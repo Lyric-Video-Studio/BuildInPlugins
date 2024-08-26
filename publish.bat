@@ -1,4 +1,4 @@
-dotnet publish .\PluginInterface\PluginBase.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish\plugins
+dotnet publish .\PluginInterface\PluginBase.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
 
 dotnet publish .\A1111Img2ImgPlugin\A1111Img2ImgPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
 dotnet publish .\A1111TxtToImgPlugin\A1111TxtToImgPlugin.csproj  -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
