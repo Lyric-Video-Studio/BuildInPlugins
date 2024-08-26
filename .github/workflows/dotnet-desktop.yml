@@ -83,22 +83,22 @@ jobs:
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Publish A1111 Img2Img
-      run: .\A1111Img2ImgPlugin\A1111Img2ImgPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
+      run: dotnet publish .\A1111Img2ImgPlugin\A1111Img2ImgPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
 
     - name: Publish A1111 Txt2Img
-      run: .\A1111TxtToImgPlugin\A1111TxtToImgPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
+      run: dotnet publish .\A1111TxtToImgPlugin\A1111TxtToImgPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
 
     - name: Image cropper
-      run: .\CroppedImagePlugin\CroppedImagePlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
+      run: dotnet publish .\CroppedImagePlugin\CroppedImagePlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
 
     - name: Publish OpenAi txt2Img
-      run: .\OpenAiTxtToImgPlugin\OpenAiTxtToImgPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
+      run: dotnet publish .\OpenAiTxtToImgPlugin\OpenAiTxtToImgPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
 
     - name: Publish Stability.ai img2vid
-      run: .\StabilityAiImgToVidPlugin\StabilityAiImgToVidPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
+      run: dotnet publish .\StabilityAiImgToVidPlugin\StabilityAiImgToVidPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
 
     - name: Publish Stability.ai txt2img
-      run: .\StabilityAiTxtToImgPlugin\StabilityAiTxtToImgPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish      
+      run: dotnet publish .\StabilityAiTxtToImgPlugin\StabilityAiTxtToImgPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish      
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
