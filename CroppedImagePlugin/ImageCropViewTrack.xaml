@@ -1,0 +1,80 @@
+﻿<ContentView
+    x:Class="CroppedImagePlugin.ImageCropViewTrack"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:CroppedImagePlugin"
+    x:DataType="local:TrackPayload">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <HorizontalStackLayout>
+            <Label Text="Mode (crop/scale)" />
+            <Switch IsToggled="{Binding Scale}" />
+        </HorizontalStackLayout>
+
+        <HorizontalStackLayout Grid.Row="1">
+            <Label Text="Width" />
+            <Editor Text="{Binding Width}" />
+        </HorizontalStackLayout>
+
+        <HorizontalStackLayout Grid.Row="1" Grid.Column="1">
+            <Label Text="Height" />
+            <Editor Text="{Binding Height}" />
+        </HorizontalStackLayout>
+
+        <HorizontalStackLayout Grid.Row="2" IsVisible="{Binding IsCrop}">
+            <Label Text="X offset" />
+            <Editor Text="{Binding XOffset}" />
+        </HorizontalStackLayout>
+
+        <HorizontalStackLayout
+            Grid.Row="2"
+            Grid.Column="1"
+            IsVisible="{Binding IsCrop}">
+            <Label Text="Y Offsset" />
+            <Editor Text="{Binding YOffset}" />
+        </HorizontalStackLayout>
+
+        <Button
+            Grid.Row="3"
+            Clicked="SyncValuesToCropControl"
+            Text="Refresh cropping"
+            ToolTipProperties.Text="Click here if you modified values maually and want to ui to sync up" />
+
+        <Image
+            x:Name="imageContainer"
+            Grid.Row="4"
+            Grid.ColumnSpan="2"
+            Aspect="Center" />
+        <AbsoluteLayout
+            x:Name="cropCanvas"
+            Grid.Row="4"
+            Grid.ColumnSpan="2"
+            HeightRequest="{Binding Source={x:Reference imageContainer}, Path=Height}"
+            IsVisible="{Binding IsCrop}"
+            WidthRequest="{Binding Source={x:Reference imageContainer}, Path=Width}">
+
+            <AbsoluteLayout.GestureRecognizers>
+                <PointerGestureRecognizer
+                    PointerMoved="PointerGestureRecognizer_PointerMoved"
+                    PointerPressed="PointerGestureRecognizer_PointerPressed"
+                    PointerReleased="PointerGestureRecognizer_PointerExited" />
+            </AbsoluteLayout.GestureRecognizers>
+        </AbsoluteLayout>
+        <HorizontalStackLayout Grid.Row="5" Grid.ColumnSpan="2">
+            <Label Text="Invert crop control colors" />
+            <CheckBox CheckedChanged="InvertColorsChanged" />
+        </HorizontalStackLayout>
+    </Grid>
+</ContentView>
