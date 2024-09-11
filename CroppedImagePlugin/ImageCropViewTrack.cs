@@ -16,14 +16,27 @@
 
         private void CheckCropInit()
         {
-            if (BindingContext is TrackPayload tp && !tp.Scale && topLeftMarker == null && bottomRightMarker == null)
+            if (BindingContext is TrackPayload tp && !tp.Scale)
             {
                 // Bindingcontext set
                 if (tp.XOffset >= 0 && tp.YOffset >= 0 && tp.XOffset + tp.Width < imageContainer.Width && tp.YOffset + tp.Height < imageContainer.Height)
                 {
+                    if (topLeftMarker != null)
+                    {
+                        cropCanvas.Remove(topLeftMarker);
+                        topLeftMarker.PropertyChanged -= Marker_PropertyChanged;
+                    }
+                    if (bottomRightMarker != null)
+                    {
+                        cropCanvas.Remove(bottomRightMarker);
+                        bottomRightMarker.PropertyChanged -= Marker_PropertyChanged;
+                    }
+
+                    topLeftMarker = null;
+                    bottomRightMarker = null;
+
                     SetMarkers(new Point(tp.XOffset, tp.YOffset));
                     SetMarkers(new Point(tp.XOffset + tp.Width, tp.YOffset + tp.Height));
-                    CheckFullCrop();
                 }
             }
         }
@@ -63,7 +76,7 @@
                     }
                 }
 
-                tp.PropertyChanged += (a, b) =>
+                /*tp.PropertyChanged += (a, b) =>
                 {
                     if (b.PropertyName == nameof(TrackPayload.Scale))
                     {
@@ -75,7 +88,7 @@
                     {
                         SetPictureFrameProperties();
                     }
-                };
+                };*/
 
                 SetPictureFrameProperties();
             }
@@ -134,8 +147,8 @@
                     tp.XOffset = (int)topLeft.X;
                     tp.YOffset = (int)topLeft.Y;
 
-                    tp.Width = (int)width;
-                    tp.Height = (int)heigth;
+                    tp.Width = (int)width + size;
+                    tp.Height = (int)heigth + size;
                 }
             }
         }
@@ -259,63 +272,7 @@
 
         public void SyncValuesToCropControl(object sender, EventArgs e)
         {
-            if (fullCrop != null && BindingContext is TrackPayload tp)
-            {
-                var fullCropBounds = cropCanvas.GetLayoutBounds(fullCrop);
-
-                var somethingDiffersInFullCrop = false;
-
-                if (fullCropBounds.X != tp.XOffset)
-                {
-                    Console.WriteLine($"X offset differ set: {tp.XOffset}");
-                    fullCropBounds.X = tp.XOffset;
-                    somethingDiffersInFullCrop = true;
-                }
-
-                if (fullCropBounds.Y != tp.YOffset)
-                {
-                    Console.WriteLine($"X offset differ set: {tp.YOffset}");
-                    fullCropBounds.Y = tp.YOffset;
-                    somethingDiffersInFullCrop = true;
-                }
-
-                if (fullCropBounds.Width != tp.Width + size)
-                {
-                    Console.WriteLine($"X offset differ set: {tp.XOffset}");
-                    fullCropBounds.Width = tp.Width;
-                    somethingDiffersInFullCrop = true;
-                }
-
-                if (fullCropBounds.Height != tp.Height + size)
-                {
-                    Console.WriteLine($"X offset differ set: {tp.YOffset}");
-                    fullCropBounds.Height = tp.Height;
-                    somethingDiffersInFullCrop = true;
-                }
-
-                if (somethingDiffersInFullCrop)
-                {
-                    cropCanvas.SetLayoutBounds(fullCrop, fullCropBounds);
-
-                    cropCanvas.Remove(topLeftMarker);
-                    cropCanvas.Remove(bottomRightMarker);
-
-                    if (topLeftMarker != null)
-                    {
-                        topLeftMarker.PropertyChanged -= Marker_PropertyChanged;
-                    }
-                    if (bottomRightMarker != null)
-                    {
-                        bottomRightMarker.PropertyChanged -= Marker_PropertyChanged;
-                    }
-
-                    topLeftMarker = null;
-                    bottomRightMarker = null;
-
-                    SetMarkers(new Point(tp.XOffset, tp.YOffset));
-                    SetMarkers(new Point(tp.XOffset + tp.Width, tp.YOffset + tp.Height));
-                }
-            }
+            CheckCropInit();
         }
     }
 }
