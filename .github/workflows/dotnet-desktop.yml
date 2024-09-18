@@ -99,7 +99,10 @@ jobs:
       run: dotnet publish .\StabilityAiImgToVidPlugin\StabilityAiImgToVidPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
 
     - name: Publish Stability.ai txt2img
-      run: dotnet publish .\StabilityAiTxtToImgPlugin\StabilityAiTxtToImgPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish      
+      run: dotnet publish .\StabilityAiTxtToImgPlugin\StabilityAiTxtToImgPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
+      
+    - name: Publish LumaAi
+      run: dotnet publish .\LumaAiDreamMachine\LumaAiDreamMachinePlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish  
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
