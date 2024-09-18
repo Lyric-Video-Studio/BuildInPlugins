@@ -6,3 +6,4 @@ dotnet publish .\CroppedImagePlugin\CroppedImagePlugin.csproj -c Release /p:Runt
 dotnet publish .\OpenAiTxtToImgPlugin\OpenAiTxtToImgPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
 dotnet publish .\StabilityAiImgToVidPlugin\StabilityAiImgToVidPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
 dotnet publish .\StabilityAiTxtToImgPlugin\StabilityAiTxtToImgPlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish
+dotnet publish .\LumaAiDreamMachine\LumaAiDreamMachinePlugin.csproj -c Release /p:RuntimeIdentifierOverride=win-x86 -o publish

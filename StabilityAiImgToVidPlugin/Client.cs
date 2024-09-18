@@ -38,8 +38,8 @@ namespace StabilityAiImgToVidPlugin
                 content.Add(new StringContent($"{request.motion_bucket_id}"), $"\"{nameof(Request.motion_bucket_id)}\"");
                 content.Add(new StringContent(request.seed), $"\"{nameof(Request.seed)}\"");
 
+#if DEBUG
                 var tempFile = Path.Combine(FileSystem.AppDataDirectory, "stabilityImgToVidContentCache.txt");
-
                 if (File.Exists(tempFile))
                 {
                     var existingContent = File.ReadAllLines(tempFile).FirstOrDefault(l => l.StartsWith(pathToSourceImage));
@@ -58,7 +58,7 @@ namespace StabilityAiImgToVidPlugin
                         }
                     }
                 }
-
+#endif
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
                     return await PollVideoResults(httpClient, refItemPlayload.PollingId, refItemPlayload, folderToSave, saveAndRefreshCallback);
@@ -70,6 +70,7 @@ namespace StabilityAiImgToVidPlugin
                 if (resp.IsSuccessStatusCode)
                 {
                     respString = respString.Replace("\"", "").Replace("id:", "").Replace("{", "").Replace("}", "");
+#if DEBUG
                     if (!File.Exists(tempFile))
                     {
                         File.WriteAllText(tempFile, $"{pathToSourceImage};{respString}");
@@ -80,6 +81,7 @@ namespace StabilityAiImgToVidPlugin
                         File.Delete(tempFile);
                         File.WriteAllLines(tempFile, contents.Concat(new List<string> { $"{pathToSourceImage};{respString}" }));
                     }
+#endif
                     return await PollVideoResults(httpClient, respString, refItemPlayload, folderToSave, saveAndRefreshCallback);
                 }
                 else
