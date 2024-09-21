@@ -45,7 +45,7 @@ namespace LumaAiDreamMachinePlugin
                 // Also, when img2Vid
 
                 newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
-                newTp.Settings.keyFrames = newIp.KeyFrames;
+                newTp.Settings.keyframes = newIp.KeyFrames;
 
                 return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
             }

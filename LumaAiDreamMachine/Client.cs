@@ -13,7 +13,7 @@ namespace LumaAiDreamMachinePlugin
         public string aspect_ratio { get; set; } = "16:9";
 
         [IgnoreDynamicEdit]
-        public KeyFrames keyFrames { get; set; } = new KeyFrames();
+        public KeyFrames keyframes { get; set; } = new KeyFrames();
     }
 
     public class KeyFrames
@@ -75,22 +75,22 @@ namespace LumaAiDreamMachinePlugin
                     return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), refItemPlayload, folderToSave, saveAndRefreshCallback);
                 }
 
-                request.keyFrames.frame0.type = string.IsNullOrEmpty(request.keyFrames.frame0.url) ? "generation" : "image";
-                request.keyFrames.frame1.type = string.IsNullOrEmpty(request.keyFrames.frame1.url) ? "generation" : "image";
+                request.keyframes.frame0.type = string.IsNullOrEmpty(request.keyframes.frame0.url) ? "generation" : "image";
+                request.keyframes.frame1.type = string.IsNullOrEmpty(request.keyframes.frame1.url) ? "generation" : "image";
 
-                if (string.IsNullOrEmpty(request.keyFrames.frame0.url) && string.IsNullOrEmpty(request.keyFrames.frame0.id))
+                if (string.IsNullOrEmpty(request.keyframes.frame0.url) && string.IsNullOrEmpty(request.keyframes.frame0.id))
                 {
-                    request.keyFrames.frame0 = null;
+                    request.keyframes.frame0 = null;
                 }
 
-                if (string.IsNullOrEmpty(request.keyFrames.frame1.url) && string.IsNullOrEmpty(request.keyFrames.frame1.id))
+                if (string.IsNullOrEmpty(request.keyframes.frame1.url) && string.IsNullOrEmpty(request.keyframes.frame1.id))
                 {
-                    request.keyFrames.frame1 = null;
+                    request.keyframes.frame1 = null;
                 }
 
-                if (request.keyFrames.frame0 == null && request.keyFrames.frame1 == null)
+                if (request.keyframes.frame0 == null && request.keyframes.frame1 == null)
                 {
-                    request.keyFrames = null;
+                    request.keyframes = null;
                 }
 
                 var serialized = JsonHelper.Serialize(request);
