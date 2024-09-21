@@ -1,17 +1,12 @@
-﻿using PluginBase;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace LumaAiDreamMachinePlugin
 {
     public class ItemPayload
     {
-        private string pathToImage = "";
         private string prompt = "";
 
-        [Description("Image source must be exactly one of these dimensions: 1024x576, 576x1024, 768x768")]
-        [EditorWidth(500)]
-        [EditorColumnSpan(5)]
-        public string PathToImage { get => pathToImage; set => pathToImage = value; }
+        public KeyFrames KeyFrames { get; set; } = new KeyFrames();
 
         public string Prompt { get => prompt; set => prompt = value; }
 

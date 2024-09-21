@@ -1,6 +1,6 @@
 ﻿using Microsoft.Maui.Storage;
 using PluginBase;
-using System.Diagnostics;
+using System.ComponentModel;
 using System.Net;
 using System.Net.Http.Headers;
 
@@ -11,15 +11,33 @@ namespace LumaAiDreamMachinePlugin
         public string prompt { get; set; } = "";
         public bool loop { get; set; }
         public string aspect_ratio { get; set; } = "16:9";
+
+        [IgnoreDynamicEdit]
+        public KeyFrames keyFrames { get; set; } = new KeyFrames();
     }
 
-    /*"id": "123e4567-e89b-12d3-a456-426614174000",
-  "state": "completed",
-  "failure_reason": null,
-  "created_at": "2023-06-01T12:00:00Z",
-  "assets": {
-    "video": "https://example.com/video.mp4"
-  },*/
+    public class KeyFrames
+    {
+        [Description("Starting image/generarion")]
+        [ParentName("Start frame")]
+        public KeyFrame frame0 { get; set; } = new KeyFrame();
+
+        [Description("Ending image/generarion")]
+        [ParentName("End frame")]
+        public KeyFrame frame1 { get; set; } = new KeyFrame();
+    }
+
+    public class KeyFrame
+    {
+        [IgnoreDynamicEdit]
+        public string type { get; set; }
+
+        [Description("Image source, this needs to be publicly available url")]
+        public string url { get; set; }
+
+        [Description("For extending video, add pollingId of another luma ai video here")]
+        public string id { get; set; }
+    }
 
     public class Response
     {
@@ -38,12 +56,11 @@ namespace LumaAiDreamMachinePlugin
 
     internal class Client
     {
-        public async Task<VideoResponse> GetImgToVid(Request request, string pathToSourceImage, string uploadUrl, string folderToSave, ConnectionSettings connectionSettings,
+        public async Task<VideoResponse> GetImgToVid(Request request, string folderToSave, ConnectionSettings connectionSettings,
             ItemPayload refItemPlayload, Action saveAndRefreshCallback)
         {
             try
             {
-                var id = Guid.Parse("9c96eda8-2a4f-454e-b8cf-5b22b70c6bb2");
                 using var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.Remove("accept");
 
@@ -56,6 +73,24 @@ namespace LumaAiDreamMachinePlugin
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
                     return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), refItemPlayload, folderToSave, saveAndRefreshCallback);
+                }
+
+                request.keyFrames.frame0.type = string.IsNullOrEmpty(request.keyFrames.frame0.url) ? "generation" : "image";
+                request.keyFrames.frame1.type = string.IsNullOrEmpty(request.keyFrames.frame1.url) ? "generation" : "image";
+
+                if (string.IsNullOrEmpty(request.keyFrames.frame0.url) && string.IsNullOrEmpty(request.keyFrames.frame0.id))
+                {
+                    request.keyFrames.frame0 = null;
+                }
+
+                if (string.IsNullOrEmpty(request.keyFrames.frame1.url) && string.IsNullOrEmpty(request.keyFrames.frame1.id))
+                {
+                    request.keyFrames.frame1 = null;
+                }
+
+                if (request.keyFrames.frame0 == null && request.keyFrames.frame1 == null)
+                {
+                    request.keyFrames = null;
                 }
 
                 var serialized = JsonHelper.Serialize(request);

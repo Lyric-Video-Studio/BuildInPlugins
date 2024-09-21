@@ -45,8 +45,9 @@ namespace LumaAiDreamMachinePlugin
                 // Also, when img2Vid
 
                 newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
+                newTp.Settings.keyFrames = newIp.KeyFrames;
 
-                return await _wrapper.GetImgToVid(newTp.Settings, newIp.PathToImage, newTp.UploadUrl, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
+                return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
             }
             else
             {
@@ -131,11 +132,6 @@ namespace LumaAiDreamMachinePlugin
             {
                 return ex.Message;
             }
-        }
-
-        public object ItemPayloadFromImageSource(string imgSource)
-        {
-            return new ItemPayload { PathToImage = imgSource };
         }
 
         public (bool payloadOk, string reasonIfNot) ValidateVideoPayload(object payload)

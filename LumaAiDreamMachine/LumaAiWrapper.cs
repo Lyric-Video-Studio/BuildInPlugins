@@ -14,7 +14,7 @@ namespace LumaAiDreamMachinePlugin
             client = new Client();
         }
 
-        public async Task<VideoResponse> GetImgToVid(Request payload, string pathToSourceImage, string uploadUrl, string pathForSaving, ConnectionSettings connectionSettings, ItemPayload refItemPlayload, Action saveAndRefreshCallback)
+        public async Task<VideoResponse> GetImgToVid(Request payload, string pathForSaving, ConnectionSettings connectionSettings, ItemPayload refItemPlayload, Action saveAndRefreshCallback)
         {
             if (client == null)
             {
@@ -22,7 +22,7 @@ namespace LumaAiDreamMachinePlugin
             }
             try
             {
-                return await client.GetImgToVid(payload, pathToSourceImage, uploadUrl, pathForSaving, connectionSettings, refItemPlayload, saveAndRefreshCallback);
+                return await client.GetImgToVid(payload, pathForSaving, connectionSettings, refItemPlayload, saveAndRefreshCallback);
             }
             catch (Exception ex)
             {
@@ -40,6 +40,10 @@ namespace LumaAiDreamMachinePlugin
 
         public async Task<string[]> GetSelectionForProperty(string property, ConnectionSettings settings)
         {
+            if (property == nameof(Request.aspect_ratio))
+            {
+                return ["16:9", "1:1", "9:16", "4:3", "3:4", "21:9", "9:21"];
+            }
             return Array.Empty<string>();
         }
     }
