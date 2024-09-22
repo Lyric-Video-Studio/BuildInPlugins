@@ -18,6 +18,8 @@ namespace StabilityAiImgToVidPlugin
 
         public string[] SettingsLinks => new[] { "https://stability.ai" };
 
+        public bool AsynchronousGeneration { get; } = true;
+
         private ConnectionSettings _connectionSettings = new ConnectionSettings();
         private StabilityAiWrapper _wrapper = new StabilityAiWrapper();
 

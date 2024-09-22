@@ -16,6 +16,8 @@ namespace LumaAiDreamMachinePlugin
 
         public string SettingsHelpText => "Hosted by Luma AI. You need to have your authorization token";
 
+        public bool AsynchronousGeneration { get; } = true;
+
         public string[] SettingsLinks => new[] { "https://lumalabs.ai/dream-machine/api/keys" };
 
         private ConnectionSettings _connectionSettings = new ConnectionSettings();

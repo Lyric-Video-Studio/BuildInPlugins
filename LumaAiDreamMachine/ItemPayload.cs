@@ -12,8 +12,8 @@ namespace LumaAiDreamMachinePlugin
 
         private string pollingId;
 
-        [Description("This id is used internally to poll results and is not meant to be edited manually, if you're not sure what you are doing.  " +
-            "You can manually remove this, if video generation failed and you would like to discard the results. PollingId will be preserved and you need to manually clear it go generate this again (polling id might be needed elsewhere too)")]
+        [Description("PollingId (generation id) is filled when you make new request. Unlike in other plugins, this is not cleared when generation is completed, because ths id is needed if you want to extend the video. " +
+            "If you need to create new variation, clear this id, otherwise the same result will be fetched from the server")]
         public string PollingId { get => pollingId; set => pollingId = value; }
     }
 }

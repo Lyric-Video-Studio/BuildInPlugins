@@ -19,6 +19,8 @@ namespace StabilityAiTxtToImgPlugin
 
         public string ImageFormat => "png";
 
+        public bool AsynchronousGeneration { get; } = true;
+
         private ConnectionSettings _connectionSettings = new ConnectionSettings();
 
         private StabilityAiWrapper _wrapper = new StabilityAiWrapper();

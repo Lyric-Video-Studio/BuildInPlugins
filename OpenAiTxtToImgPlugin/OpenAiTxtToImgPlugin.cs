@@ -21,6 +21,8 @@ namespace OpenAiTxtToImgPlugin
 
         public string ImageFormat => "png";
 
+        public bool AsynchronousGeneration { get; } = true;
+
         private ConnectionSettings _connectionSettings = new ConnectionSettings();
 
         private OpenAIClient openAIClient;

@@ -15,6 +15,8 @@ namespace CroppedImagePlugin
 
         public object GeneralDefaultSettings => null;
 
+        public bool AsynchronousGeneration { get; } = false;
+
         public bool IsInitialized => true;
 
         public void CloseConnection()

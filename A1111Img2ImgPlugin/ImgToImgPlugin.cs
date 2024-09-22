@@ -21,6 +21,8 @@ namespace A1111ImgToImgPlugin
 
         private A1111Wrapper _wrapper = new A1111Wrapper();
 
+        public bool AsynchronousGeneration { get; } = false;
+
         public object DefaultPayloadForImageItem()
         {
             return new ItemPayload();
