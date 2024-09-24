@@ -93,7 +93,18 @@ namespace LumaAiDreamMachinePlugin
                     request.keyframes = null;
                 }
 
-                var serialized = JsonHelper.Serialize(request);
+                var serialized = "";
+
+                try
+                {
+                    serialized = JsonHelper.Serialize(request);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new VideoResponse() { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
+                }
+
                 var stringContent = new StringContent(serialized);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
@@ -107,7 +118,8 @@ namespace LumaAiDreamMachinePlugin
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new VideoResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
                 }
 
                 if (respSerialized != null && resp.IsSuccessStatusCode)
@@ -121,6 +133,7 @@ namespace LumaAiDreamMachinePlugin
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
                 return new VideoResponse() { ErrorMsg = ex.Message, Success = false };
             }
         }
@@ -147,7 +160,13 @@ namespace LumaAiDreamMachinePlugin
                     {
                         respSerialized = JsonHelper.DeserializeString<Response>(respString);
                         assets = respSerialized.assets;
-                        Console.WriteLine($"State: {respSerialized.state}");
+
+                        if (respSerialized.state == "failed")
+                        {
+                            return new VideoResponse() { Success = false, ErrorMsg = "Luma Ai backend reported that video generating failed" };
+                        }
+
+                        System.Diagnostics.Debug.WriteLine($"State: {respSerialized.state}");
 
                         if (assets == null)
                         {
@@ -156,7 +175,7 @@ namespace LumaAiDreamMachinePlugin
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.ToString());
+                        System.Diagnostics.Debug.WriteLine(ex.ToString());
                     }
                 }
                 catch (Exception)
