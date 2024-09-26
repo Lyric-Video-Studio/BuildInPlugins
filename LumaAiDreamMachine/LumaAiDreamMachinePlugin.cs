@@ -35,9 +35,9 @@ namespace LumaAiDreamMachinePlugin
 
         public async Task<VideoResponse> GetVideo(object trackPayload, object itemsPayload, string folderToSaveVideo)
         {
-            if (_connectionSettings == null)
+            if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
             {
-                return new VideoResponse { Success = false, ErrorMsg = "Uninitialize" };
+                return new VideoResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
 
             if (JsonHelper.DeepCopy<TrackPayload>(trackPayload) is TrackPayload newTp && JsonHelper.DeepCopy<ItemPayload>(itemsPayload) is ItemPayload newIp)
@@ -140,7 +140,14 @@ namespace LumaAiDreamMachinePlugin
         {
             if (payload is ItemPayload ip)
             {
-                return (!string.IsNullOrEmpty(ip.Prompt), "");
+                if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
+                {
+                    return (false, "Auth token empty!!!");
+                }
+                if (string.IsNullOrEmpty(ip.Prompt))
+                {
+                    return (false, "Prompt empty");
+                }
                 /*if (string.IsNullOrEmpty(ip.PathToImage))
                 {
                     return (false, "No source");
@@ -170,7 +177,7 @@ namespace LumaAiDreamMachinePlugin
                     }
                 }*/
             }
-            return (false, "Prompt empty");
+            return (true, "");
         }
 
         private Action saveAndRefreshCallback;

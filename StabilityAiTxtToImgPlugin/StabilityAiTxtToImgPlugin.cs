@@ -37,9 +37,9 @@ namespace StabilityAiTxtToImgPlugin
 
         public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
         {
-            if (_connectionSettings == null)
+            if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
             {
-                return new ImageResponse { Success = false, ErrorMsg = "Uninitialize" };
+                return new ImageResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
 
             if (JsonHelper.DeepCopy<TrackPayload>(trackPayload) is TrackPayload newTp && JsonHelper.DeepCopy<ItemPayload>(itemsPayload) is ItemPayload newIp)
@@ -145,6 +145,11 @@ namespace StabilityAiTxtToImgPlugin
 
         public (bool payloadOk, string reasonIfNot) ValidateImagePayload(object payload)
         {
+            if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            {
+                return (false, "Auth token missing");
+            }
+
             if (payload is ItemPayload ip && string.IsNullOrEmpty(ip.PositivePrompt))
             {
                 return (false, "Prompt missing");

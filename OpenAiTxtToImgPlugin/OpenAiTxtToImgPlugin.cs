@@ -174,6 +174,10 @@ namespace OpenAiTxtToImgPlugin
 
         public (bool payloadOk, string reasonIfNot) ValidateImagePayload(object payload)
         {
+            if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            {
+                return (false, "Auth token is missing");
+            }
             if (payload is ItemPayload ip && string.IsNullOrEmpty(ip.Prompt))
             {
                 return (false, "Prompt missing");

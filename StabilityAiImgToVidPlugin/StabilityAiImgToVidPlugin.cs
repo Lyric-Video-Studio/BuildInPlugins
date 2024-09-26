@@ -35,9 +35,9 @@ namespace StabilityAiImgToVidPlugin
 
         public async Task<VideoResponse> GetVideo(object trackPayload, object itemsPayload, string folderToSaveVideo)
         {
-            if (_connectionSettings == null)
+            if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
             {
-                return new VideoResponse { Success = false, ErrorMsg = "Uninitialize" };
+                return new VideoResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
 
             if (JsonHelper.DeepCopy<TrackPayload>(trackPayload) is TrackPayload newTp && JsonHelper.DeepCopy<ItemPayload>(itemsPayload) is ItemPayload newIp)
@@ -138,6 +138,11 @@ namespace StabilityAiImgToVidPlugin
         {
             if (payload is ItemPayload ip)
             {
+                if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
+                {
+                    return (false, "Auth token missing");
+                }
+
                 if (string.IsNullOrEmpty(ip.PathToImage))
                 {
                     return (false, "No source");
