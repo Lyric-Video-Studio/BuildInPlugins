@@ -11,13 +11,13 @@ namespace OpenAiTxtToImgPlugin
 
         [Description("Access token. Each image creation uses credits. Access token is found from Open.ai/account/keys. " +
             "This application is not resposible for possible usage of credits and will not in any way refund any used credits!!!")]
-        [EditorWidth(600)]
+        [EditorWidth(300)]
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
         [OnSerializing]
         internal void OnSerializingMethod(StreamingContext context)
         {
-            if(!string.IsNullOrEmpty(AccessToken))
+            if (!string.IsNullOrEmpty(AccessToken))
             {
                 SecureStorageWrapper.Set(accessTokenKey, AccessToken);
                 AccessToken = "";
@@ -35,13 +35,13 @@ namespace OpenAiTxtToImgPlugin
         internal void OnDeserializedMethod(StreamingContext context)
         {
             try
-            {                
+            {
                 AccessToken = SecureStorageWrapper.Get(accessTokenKey);
             }
             catch (Exception)
             {
                 AccessToken = "";
-            }            
+            }
         }
     }
 }

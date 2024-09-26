@@ -15,7 +15,7 @@ namespace LumaAiDreamMachinePlugin
 
         [Description("Access token. Each video creation uses credits. Access token is found from https://lumalabs.ai/dream-machine/api/keys " +
             "This application is not resposible for possible usage of credits and will not in any way refund any used credits!!!")]
-        [EditorWidth(600)]
+        [EditorWidth(300)]
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
         [OnSerializing]

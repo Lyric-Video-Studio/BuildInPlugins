@@ -1,5 +1,4 @@
-﻿
-using PluginBase;
+﻿using PluginBase;
 
 namespace OpenAiTxtToImgPlugin
 {
@@ -7,7 +6,7 @@ namespace OpenAiTxtToImgPlugin
     {
         private string prompt = "Progressive metal band from Finland playing in forest";
 
-        [EditorWidth(600)]
+        [EditorWidth(300)]
         public string Prompt { get => prompt; set => prompt = value; }
     }
 }
