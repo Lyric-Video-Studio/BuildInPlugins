@@ -2,6 +2,8 @@
 
 namespace StabilityAiTxtToImgPlugin
 {
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+
     public class StabilityAiTxtToImgPlugin : IImagePlugin, IImportFromLyrics
     {
         public string UniqueName { get => "StabilityAiTxtToImageBuildIn"; }
@@ -157,4 +159,6 @@ namespace StabilityAiTxtToImgPlugin
             return (true, "");
         }
     }
+
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 }

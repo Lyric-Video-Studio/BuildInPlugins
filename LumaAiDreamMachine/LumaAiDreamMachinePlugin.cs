@@ -1,8 +1,9 @@
 ﻿using PluginBase;
-using SkiaSharp;
 
 namespace LumaAiDreamMachinePlugin
 {
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+
     public class LumaAiDreamMachineImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics /*,IImportFromImage*/
     {
         public string UniqueName { get => "LumaAiDreamMachineImgToVidBuildIn"; }
@@ -192,4 +193,6 @@ namespace LumaAiDreamMachinePlugin
             return new ItemPayload() { Prompt = text };
         }
     }
+
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 }

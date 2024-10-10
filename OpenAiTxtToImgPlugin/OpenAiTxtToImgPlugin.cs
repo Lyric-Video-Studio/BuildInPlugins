@@ -4,6 +4,8 @@ using OpenAI.Images;
 
 namespace OpenAiTxtToImgPlugin
 {
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+
     public class OpenAiTxtToImgPlugin : IImagePlugin, IImportFromLyrics
     {
         public string UniqueName { get => "OpenAiTxtToImageBuildIn"; }
@@ -185,4 +187,6 @@ namespace OpenAiTxtToImgPlugin
             return (true, "");
         }
     }
+
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 }

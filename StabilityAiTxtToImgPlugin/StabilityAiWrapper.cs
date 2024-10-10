@@ -8,7 +8,7 @@ namespace StabilityAiTxtToImgPlugin
         // Keep process static. Rememebr that the uri can be to server / internets, so process might not be needed
 
         private Client client;
-        
+
         public void InitializeClient()
         {
             client = new Client();
@@ -16,7 +16,7 @@ namespace StabilityAiTxtToImgPlugin
 
         public async Task<ImageResponse> GetTxtToImg(Request payload, ConnectionSettings connectionSettings)
         {
-            if(client == null)
+            if (client == null)
             {
                 return new ImageResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
@@ -32,14 +32,17 @@ namespace StabilityAiTxtToImgPlugin
 
         internal void CloseConnection()
         {
-            if(client != null)
+            if (client != null)
             {
                 client = null;
             }
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+
         public async Task<string[]> GetSelectionForProperty(string property, ConnectionSettings settings)
-        {            
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+        {
             return Array.Empty<string>();
         }
     }

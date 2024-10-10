@@ -38,7 +38,10 @@ namespace LumaAiDreamMachinePlugin
             }
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+
         public async Task<string[]> GetSelectionForProperty(string property, ConnectionSettings settings)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             if (property == nameof(Request.aspect_ratio))
             {
