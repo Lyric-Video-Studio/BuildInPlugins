@@ -10,10 +10,10 @@ namespace RunwayMlPlugin
         private string url = "https://api.dev.runwayml.com/";
         private string accessToken;
 
-        [Description("Url to luma ai API")]
+        [Description("Url to Runwal ML api, do not chnage this if unsure")]
         public string Url { get => url; set => url = value; }
 
-        [Description("Access token. Each video creation uses credits. Access token is found from https://lumalabs.ai/dream-machine/api/keys " +
+        [Description("Access token. Each video creation uses credits. Access token is found from https://dev.runwayml.com " +
             "This application is not resposible for possible usage of credits and will not in any way refund any used credits!!!")]
         [EditorWidth(300)]
         public string AccessToken { get => accessToken; set => accessToken = value; }

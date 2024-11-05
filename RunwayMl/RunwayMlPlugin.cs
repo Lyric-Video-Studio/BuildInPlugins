@@ -4,7 +4,7 @@ namespace RunwayMlPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class RunwayMlImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage
+    public class RunwayMlImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader
     {
         public string UniqueName { get => "RunwayMlImgToVidBuildIn"; }
         public string DisplayName { get => "Runway LM "; }
@@ -22,6 +22,7 @@ namespace RunwayMlPlugin
         public string[] SettingsLinks => new[] { "https://dev.runwayml.com/", "https://Runwayml.com" };
 
         private ConnectionSettings _connectionSettings = new ConnectionSettings();
+        private IContentUploader _contentUploader;
 
         public object DefaultPayloadForVideoItem()
         {
@@ -66,6 +67,22 @@ namespace RunwayMlPlugin
                 if (newIp.Request.duration != newTp.Request.duration)
                 {
                     newTp.Request.duration = newIp.Request.duration;
+                }
+
+                var fileUpload = await _contentUploader.RequestContentUpload(newTp.Request.promptImage);
+
+                if (fileUpload.isLocalFile)
+                {
+                    return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
+                }
+                else if (fileUpload.responseCode != System.Net.HttpStatusCode.OK)
+                {
+                    return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {fileUpload.responseCode}" };
+                }
+                else
+                {
+                    newTp.Request.promptImage = fileUpload.uploadedUrl;
+                    saveAndRefreshCallback.Invoke();
                 }
 
                 var videoResp = await new Client().GetImgToVid(newTp.Request, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
@@ -221,6 +238,11 @@ namespace RunwayMlPlugin
             var output = new ItemPayload();
             output.Request.promptImage = imgSource;
             return output;
+        }
+
+        public void ContentUploaderProvided(IContentUploader uploader)
+        {
+            _contentUploader = uploader;
         }
     }
 
