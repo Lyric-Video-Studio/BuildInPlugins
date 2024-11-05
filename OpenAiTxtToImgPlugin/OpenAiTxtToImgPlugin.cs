@@ -116,7 +116,8 @@ namespace OpenAiTxtToImgPlugin
             {
                 return Array.Empty<string>();
             }
-            return GetFunctionPropertyArray(propertyName);
+            var values = GetFunctionPropertyArray(propertyName);
+            return values;
         }
 
         public object CopyPayloadForImageTrack(object obj)
