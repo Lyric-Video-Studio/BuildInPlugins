@@ -12,5 +12,9 @@ namespace RunwayMlPlugin
 
         private Request request = new Request();
         public Request Request { get => request; set => request = value; }
+
+        public string ImageSource { get => imageSource; set => imageSource = value; }
+
+        private string imageSource;
     }
 }

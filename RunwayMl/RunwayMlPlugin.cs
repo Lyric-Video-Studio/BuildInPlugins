@@ -49,11 +49,6 @@ namespace RunwayMlPlugin
 
                 newTp.Request.promptText = newIp.Request.promptText + " " + newTp.Request.promptText;
 
-                if (!string.IsNullOrEmpty(newIp.Request.promptImage))
-                {
-                    newTp.Request.promptImage = newIp.Request.promptImage;
-                }
-
                 if (newIp.Request.seed.HasValue)
                 {
                     newTp.Request.seed = newIp.Request.seed.Value;
@@ -69,7 +64,7 @@ namespace RunwayMlPlugin
                     newTp.Request.duration = newIp.Request.duration;
                 }
 
-                var fileUpload = await _contentUploader.RequestContentUpload(newTp.Request.promptImage);
+                var fileUpload = await _contentUploader.RequestContentUpload(newIp.ImageSource);
 
                 if (fileUpload.isLocalFile)
                 {
@@ -185,6 +180,11 @@ namespace RunwayMlPlugin
                 if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
                 {
                     return (false, "Auth token empty!!!");
+                }
+
+                if (string.IsNullOrEmpty(ip.ImageSource))
+                {
+                    return (false, "Image source must not be empty");
                 }
 
                 /*if (string.IsNullOrEmpty(ip.PathToImage))

@@ -14,7 +14,10 @@ namespace RunwayMlPlugin
         private int? videoSeed;
 
         public string? promptText { get => prompt; set => prompt = value; }
+
+        [IgnoreDynamicEdit]
         public string promptImage { get => image; set => image = value; }
+
         public string ratio { get => videoRatio; set => videoRatio = value; }
         public int? seed { get => videoSeed; set => videoSeed = value; }
 
@@ -33,6 +36,7 @@ namespace RunwayMlPlugin
         public string status { get; set; }
         public string createdAt { get; set; }
         public string[] output { get; set; }
+        public string failure { get; set; }
     }
 
     internal class Client
@@ -141,7 +145,7 @@ namespace RunwayMlPlugin
 
                         if (respSerialized.status == "FAILED")
                         {
-                            return new VideoResponse() { Success = false, ErrorMsg = "Runway ML backend reported that video generating failed" };
+                            return new VideoResponse() { Success = false, ErrorMsg = "Runway ML backend reported that video generating failed. " + respSerialized.failure };
                         }
 
                         System.Diagnostics.Debug.WriteLine($"State: {respSerialized.status}");
