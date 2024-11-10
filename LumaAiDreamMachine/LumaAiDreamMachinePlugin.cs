@@ -4,7 +4,7 @@ namespace LumaAiDreamMachinePlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class LumaAiDreamMachineImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics /*,IImportFromImage*/
+    public class LumaAiDreamMachineImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader
     {
         public string UniqueName { get => "LumaAiDreamMachineImgToVidBuildIn"; }
         public string DisplayName { get => "Luma AI Dream Machine"; }
@@ -49,6 +49,35 @@ namespace LumaAiDreamMachinePlugin
 
                 newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
                 newTp.Settings.keyframes = newIp.KeyFrames;
+
+                // Upload to cloud first
+                if (!string.IsNullOrEmpty(newTp.Settings.keyframes.frame0.url))
+                {
+                    var resp = await _uploader.RequestContentUpload(newTp.Settings.keyframes.frame0.url);
+
+                    if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                    {
+                        newTp.Settings.keyframes.frame0.url = resp.uploadedUrl;
+                    }
+                    else
+                    {
+                        return new VideoResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(newTp.Settings.keyframes.frame1.url))
+                {
+                    var resp = await _uploader.RequestContentUpload(newTp.Settings.keyframes.frame1.url);
+
+                    if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                    {
+                        newTp.Settings.keyframes.frame1.url = resp.uploadedUrl;
+                    }
+                    else
+                    {
+                        return new VideoResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                    }
+                }
 
                 return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
             }
@@ -182,6 +211,7 @@ namespace LumaAiDreamMachinePlugin
         }
 
         private Action saveAndRefreshCallback;
+        private IContentUploader _uploader;
 
         public void SetSaveAndRefreshCallback(Action saveAndRefreshCallback)
         {
@@ -191,6 +221,18 @@ namespace LumaAiDreamMachinePlugin
         public object ItemPayloadFromLyrics(string text)
         {
             return new ItemPayload() { Prompt = text };
+        }
+
+        public object ItemPayloadFromImageSource(string imgSource)
+        {
+            var output = new ItemPayload();
+            output.KeyFrames.frame0.url = imgSource;
+            return output;
+        }
+
+        public void ContentUploaderProvided(IContentUploader uploader)
+        {
+            _uploader = uploader;
         }
     }
 

@@ -7,7 +7,7 @@ namespace LumaAiDreamMachinePlugin
     public class ConnectionSettings
     {
         private static string accessTokenKey = "LumaAiDreamMachineImgToVidPlugin.accessKey";
-        private string url = "https://api.lumalabs.ai/dream-machine/";
+        private string url = "https://api.lumalabs.ai";
         private string accessToken;
 
         [Description("Url to luma ai API")]

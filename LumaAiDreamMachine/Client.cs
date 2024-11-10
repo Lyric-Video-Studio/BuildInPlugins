@@ -31,7 +31,7 @@ namespace LumaAiDreamMachinePlugin
         [IgnoreDynamicEdit]
         public string type { get; set; }
 
-        [Description("Image source, this needs to be publicly available url")]
+        [Description("Image source")]
         public string url { get; set; }
 
         [Description("For extending video, add pollingId of another luma ai video here")]
@@ -107,7 +107,7 @@ namespace LumaAiDreamMachinePlugin
                 var stringContent = new StringContent(serialized);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
-                var resp = await httpClient.PostAsync("v1/generations", stringContent);
+                var resp = await httpClient.PostAsync("dream-machine/v1/generations", stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
                 Response respSerialized = null;
 
@@ -151,7 +151,7 @@ namespace LumaAiDreamMachinePlugin
                 // Wait for assets to be filled
                 try
                 {
-                    var generationResp = await httpClient.GetAsync($"v1/generations/{id}");
+                    var generationResp = await httpClient.GetAsync($"dream-machine/v1/generations/{id}");
                     var respString = await generationResp.Content.ReadAsStringAsync();
                     Response respSerialized = null;
 
