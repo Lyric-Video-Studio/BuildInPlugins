@@ -51,7 +51,6 @@
             Clicked="SyncValuesToCropControl"
             Text="Refresh cropping"
             ToolTipProperties.Text="Click here if you modified values maually and want to ui to sync up" />
-
         <Image
             x:Name="imageContainer"
             Grid.Row="4"
