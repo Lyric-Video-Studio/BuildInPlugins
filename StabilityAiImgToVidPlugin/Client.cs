@@ -1,5 +1,4 @@
-﻿using Microsoft.Maui.Storage;
-using PluginBase;
+﻿using PluginBase;
 using System.Diagnostics;
 using System.Net;
 
@@ -38,27 +37,6 @@ namespace StabilityAiImgToVidPlugin
                 content.Add(new StringContent($"{request.motion_bucket_id}"), $"\"{nameof(Request.motion_bucket_id)}\"");
                 content.Add(new StringContent(request.seed), $"\"{nameof(Request.seed)}\"");
 
-#if DEBUG
-                var tempFile = Path.Combine(FileSystem.AppDataDirectory, "stabilityImgToVidContentCache.txt");
-                if (File.Exists(tempFile))
-                {
-                    var existingContent = File.ReadAllLines(tempFile).FirstOrDefault(l => l.StartsWith(pathToSourceImage));
-
-                    if (!string.IsNullOrEmpty(existingContent))
-                    {
-                        var existingResp = existingContent.Split(';')[1];
-                        var existingVideoResp = await httpClient.GetAsync($"/v2beta/image-to-video/result/{existingResp}");
-
-                        if (existingVideoResp.StatusCode == HttpStatusCode.OK)
-                        {
-                            var respBytes = await existingVideoResp.Content.ReadAsByteArrayAsync();
-                            var pathToVideo = Path.Combine(folderToSave, $"{Guid.NewGuid()}.mp4");
-                            await File.WriteAllBytesAsync(pathToVideo, respBytes);
-                            return new VideoResponse() { Success = true, VideoFile = pathToVideo };
-                        }
-                    }
-                }
-#endif
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
                     return await PollVideoResults(httpClient, refItemPlayload.PollingId, refItemPlayload, folderToSave, saveAndRefreshCallback);
@@ -70,18 +48,6 @@ namespace StabilityAiImgToVidPlugin
                 if (resp.IsSuccessStatusCode)
                 {
                     respString = respString.Replace("\"", "").Replace("id:", "").Replace("{", "").Replace("}", "");
-#if DEBUG
-                    if (!File.Exists(tempFile))
-                    {
-                        File.WriteAllText(tempFile, $"{pathToSourceImage};{respString}");
-                    }
-                    else
-                    {
-                        var contents = File.ReadAllLines(tempFile);
-                        File.Delete(tempFile);
-                        File.WriteAllLines(tempFile, contents.Concat(new List<string> { $"{pathToSourceImage};{respString}" }));
-                    }
-#endif
                     return await PollVideoResults(httpClient, respString, refItemPlayload, folderToSave, saveAndRefreshCallback);
                 }
                 else

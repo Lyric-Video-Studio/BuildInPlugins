@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel;
-using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using PluginBase;
 
 namespace RunwayMlPlugin
 {
-    public class ConnectionSettings
+    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
     {
         private static string accessTokenKey = "RunwayMlImgToVidPlugin.accessKey";
         private string url = "https://api.dev.runwayml.com/";
@@ -18,25 +18,7 @@ namespace RunwayMlPlugin
         [EditorWidth(300)]
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
-        [OnSerializing]
-        internal void OnSerializingMethod(StreamingContext context)
-        {
-            if (!string.IsNullOrEmpty(AccessToken))
-            {
-                SecureStorageWrapper.Set(accessTokenKey, AccessToken);
-                AccessToken = "";
-            }
-        }
-
-        [OnSerialized]
-        internal void OnSerializedMethod(StreamingContext context)
-        {
-            // Need to chnage the token back
-            OnDeserializedMethod(new StreamingContext());
-        }
-
-        [OnDeserialized]
-        internal void OnDeserializedMethod(StreamingContext context)
+        public void OnDeserialized()
         {
             try
             {
@@ -44,6 +26,21 @@ namespace RunwayMlPlugin
             }
             catch (Exception)
             {
+                AccessToken = "";
+            }
+        }
+
+        public void OnSerialized()
+        {
+            // Need to change the token back
+            OnDeserialized();
+        }
+
+        public void OnSerializing()
+        {
+            if (!string.IsNullOrEmpty(AccessToken))
+            {
+                SecureStorageWrapper.Set(accessTokenKey, AccessToken);
                 AccessToken = "";
             }
         }
