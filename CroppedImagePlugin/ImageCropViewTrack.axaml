@@ -17,64 +17,81 @@
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="Auto" />
       <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="Auto" />
     </Grid.ColumnDefinitions>
 
-    <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Mode (crop/scale)" />
-      <ToggleSwitch IsChecked="{Binding Scale}" />
-    </StackPanel>
+    <TextBlock
+        Grid.Row="0"
+        Grid.Column="0"
+        Text="Mode (crop/scale)" />
+    <ToggleSwitch
+        Grid.Row="0"
+        Grid.Column="1"
+        IsChecked="{Binding Scale}" />
 
-    <StackPanel Grid.Row="1" Orientation="Horizontal">
-      <TextBlock Text="Width" />
-      <TextBox Text="{Binding Width}" />
-    </StackPanel>
-
-    <StackPanel
+    <TextBlock
+        Grid.Row="1"
+        Grid.Column="0"
+        Text="Width" />
+    <TextBox
         Grid.Row="1"
         Grid.Column="1"
-        Orientation="Horizontal">
-      <TextBlock Text="Height" />
-      <TextBox Text="{Binding Height}" />
-    </StackPanel>
+        Text="{Binding Width}" />
 
-    <StackPanel
+    <TextBlock
+        Grid.Row="1"
+        Grid.Column="2"
+        Text="Height" />
+    <TextBox
+        Grid.Row="1"
+        Grid.Column="3"
+        Text="{Binding Height}" />
+
+    <TextBlock
         Grid.Row="2"
-        IsVisible="{Binding IsCrop}"
-        Orientation="Horizontal">
-      <TextBlock Text="X offset" />
-      <TextBox Text="{Binding XOffset}" />
-    </StackPanel>
-
-    <StackPanel
+        Grid.Column="0"
+        IsVisible="{Binding !Scale}"
+        Text="X offset" />
+    <TextBox
         Grid.Row="2"
         Grid.Column="1"
-        IsVisible="{Binding IsCrop}"
-        Orientation="Horizontal">
-      <TextBlock Text="Y Offsset" />
-      <TextBox Text="{Binding YOffset}" />
-    </StackPanel>
+        IsVisible="{Binding !Scale}"
+        Text="{Binding XOffset}" />
+
+    <TextBlock
+        Grid.Row="2"
+        Grid.Column="2"
+        IsVisible="{Binding !Scale}"
+        Text="Y Offsset" />
+    <TextBox
+        Grid.Row="2"
+        Grid.Column="3"
+        IsVisible="{Binding !Scale}"
+        Text="{Binding YOffset}" />
 
     <Button
         Grid.Row="3"
+        Margin="4"
         Click="SyncValuesToCropControl"
         Content="Refresh cropping"
         ToolTip.Tip="Click here if you modified values maually and want to ui to sync up" />
     <Image
         x:Name="imageContainer"
         Grid.Row="4"
-        Grid.ColumnSpan="2"
+        Grid.ColumnSpan="4"
         Stretch="None" />
     <Canvas
         x:Name="cropCanvas"
         Grid.Row="4"
-        Grid.ColumnSpan="2"
+        Grid.ColumnSpan="4"
         IsVisible="{Binding IsCrop}"
         PointerMoved="PointerGestureRecognizer_PointerMoved"
         PointerPressed="PointerGestureRecognizer_PointerPressed"
         PointerReleased="PointerGestureRecognizer_PointerExited" />
     <StackPanel
         Grid.Row="5"
-        Grid.ColumnSpan="2"
+        Grid.ColumnSpan="4"
         Orientation="Horizontal">
       <TextBlock Text="Invert crop control colors" />
       <CheckBox x:Name="invColorsCheckbox" IsCheckedChanged="InvertColorsChanged" />

@@ -50,17 +50,29 @@ namespace CroppedImagePlugin
             }
         }
 
+        private TrackPayload currentTp;
+
         private void ImageCropViewTrack_DataContextChanged(object? sender, EventArgs e)
         {
             if (DataContext is TrackPayload tp)
             {
+                currentTp = tp;
+
+                void SetScaleConteiner()
+                {
+                    imageContainer.Stretch = Stretch.Fill;
+                    imageContainer.MaxWidth = currentTp.Width;
+                    imageContainer.MaxHeight = currentTp.Height;
+                    imageContainer.MinWidth = currentTp.Width;
+                    imageContainer.MinHeight = currentTp.Height;
+                }
+
                 void SetPictureFrameProperties()
                 {
                     if (tp.Scale)
                     {
-                        imageContainer.Stretch = Stretch.Fill;
-                        imageContainer.Width = tp.Width;
-                        imageContainer.Height = tp.Height;
+                        
+                        SetScaleConteiner();
                         cropCanvas.Children.Clear();
 
                         if (topLeftMarker != null)
@@ -82,6 +94,17 @@ namespace CroppedImagePlugin
                         CheckCropInit();
                     }
                 }
+
+                tp.PropertyChanged += (a, b) =>
+                {
+                    if (currentTp != null && currentTp.Scale)
+                    {
+                        if (b.PropertyName == nameof(TrackPayload.Width) || b.PropertyName == nameof(TrackPayload.Height))
+                        {
+                            SetScaleConteiner();
+                        }
+                    }
+                };
 
                 /*tp.PropertyChanged += (a, b) =>
                 {
@@ -156,6 +179,17 @@ namespace CroppedImagePlugin
 
                 SetLayoutBounds(topLeftMarker, newTopLeft);
                 SetLayoutBounds(bottomRightMarker, newBottomRight);
+            }
+
+            if (currentTp != null && !currentTp.Scale && topLeftMarker != null && bottomRightMarker != null)
+            {
+                var topLeft = GetLayoutBounds(topLeftMarker);
+                var bottomRight = GetLayoutBounds(bottomRightMarker);
+                currentTp.XOffset = (int)topLeft.Left;
+                currentTp.YOffset = (int)topLeft.Top;
+
+                currentTp.Width = (int)(bottomRight.Right - topLeft.Left);
+                currentTp.Height = (int)(bottomRight.Bottom - topLeft.Top);
             }
         }
 
@@ -322,7 +356,7 @@ namespace CroppedImagePlugin
                 if (b.PropertyName == nameof(ItemPayload.SourceBitmap))
                 {
                     SetImageProperties();                    
-                }
+                }                
             };
         }
 
