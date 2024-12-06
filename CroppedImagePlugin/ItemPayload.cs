@@ -13,11 +13,33 @@ namespace CroppedImagePlugin
         public string Source
         {
             get { return source; }
-            set { source = value; RaisePropertyChanged(nameof(Source)); RaisePropertyChanged(nameof(SourceBitmap)); }
+            set 
+            {
+                if (source != value)
+                {
+                    sourceBitmap = null;
+                }
+                source = value; 
+                RaisePropertyChanged(nameof(Source)); 
+                RaisePropertyChanged(nameof(SourceBitmap)); 
+            }
         }
 
+        private Bitmap sourceBitmap;
+
         [JsonIgnore]
-        public Bitmap SourceBitmap => File.Exists(Source) ? new Bitmap(Source) : null;
+        public Bitmap SourceBitmap 
+        {
+            get
+            {
+                if(sourceBitmap != null)
+                {
+                    return sourceBitmap;
+                }
+                sourceBitmap = File.Exists(Source) ? new Bitmap(Source) : null;
+                return sourceBitmap;
+            }            
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

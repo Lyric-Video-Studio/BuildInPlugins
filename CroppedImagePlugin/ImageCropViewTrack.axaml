@@ -68,8 +68,6 @@
         x:Name="cropCanvas"
         Grid.Row="4"
         Grid.ColumnSpan="2"
-        Width="{Binding #imageContainer.Width}"
-        Height="{Binding #imageContainer.Height}"
         IsVisible="{Binding IsCrop}"
         PointerMoved="PointerGestureRecognizer_PointerMoved"
         PointerPressed="PointerGestureRecognizer_PointerPressed"

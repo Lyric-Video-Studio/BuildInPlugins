@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 
 namespace CroppedImagePlugin
 {
@@ -25,7 +26,7 @@ namespace CroppedImagePlugin
             if (DataContext is TrackPayload tp && !tp.Scale)
             {
                 // DataContext set
-                if (tp.XOffset >= 0 && tp.YOffset >= 0 && tp.XOffset + tp.Width < imageContainer.Width && tp.YOffset + tp.Height < imageContainer.Height)
+                if (tp.XOffset >= 0 && tp.YOffset >= 0 && tp.XOffset + tp.Width < imageContainer.Bounds.Width && tp.YOffset + tp.Height < imageContainer.Bounds.Height)
                 {
                     if (topLeftMarker != null)
                     {
@@ -43,6 +44,8 @@ namespace CroppedImagePlugin
 
                     SetMarkers(new Point(tp.XOffset, tp.YOffset));
                     SetMarkers(new Point(tp.XOffset + tp.Width, tp.YOffset + tp.Height));
+
+                    InvertColorsChanged(null, null);
                 }
             }
         }
@@ -141,7 +144,7 @@ namespace CroppedImagePlugin
             if (elementToDrag != null)
             {
                 var isBottom = elementToDrag == bottomRightMarker;
-                var offset = isBottom ? -size : 0;
+                var offset = isBottom ? -size / 2 : 0;
                 SetLayoutBounds(elementToDrag, new Rect(relativeToContainerPosition.X + offset, relativeToContainerPosition.Y + offset, size, size));
             }
             else if (moveCenterStart != null && origTopLeft != null && origBottomRight != null)
@@ -252,7 +255,7 @@ namespace CroppedImagePlugin
 
         private void InvertColorsChanged(object? sender, RoutedEventArgs e)
         {
-            var color = invColorsCheckbox.IsChecked.Value ? Color.FromRgb(255, 255, 255) : Color.FromRgb(0, 0, 0);
+            var color = invColorsCheckbox!.IsChecked!.Value ? Color.FromRgb(255, 255, 255) : Color.FromRgb(0, 0, 0);
             var brush = new SolidColorBrush(color);
             if (topLeftMarker != null)
             {
@@ -276,17 +279,59 @@ namespace CroppedImagePlugin
         internal void SetItemPayload(ItemPayload ip)
         {
             void SetImageProperties()
-            {
-                imageContainer.Source = ip.SourceBitmap;    
+            {                
+                imageContainer.Source = ip.SourceBitmap;
+                // Source has changed, must set the width and heigh to match the picture
+                if (DataContext is TrackPayload trackPayload)
+                {
+                    if((trackPayload.Width + trackPayload.XOffset > ip.SourceBitmap.Size.Width || trackPayload.Height + trackPayload.YOffset > ip.SourceBitmap.Size.Height) && !trackPayload.Scale)
+                    {
+                        trackPayload.Width = (int)(ip.SourceBitmap.Size.Width * 0.75d);
+                        trackPayload.Height = (int)(ip.SourceBitmap.Size.Height * 0.75d);
+                        trackPayload.XOffset = (int)((ip.SourceBitmap.Size.Width * 0.25d) / 2);
+                        trackPayload.YOffset = (int)((ip.SourceBitmap.Size.Height * 0.25d) / 2);
+                    }
+
+                    if(ip.SourceBitmap != null && !trackPayload.Scale)
+                    {
+                        SetCanvasSize(cropCanvas, ip.SourceBitmap);
+                        SetCanvasSize(imageContainer, ip.SourceBitmap);
+                    }
+                }
+                CheckCropInit();
             }
             SetImageProperties();
+
+            /*Task.Run(() =>
+            {
+                try
+                {
+                    if (DataContext is TrackPayload tp)
+                    {
+                        var w = tp.Width;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw;
+                }
+            });*/
+
             ip.PropertyChanged += (a, b) =>
             {
                 if (b.PropertyName == nameof(ItemPayload.SourceBitmap))
                 {
-                    SetImageProperties();
+                    SetImageProperties();                    
                 }
             };
+        }
+
+        private void SetCanvasSize(Control v, Bitmap b)
+        {
+            v.MaxWidth = b.Size.Width;
+            v.MaxHeight = b.Size.Width;
+            v.MinWidth = b.Size.Width;
+            v.MinHeight = b.Size.Width;
         }
     }
 }

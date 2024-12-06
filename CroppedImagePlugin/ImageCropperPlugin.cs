@@ -1,9 +1,7 @@
 ﻿using Avalonia.Controls;
 using PluginBase;
 using SkiaSharp;
-using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 
 namespace CroppedImagePlugin
 {
