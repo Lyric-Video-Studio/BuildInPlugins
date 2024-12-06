@@ -198,6 +198,10 @@ namespace OpenAiTxtToImgPlugin
         {
             return JsonHelper.ToExactType<TrackPayload>(obj);
         }
+        public object ObjectToGeneralSettings(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<ConnectionSettings>(obj);
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

@@ -298,5 +298,9 @@ namespace CroppedImagePlugin
         {
             return JsonHelper.ToExactType<TrackPayload>(obj);
         }
+        public object ObjectToGeneralSettings(JsonObject obj)
+        {
+            return null;
+        }
     }
 }
