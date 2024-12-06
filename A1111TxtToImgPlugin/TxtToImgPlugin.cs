@@ -1,4 +1,5 @@
 ﻿using PluginBase;
+using System.Text.Json.Nodes;
 
 namespace A1111TxtToImgPlugin
 {
@@ -163,6 +164,16 @@ namespace A1111TxtToImgPlugin
                 return (false, "Positive prompt missing");
             }
             return (true, "");
+        }
+
+        public object ObjectToItemPayload(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<ItemPayload>(obj);
+        }
+
+        public object ObjectToTrackPayload(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<TrackPayload>(obj);
         }
     }
 }

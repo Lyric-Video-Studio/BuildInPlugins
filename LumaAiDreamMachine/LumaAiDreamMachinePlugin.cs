@@ -1,4 +1,5 @@
 ﻿using PluginBase;
+using System.Text.Json.Nodes;
 
 namespace LumaAiDreamMachinePlugin
 {
@@ -233,6 +234,16 @@ namespace LumaAiDreamMachinePlugin
         public void ContentUploaderProvided(IContentUploader uploader)
         {
             _uploader = uploader;
+        }
+
+        public object ObjectToItemPayload(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<ItemPayload>(obj);
+        }
+
+        public object ObjectToTrackPayload(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<TrackPayload>(obj);
         }
     }
 

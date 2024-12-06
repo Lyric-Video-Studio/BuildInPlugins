@@ -1,6 +1,7 @@
 ﻿using PluginBase;
 using OpenAI;
 using OpenAI.Images;
+using System.Text.Json.Nodes;
 
 namespace OpenAiTxtToImgPlugin
 {
@@ -186,6 +187,16 @@ namespace OpenAiTxtToImgPlugin
                 return (false, "Prompt missing");
             }
             return (true, "");
+        }
+
+        public object ObjectToItemPayload(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<ItemPayload>(obj);
+        }
+
+        public object ObjectToTrackPayload(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<TrackPayload>(obj);
         }
     }
 

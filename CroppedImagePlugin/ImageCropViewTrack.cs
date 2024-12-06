@@ -272,5 +272,21 @@ namespace CroppedImagePlugin
         {
             CheckCropInit();
         }
+
+        internal void SetItemPayload(ItemPayload ip)
+        {
+            void SetImageProperties()
+            {
+                imageContainer.Source = ip.SourceBitmap;    
+            }
+            SetImageProperties();
+            ip.PropertyChanged += (a, b) =>
+            {
+                if (b.PropertyName == nameof(ItemPayload.SourceBitmap))
+                {
+                    SetImageProperties();
+                }
+            };
+        }
     }
 }

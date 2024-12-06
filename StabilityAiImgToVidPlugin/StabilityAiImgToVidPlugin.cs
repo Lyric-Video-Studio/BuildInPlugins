@@ -1,5 +1,6 @@
 ﻿using PluginBase;
 using SkiaSharp;
+using System.Text.Json.Nodes;
 
 namespace StabilityAiImgToVidPlugin
 {
@@ -182,6 +183,16 @@ namespace StabilityAiImgToVidPlugin
         public void SetSaveAndRefreshCallback(Action saveAndRefreshCallback)
         {
             this.saveAndRefreshCallback = saveAndRefreshCallback;
+        }
+
+        public object ObjectToItemPayload(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<ItemPayload>(obj);
+        }
+
+        public object ObjectToTrackPayload(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<TrackPayload>(obj);
         }
     }
 

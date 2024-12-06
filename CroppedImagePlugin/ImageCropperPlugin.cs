@@ -1,6 +1,9 @@
 ﻿using Avalonia.Controls;
 using PluginBase;
 using SkiaSharp;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 namespace CroppedImagePlugin
 {
@@ -49,7 +52,13 @@ namespace CroppedImagePlugin
 
         public object DefaultPayloadForImageItem()
         {
-            return new ItemPayload();
+            currentItemPayload = new ItemPayload();
+            if (trackEdit != null)
+            {
+                // Track edit has been initialized first, set the image path
+                trackEdit.SetItemPayload(currentItemPayload);
+            }
+            return currentItemPayload;
         }
 
         public object DefaultPayloadForImageTrack()
@@ -83,7 +92,7 @@ namespace CroppedImagePlugin
                         {
                             var info = new SKImageInfo(newTp.Width, newTp.Height, img.ColorType);
                             var output = SKImage.Create(info);
-                            img.ScalePixels(output.PeekPixels(), SKFilterQuality.High);
+                            img.ScalePixels(output.PeekPixels(), SKSamplingOptions.Default);
 
                             using var memStream = new MemoryStream();
                             var codec = SKCodec.Create(newIp.Source);
@@ -187,7 +196,13 @@ namespace CroppedImagePlugin
 
         public object ItemPayloadFromImageSource(string imgSource)
         {
-            return new ItemPayload() { Source = imgSource };
+            currentItemPayload = new ItemPayload() { Source = imgSource };
+            if (trackEdit != null)
+            {
+                // Track edit has been initialized first, set the image path
+                trackEdit.SetItemPayload(currentItemPayload);
+            }
+            return currentItemPayload;
         }
 
         public (bool payloadOk, string reasonIfNot) ValidateImagePayload(object payload)
@@ -220,6 +235,13 @@ namespace CroppedImagePlugin
                 var cv = itemEdit ?? new ImageCropViewItem();
                 itemEdit = cv;
                 cv.DataContext = payload;
+
+                if (trackEdit != null)
+                {
+                    // Track edit has been initialized first, set the image path
+                    trackEdit.SetItemPayload(currentItemPayload);
+                }
+
                 return cv;
             }
             return null;
@@ -234,6 +256,12 @@ namespace CroppedImagePlugin
                 var cv = trackEdit ?? new ImageCropViewTrack();
                 trackEdit = cv;
                 cv.DataContext = tp;
+
+                if (currentItemPayload != null)
+                {
+                    // Item payload was initialized first, set it to view to enable user friendly cropping
+                    trackEdit.SetItemPayload(currentItemPayload);
+                }
 
                 return cv;
             }
@@ -261,6 +289,16 @@ namespace CroppedImagePlugin
             trackEdit = null;
             currentItemPayload = null;
             itemEdit = null;
+        }
+
+        public object ObjectToItemPayload(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<ItemPayload>(obj);
+        }
+
+        public object ObjectToTrackPayload(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<TrackPayload>(obj);
         }
     }
 }

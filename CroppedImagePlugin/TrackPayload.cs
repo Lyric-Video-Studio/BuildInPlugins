@@ -2,7 +2,7 @@
 
 namespace CroppedImagePlugin
 {
-    internal class TrackPayload : INotifyPropertyChanged
+    public class TrackPayload : INotifyPropertyChanged
     {
         private int width;
         private int height;

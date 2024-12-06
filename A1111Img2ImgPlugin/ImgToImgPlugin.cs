@@ -1,4 +1,5 @@
 ﻿using PluginBase;
+using System.Text.Json.Nodes;
 
 namespace A1111ImgToImgPlugin
 {
@@ -311,6 +312,16 @@ namespace A1111ImgToImgPlugin
         public void SetProgressCallback(Action<(int currentProgress, int maxProgress)> action)
         {
             progressAction = action;
+        }
+
+        public object ObjectToItemPayload(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<ItemPayload>(obj);
+        }
+
+        public object ObjectToTrackPayload(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<TrackPayload>(obj);
         }
     }
 }

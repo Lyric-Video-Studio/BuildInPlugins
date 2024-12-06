@@ -1,4 +1,5 @@
 ﻿using PluginBase;
+using System.Text.Json.Nodes;
 
 namespace StabilityAiTxtToImgPlugin
 {
@@ -157,6 +158,16 @@ namespace StabilityAiTxtToImgPlugin
                 return (false, "Prompt missing");
             }
             return (true, "");
+        }
+
+        public object ObjectToItemPayload(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<ItemPayload>(obj);
+        }
+
+        public object ObjectToTrackPayload(JsonObject obj)
+        {
+            return JsonHelper.ToExactType<TrackPayload>(obj);
         }
     }
 
