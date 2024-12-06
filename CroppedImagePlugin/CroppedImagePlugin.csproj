@@ -3,25 +3,23 @@
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Nullable>enable</Nullable>
     <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <BaseOutputPath>..\..\MainApp\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\AppX\plugins</BaseOutputPath>
+    <BaseOutputPath>..\..\LyricVideoStudio.Desktop\bin\Debug\net9.0-windows10.0.19041.0\win-x64\plugins</BaseOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="bin\**" />
-    <EmbeddedResource Remove="bin\**" />
-    <MauiCss Remove="bin\**" />
-    <MauiXaml Remove="bin\**" />
-    <None Remove="bin\**" />
+    <!-- Add the 'Watch' directive to watch for XAML file changes. -->
+    <Watch Include="**\*.axaml" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.10" />
-    <PackageReference Include="SkiaSharp" Version="2.88.9" />
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="SkiaSharp" Version="3.118.0-preview.1.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,14 +27,5 @@
       <Private>false</Private>
       <ExcludeAssets>runtime</ExcludeAssets>
     </ProjectReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <MauiXaml Update="ImageCropViewTrack.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </MauiXaml>
-    <MauiXaml Update="ImageCropViewItem.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </MauiXaml>
   </ItemGroup>
 </Project>

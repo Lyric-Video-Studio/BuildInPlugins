@@ -1,34 +1,40 @@
-﻿namespace CroppedImagePlugin
+﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Media;
+
+namespace CroppedImagePlugin
 {
-    public partial class ImageCropViewTrack : ContentView
+    public partial class ImageCropViewTrack : UserControl
     {
         public ImageCropViewTrack()
         {
             InitializeComponent();
-            BindingContextChanged += ImageCropViewTrack_BindingContextChanged;
+            DataContextChanged += ImageCropViewTrack_DataContextChanged;
             imageContainer.SizeChanged += ImageContainer_SizeChanged;
         }
 
-        private void ImageContainer_SizeChanged(object sender, EventArgs e)
+        private void ImageContainer_SizeChanged(object? sender, EventArgs e)
         {
             CheckCropInit();
         }
 
         private void CheckCropInit()
         {
-            if (BindingContext is TrackPayload tp && !tp.Scale)
+            if (DataContext is TrackPayload tp && !tp.Scale)
             {
-                // Bindingcontext set
+                // DataContext set
                 if (tp.XOffset >= 0 && tp.YOffset >= 0 && tp.XOffset + tp.Width < imageContainer.Width && tp.YOffset + tp.Height < imageContainer.Height)
                 {
                     if (topLeftMarker != null)
                     {
-                        cropCanvas.Remove(topLeftMarker);
+                        cropCanvas.Children.Remove(topLeftMarker);
                         topLeftMarker.PropertyChanged -= Marker_PropertyChanged;
                     }
                     if (bottomRightMarker != null)
                     {
-                        cropCanvas.Remove(bottomRightMarker);
+                        cropCanvas.Children.Remove(bottomRightMarker);
                         bottomRightMarker.PropertyChanged -= Marker_PropertyChanged;
                     }
 
@@ -41,18 +47,18 @@
             }
         }
 
-        private void ImageCropViewTrack_BindingContextChanged(object sender, EventArgs e)
+        private void ImageCropViewTrack_DataContextChanged(object? sender, EventArgs e)
         {
-            if (BindingContext is TrackPayload tp)
+            if (DataContext is TrackPayload tp)
             {
                 void SetPictureFrameProperties()
                 {
                     if (tp.Scale)
                     {
-                        imageContainer.Aspect = Aspect.Fill;
-                        imageContainer.WidthRequest = tp.Width;
-                        imageContainer.HeightRequest = tp.Height;
-                        cropCanvas.Clear();
+                        imageContainer.Stretch = Stretch.Fill;
+                        imageContainer.Width = tp.Width;
+                        imageContainer.Height = tp.Height;
+                        cropCanvas.Children.Clear();
 
                         if (topLeftMarker != null)
                         {
@@ -69,9 +75,7 @@
                     }
                     else
                     {
-                        imageContainer.Aspect = Aspect.Center;
-                        imageContainer.WidthRequest = -1;
-                        imageContainer.HeightRequest = -1;
+                        imageContainer.Stretch = Stretch.None;
                         CheckCropInit();
                     }
                 }
@@ -98,28 +102,6 @@
         private Border bottomRightMarker;
         private Border fullCrop;
 
-        internal void SetItemPayload(ItemPayload ip)
-        {
-            void SetImagePrroperties()
-            {
-                imageContainer.Source = ip.Source;
-
-                if (!string.IsNullOrEmpty(ip.Source))
-                {
-                }
-            }
-
-            SetImagePrroperties();
-
-            ip.PropertyChanged += (a, b) =>
-            {
-                if (b.PropertyName == nameof(ItemPayload.Source))
-                {
-                    SetImagePrroperties();
-                }
-            };
-        }
-
         private int size = 10;
 
         private void CheckFullCrop()
@@ -129,20 +111,20 @@
                 if (fullCrop == null)
                 {
                     fullCrop = new Border();
-                    fullCrop.Stroke = Color.FromRgb(0, 0, 0);
-                    fullCrop.StrokeThickness = 2;
-                    cropCanvas.Insert(0, fullCrop);
+                    fullCrop.BorderBrush = new SolidColorBrush(Color.FromRgb(0, 0, 0));
+                    fullCrop.BorderThickness = new Thickness(2);
+                    cropCanvas.Children.Insert(0, fullCrop);
                 }
 
-                var topLeft = cropCanvas.GetLayoutBounds(topLeftMarker);
-                var bottomRight = cropCanvas.GetLayoutBounds(bottomRightMarker);
+                var topLeft = GetLayoutBounds(topLeftMarker);
+                var bottomRight = GetLayoutBounds(bottomRightMarker);
 
                 var width = bottomRight.X - topLeft.X;
                 var heigth = bottomRight.Y - topLeft.Y;
 
-                cropCanvas.SetLayoutBounds(fullCrop, new Rect(topLeft.X, topLeft.Y, width + size, heigth + size));
+                SetLayoutBounds(fullCrop, new Rect(topLeft.X, topLeft.Y, width + size, heigth + size));
 
-                if (BindingContext is TrackPayload tp)
+                if (DataContext is TrackPayload tp)
                 {
                     tp.XOffset = (int)topLeft.X;
                     tp.YOffset = (int)topLeft.Y;
@@ -153,29 +135,36 @@
             }
         }
 
-        internal void PointerGestureRecognizer_PointerMoved(object sender, PointerEventArgs e)
+        internal void PointerGestureRecognizer_PointerMoved(object? sender, PointerEventArgs e)
         {
-            var relativeToContainerPosition = e.GetPosition(imageContainer) ?? new Point();
+            var relativeToContainerPosition = e.GetPosition(imageContainer);
             if (elementToDrag != null)
             {
                 var isBottom = elementToDrag == bottomRightMarker;
                 var offset = isBottom ? -size : 0;
-                var newRect = new Rect(relativeToContainerPosition.X + offset, relativeToContainerPosition.Y + offset, size, size);
-                cropCanvas.SetLayoutBounds(elementToDrag, new Rect(relativeToContainerPosition.X + offset, relativeToContainerPosition.Y + offset, size, size));
+                SetLayoutBounds(elementToDrag, new Rect(relativeToContainerPosition.X + offset, relativeToContainerPosition.Y + offset, size, size));
             }
             else if (moveCenterStart != null && origTopLeft != null && origBottomRight != null)
             {
                 var delta = relativeToContainerPosition - moveCenterStart.Value;
 
-                var newTopLeft = origTopLeft.Value.Offset(delta.Width, delta.Height);
-                var newBottomRight = origBottomRight.Value.Offset(delta.Width, delta.Height);
+                var newTopLeft = origTopLeft.Value.Translate(new Vector(delta.X, delta.Y));
+                var newBottomRight = origBottomRight.Value.Translate(new Vector(delta.X, delta.Y));
 
-                cropCanvas.SetLayoutBounds(topLeftMarker, newTopLeft);
-                cropCanvas.SetLayoutBounds(bottomRightMarker, newBottomRight);
+                SetLayoutBounds(topLeftMarker, newTopLeft);
+                SetLayoutBounds(bottomRightMarker, newBottomRight);
             }
         }
 
-        internal void PointerGestureRecognizer_PointerExited(object sender, PointerEventArgs e)
+        private void SetLayoutBounds(Border elementToDrag, Rect rect)
+        {
+            Canvas.SetLeft(elementToDrag, rect.Left);
+            Canvas.SetTop(elementToDrag, rect.Top);
+            Canvas.SetRight(elementToDrag, rect.Right);
+            Canvas.SetBottom(elementToDrag, rect.Bottom);
+        }
+
+        internal void PointerGestureRecognizer_PointerExited(object? sender, PointerReleasedEventArgs e)
         {
             elementToDrag = null;
             moveCenterStart = null;
@@ -183,11 +172,11 @@
             origBottomRight = null;
         }
 
-        internal void PointerGestureRecognizer_PointerPressed(object sender, PointerEventArgs e)
+        internal void PointerGestureRecognizer_PointerPressed(object? sender, PointerPressedEventArgs e)
         {
-            if (BindingContext is TrackPayload tp && !tp.Scale)
+            if (DataContext is TrackPayload tp && !tp.Scale)
             {
-                var relativeToContainerPosition = e.GetPosition(imageContainer) ?? new Point();
+                var relativeToContainerPosition = e.GetPosition(imageContainer);
                 SetMarkers(relativeToContainerPosition);
             }
         }
@@ -204,8 +193,8 @@
             }
             else
             {
-                var topLeft = cropCanvas.GetLayoutBounds(topLeftMarker);
-                var bottomRight = cropCanvas.GetLayoutBounds(bottomRightMarker);
+                var topLeft = GetLayoutBounds(topLeftMarker);
+                var bottomRight = GetLayoutBounds(bottomRightMarker);
 
                 if (topLeft.Contains(relativeToContainerPosition))
                 {
@@ -226,6 +215,11 @@
             }
         }
 
+        private Rect GetLayoutBounds(Border target)
+        {
+            return new Rect(new Point(Canvas.GetLeft(target), Canvas.GetTop(target)), new Point(Canvas.GetRight(target), Canvas.GetBottom(target)));
+        }
+
         private Border elementToDrag;
         private Point? moveCenterStart;
         private Rect? origTopLeft;
@@ -234,43 +228,47 @@
         private void SetElement(ref Border marker, Point relativeToContainerPosition, bool isBottomRight)
         {
             marker = new Border();
-            marker.Stroke = Color.FromRgb(0, 0, 0);
-            marker.StrokeThickness = 2;
-            marker.BackgroundColor = Color.FromRgb(1, 1, 1);
+            marker.BorderBrush = new SolidColorBrush(Color.FromRgb(0, 0, 0));
+            marker.BorderThickness = new Thickness(2);
+            marker.Background = new SolidColorBrush(Color.FromRgb(1, 1, 1));
 
             marker.PropertyChanged += Marker_PropertyChanged;
             var offset = isBottomRight ? -size : 0;
 
-            cropCanvas.Add(marker);
-            cropCanvas.SetLayoutBounds(marker, new Rect(relativeToContainerPosition.X + offset, relativeToContainerPosition.Y + offset, size, size));
+            cropCanvas.Children.Add(marker);
+            Canvas.SetLeft(marker, relativeToContainerPosition.X + offset);
+            Canvas.SetTop(marker, relativeToContainerPosition.Y + offset);
+            Canvas.SetRight(marker, relativeToContainerPosition.X + offset + size);
+            Canvas.SetBottom(marker, relativeToContainerPosition.Y + offset + size);
         }
 
-        private void Marker_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void Marker_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "LayoutBounds")
+            if (e.Property.Name == "LayoutBounds")
             {
                 CheckFullCrop();
             }
         }
 
-        private void InvertColorsChanged(object sender, CheckedChangedEventArgs e)
+        private void InvertColorsChanged(object? sender, RoutedEventArgs e)
         {
-            var color = e.Value ? Color.FromRgb(255, 255, 255) : Color.FromRgb(0, 0, 0);
+            var color = invColorsCheckbox.IsChecked.Value ? Color.FromRgb(255, 255, 255) : Color.FromRgb(0, 0, 0);
+            var brush = new SolidColorBrush(color);
             if (topLeftMarker != null)
             {
-                topLeftMarker.Stroke = color;
+                topLeftMarker.BorderBrush = brush;
             }
             if (bottomRightMarker != null)
             {
-                bottomRightMarker.Stroke = color;
+                bottomRightMarker.BorderBrush = brush;
             }
             if (fullCrop != null)
             {
-                fullCrop.Stroke = color;
+                fullCrop.BorderBrush = brush;
             }
         }
 
-        public void SyncValuesToCropControl(object sender, EventArgs e)
+        public void SyncValuesToCropControl(object? sender, RoutedEventArgs e)
         {
             CheckCropInit();
         }

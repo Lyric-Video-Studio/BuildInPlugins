@@ -1,25 +1,30 @@
-﻿namespace CroppedImagePlugin
+﻿using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Threading;
+using PluginBase;
+
+namespace CroppedImagePlugin
 {
-    public partial class ImageCropViewItem : ContentView
+    public partial class ImageCropViewItem : UserControl
     {
         public ImageCropViewItem()
         {
             InitializeComponent();
         }
 
-        private void PickFile(object sender, EventArgs e)
+        private void PickFile(object? sender, RoutedEventArgs e)
         {
             Task.Run(async () =>
             {
-                var res = await FilePicker.PickAsync(PickOptions.Images);
+                var res = await FilePicker.PickAsync("", fileTypes: [.. CommonConstants.ImgTypes]);
 
-                if (!string.IsNullOrEmpty(res.FullPath))
+                if (res.IsSuccessful && !string.IsNullOrEmpty(res.File.Path))
                 {
-                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    await Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        if (BindingContext is ItemPayload ip)
+                        if (DataContext is ItemPayload ip)
                         {
-                            ip.Source = res.FullPath;
+                            ip.Source = res.File.Path;
                         }
                     });
                 }

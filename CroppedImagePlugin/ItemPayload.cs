@@ -1,5 +1,7 @@
-﻿using PluginBase;
+﻿using Avalonia.Media.Imaging;
+using PluginBase;
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace CroppedImagePlugin
 {
@@ -11,8 +13,11 @@ namespace CroppedImagePlugin
         public string Source
         {
             get { return source; }
-            set { source = value; RaisePropertyChanged(nameof(Source)); }
+            set { source = value; RaisePropertyChanged(nameof(Source)); RaisePropertyChanged(nameof(SourceBitmap)); }
         }
+
+        [JsonIgnore]
+        public Bitmap SourceBitmap => File.Exists(Source) ? new Bitmap(Source) : null;
 
         public event PropertyChangedEventHandler PropertyChanged;
 

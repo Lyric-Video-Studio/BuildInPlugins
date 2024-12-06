@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="CroppedImagePlugin.ImageCropViewTrack"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:CroppedImagePlugin"
+    x:DataType="local:TrackPayload">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
+
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Mode (crop/scale)" />
+      <ToggleSwitch IsChecked="{Binding Scale}" />
+    </StackPanel>
+
+    <StackPanel Grid.Row="1" Orientation="Horizontal">
+      <TextBlock Text="Width" />
+      <TextBox Text="{Binding Width}" />
+    </StackPanel>
+
+    <StackPanel
+        Grid.Row="1"
+        Grid.Column="1"
+        Orientation="Horizontal">
+      <TextBlock Text="Height" />
+      <TextBox Text="{Binding Height}" />
+    </StackPanel>
+
+    <StackPanel
+        Grid.Row="2"
+        IsVisible="{Binding IsCrop}"
+        Orientation="Horizontal">
+      <TextBlock Text="X offset" />
+      <TextBox Text="{Binding XOffset}" />
+    </StackPanel>
+
+    <StackPanel
+        Grid.Row="2"
+        Grid.Column="1"
+        IsVisible="{Binding IsCrop}"
+        Orientation="Horizontal">
+      <TextBlock Text="Y Offsset" />
+      <TextBox Text="{Binding YOffset}" />
+    </StackPanel>
+
+    <Button
+        Grid.Row="3"
+        Click="SyncValuesToCropControl"
+        Content="Refresh cropping"
+        ToolTip.Tip="Click here if you modified values maually and want to ui to sync up" />
+    <Image
+        x:Name="imageContainer"
+        Grid.Row="4"
+        Grid.ColumnSpan="2"
+        Stretch="None" />
+    <Canvas
+        x:Name="cropCanvas"
+        Grid.Row="4"
+        Grid.ColumnSpan="2"
+        Width="{Binding #imageContainer.Width}"
+        Height="{Binding #imageContainer.Height}"
+        IsVisible="{Binding IsCrop}"
+        PointerMoved="PointerGestureRecognizer_PointerMoved"
+        PointerPressed="PointerGestureRecognizer_PointerPressed"
+        PointerReleased="PointerGestureRecognizer_PointerExited" />
+    <StackPanel
+        Grid.Row="5"
+        Grid.ColumnSpan="2"
+        Orientation="Horizontal">
+      <TextBlock Text="Invert crop control colors" />
+      <CheckBox x:Name="invColorsCheckbox" IsCheckedChanged="InvertColorsChanged" />
+    </StackPanel>
+  </Grid>
+</UserControl>

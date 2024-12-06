@@ -1,4 +1,5 @@
-﻿using PluginBase;
+﻿using Avalonia.Controls;
+using PluginBase;
 using SkiaSharp;
 
 namespace CroppedImagePlugin
@@ -211,21 +212,14 @@ namespace CroppedImagePlugin
         // I want to actually edit the image offsets in track mode, so that is diable with some tricks
         private ItemPayload currentItemPayload;
 
-        public ContentView GetItemPayloadEditingUi(object payload)
+        public UserControl GetItemPayloadEditingUi(object payload)
         {
             if (payload is ItemPayload ip)
             {
                 currentItemPayload = ip;
                 var cv = itemEdit ?? new ImageCropViewItem();
                 itemEdit = cv;
-                cv.BindingContext = payload;
-
-                if (trackEdit != null)
-                {
-                    // Track edit has been initialized first, set the image path
-                    trackEdit.SetItemPayload(currentItemPayload);
-                }
-
+                cv.DataContext = payload;
                 return cv;
             }
             return null;
@@ -233,19 +227,13 @@ namespace CroppedImagePlugin
 
         private ImageCropViewTrack trackEdit;
 
-        public ContentView GetTrackPayloadEditingUi(object payload)
+        public UserControl GetTrackPayloadEditingUi(object payload)
         {
             if (payload is TrackPayload tp)
             {
                 var cv = trackEdit ?? new ImageCropViewTrack();
                 trackEdit = cv;
-                cv.BindingContext = tp;
-
-                if (currentItemPayload != null)
-                {
-                    // Item payload was initialized first, set it to view to enable user friendly cropping
-                    trackEdit.SetItemPayload(currentItemPayload);
-                }
+                cv.DataContext = tp;
 
                 return cv;
             }
@@ -254,19 +242,13 @@ namespace CroppedImagePlugin
 
         private ImageCropViewTrack trackEditOverride;
 
-        public ContentView GetTrackOverridePayloadEditingUi(object payload)
+        public UserControl GetTrackOverridePayloadEditingUi(object payload)
         {
             if (payload is TrackPayload tp)
             {
                 var cv = trackEditOverride ?? new ImageCropViewTrack();
                 trackEditOverride = cv;
-                cv.BindingContext = tp;
-
-                if (currentItemPayload != null)
-                {
-                    // Item payload was initialized first, set it to view to enable user friendly cropping
-                    trackEditOverride.SetItemPayload(currentItemPayload);
-                }
+                cv.DataContext = tp;
 
                 return cv;
             }
