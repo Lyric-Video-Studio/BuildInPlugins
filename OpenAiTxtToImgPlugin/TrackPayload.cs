@@ -27,7 +27,8 @@ namespace OpenAiTxtToImgPlugin
         public string Style { get; set; }
 
 
-        public string User { get; set; }
+        public string User { get; set; }   
+
 
         public TrackPayload(string prompt, Model model = null, int numberOfResults = 1, string quality = null, ImageResponseFormat responseFormat = ImageResponseFormat.Url, string size = null, string style = null, string user = null)
         {

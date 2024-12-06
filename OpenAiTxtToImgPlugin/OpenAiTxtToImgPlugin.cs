@@ -37,12 +37,16 @@ namespace OpenAiTxtToImgPlugin
 
         private string[] GetFunctionPropertyArray(string prop)
         {
-            return typeof(ImageGenerationRequest).GetProperties()
+            var prope = typeof(ImageGenerationRequest).GetProperties()
                 .Where(p => p.Name == prop)
-                .FirstOrDefault()?
+                .FirstOrDefault();
+
+            var fpa = prope?
                 .GetCustomAttributes(false)?
                 .OfType<FunctionPropertyAttribute>()?
-                .FirstOrDefault()?
+                .FirstOrDefault();
+
+            return fpa?
                 .PossibleValues?
                 .OfType<string>()?
                 .ToArray();
@@ -123,7 +127,7 @@ namespace OpenAiTxtToImgPlugin
 
         public object CopyPayloadForImageTrack(object obj)
         {
-            if (JsonHelper.DeepCopy<ImageGenerationRequest>(obj) is ImageGenerationRequest set)
+            if (JsonHelper.DeepCopy<TrackPayload>(obj) is TrackPayload set)
             {
                 return set;
             }
@@ -141,7 +145,7 @@ namespace OpenAiTxtToImgPlugin
 
         public object DeserializePayload(string fileName)
         {
-            return JsonHelper.Deserialize<ImageGenerationRequest>(fileName);
+            return JsonHelper.Deserialize<ItemPayload>(fileName);
         }
 
         public IPluginBase CreateNewInstance()
