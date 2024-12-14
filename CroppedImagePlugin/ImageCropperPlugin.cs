@@ -131,24 +131,35 @@ namespace CroppedImagePlugin
                             var imgWidth = img.Width;
                             var imgHeight = img.Height;
                             var targetRect = new Rect(newTp.XOffset, newTp.YOffset, newTp.Width, newTp.Height);
-                            for (var i = 0; i < imgHeight; i++)
-                            {
-                                for (var j = 0; j < imgWidth; j++)
-                                {
-                                    var pixXCoord = j;
-                                    var pixYCoord = (i * imgHeight);
-                                    var index = pixXCoord + pixYCoord;
 
-                                    if (targetRect.Contains(new Point(j, i)))
+                            /*for (var y = 1; y < imgHeight - 1; y++)
+                            {
+                                var rowOffset = y * imgWidth;
+                                var rowOffsetTarget = (imgHeight - y - 1) * imgWidth;
+                                for (var x = 0; x < imgWidth; x++)
+                                {
+                                    var pix = sourcePixels[rowOffset - imgWidth + x];
+                                    targetPixels[rowOffsetTarget - imgWidth + x] = pix;
+                                }
+                            }*/
+
+                            for (var y = 1; y < imgHeight - 1; y++)
+                            {
+                                for (var x = 0; x < imgWidth; x++)
+                                {
+                                    var rowOffset = y * imgWidth;
+                                    var pixXCoord = x;
+                                    var pixYCoord = (y * imgHeight);
+
+                                    if (targetRect.Contains(new Point(x, y - 1)))
                                     {
                                         try
                                         {
-                                            var pix = pixels[index];
-                                            //var targetIndex = (j - newTp.XOffset) * (i - newTp.YOffset);
+                                            var pix = pixels[rowOffset - imgWidth + x];
 
-                                            var targetPixXCoord = j - newTp.XOffset;
-                                            var targetPixYCoord = ((i - newTp.YOffset) * newTp.Height);
-                                            var targetIndex = targetPixXCoord + targetPixYCoord;
+                                            var targetPixXCoord = x - newTp.XOffset;
+                                            var rowOffsetTarget = (y - newTp.YOffset) * newTp.Width;
+                                            var targetIndex = rowOffsetTarget - newTp.Width + targetPixXCoord;
 
                                             if (targetIndex < targetPixels.Length)
                                             {
