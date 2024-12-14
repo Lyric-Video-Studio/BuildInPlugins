@@ -71,7 +71,6 @@ namespace CroppedImagePlugin
                 {
                     if (tp.Scale)
                     {
-                        
                         SetScaleConteiner();
                         cropCanvas.Children.Clear();
 
@@ -313,23 +312,27 @@ namespace CroppedImagePlugin
         internal void SetItemPayload(ItemPayload ip)
         {
             void SetImageProperties()
-            {                
+            {
                 imageContainer.Source = ip.SourceBitmap;
                 // Source has changed, must set the width and heigh to match the picture
                 if (DataContext is TrackPayload trackPayload)
                 {
-                    if((trackPayload.Width + trackPayload.XOffset > ip.SourceBitmap.Size.Width || trackPayload.Height + trackPayload.YOffset > ip.SourceBitmap.Size.Height) && !trackPayload.Scale)
+                    if (ip.SourceBitmap != null)
                     {
-                        trackPayload.Width = (int)(ip.SourceBitmap.Size.Width * 0.75d);
-                        trackPayload.Height = (int)(ip.SourceBitmap.Size.Height * 0.75d);
-                        trackPayload.XOffset = (int)((ip.SourceBitmap.Size.Width * 0.25d) / 2);
-                        trackPayload.YOffset = (int)((ip.SourceBitmap.Size.Height * 0.25d) / 2);
+                        AssingValuesFromSource(trackPayload, ip);
                     }
-
-                    if(ip.SourceBitmap != null && !trackPayload.Scale)
+                    else
                     {
-                        SetCanvasSize(cropCanvas, ip.SourceBitmap);
-                        SetCanvasSize(imageContainer, ip.SourceBitmap);
+                        ip.PropertyChanged += (s, p) =>
+                        {
+                            if (p.PropertyName == nameof(ItemPayload.Source))
+                            {
+                                if (ip.SourceBitmap != null)
+                                {
+                                    AssingValuesFromSource(trackPayload, ip);
+                                }
+                            }
+                        };
                     }
                 }
                 CheckCropInit();
@@ -355,9 +358,26 @@ namespace CroppedImagePlugin
             {
                 if (b.PropertyName == nameof(ItemPayload.SourceBitmap))
                 {
-                    SetImageProperties();                    
-                }                
+                    SetImageProperties();
+                }
             };
+        }
+
+        private void AssingValuesFromSource(TrackPayload trackPayload, ItemPayload ip)
+        {
+            if ((trackPayload.Width + trackPayload.XOffset > ip.SourceBitmap.Size.Width || trackPayload.Height + trackPayload.YOffset > ip.SourceBitmap.Size.Height) && !trackPayload.Scale)
+            {
+                trackPayload.Width = (int)(ip.SourceBitmap.Size.Width * 0.75d);
+                trackPayload.Height = (int)(ip.SourceBitmap.Size.Height * 0.75d);
+                trackPayload.XOffset = (int)((ip.SourceBitmap.Size.Width * 0.25d) / 2);
+                trackPayload.YOffset = (int)((ip.SourceBitmap.Size.Height * 0.25d) / 2);
+            }
+
+            if (!trackPayload.Scale)
+            {
+                SetCanvasSize(cropCanvas, ip.SourceBitmap);
+                SetCanvasSize(imageContainer, ip.SourceBitmap);
+            }
         }
 
         private void SetCanvasSize(Control v, Bitmap b)

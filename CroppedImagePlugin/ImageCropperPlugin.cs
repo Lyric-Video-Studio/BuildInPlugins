@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
 using PluginBase;
 using SkiaSharp;
 using System.Text.Json.Nodes;
@@ -123,34 +124,46 @@ namespace CroppedImagePlugin
 
                             var pixels = img.Pixels;
 
-                            int targetIndex = 0;
                             using var newImg = new SKBitmap(newTp.Width, newTp.Height);
 
-                            // Kait se toimii kun on kerran koodattu :D
-                            for (int i = 0; i < img.Width; i++)
+                            var targetPixels = newImg.Pixels;
+
+                            var imgWidth = img.Width;
+                            var imgHeight = img.Height;
+                            var targetRect = new Rect(newTp.XOffset, newTp.YOffset, newTp.Width, newTp.Height);
+                            for (var i = 0; i < imgHeight; i++)
                             {
-                                for (int j = 0; j < img.Height; j++)
+                                for (var j = 0; j < imgWidth; j++)
                                 {
-                                    // Inside left and top
-                                    if (i >= newTp.XOffset && j >= newTp.YOffset)
+                                    var pixXCoord = j;
+                                    var pixYCoord = (i * imgHeight);
+                                    var index = pixXCoord + pixYCoord;
+
+                                    if (targetRect.Contains(new Point(j, i)))
                                     {
-                                        // Inside right and bottom
-                                        if (i < newTp.XOffset + newTp.Width && j < newTp.YOffset + newTp.Height)
+                                        try
                                         {
-                                            try
+                                            var pix = pixels[index];
+                                            //var targetIndex = (j - newTp.XOffset) * (i - newTp.YOffset);
+
+                                            var targetPixXCoord = j - newTp.XOffset;
+                                            var targetPixYCoord = ((i - newTp.YOffset) * newTp.Height);
+                                            var targetIndex = targetPixXCoord + targetPixYCoord;
+
+                                            if (targetIndex < targetPixels.Length)
                                             {
-                                                var pix = img.GetPixel(i, j);
-                                                newImg.SetPixel(i - newTp.XOffset, j - newTp.YOffset, pix);
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                return Task.FromResult(new ImageResponse { ErrorMsg = $"Failed to manipulate pixels: {ex.Message}" });
+                                                targetPixels[targetIndex] = pix;
                                             }
                                         }
+                                        catch (Exception ex)
+                                        {
+                                            return Task.FromResult(new ImageResponse { ErrorMsg = $"Failed to manipulate pixels: {ex.Message}" });
+                                        }
                                     }
-                                    targetIndex++;
                                 }
                             }
+
+                            newImg.Pixels = targetPixels;
 
                             using var memStream = new MemoryStream();
                             var codec = SKCodec.Create(newIp.Source);
@@ -298,6 +311,7 @@ namespace CroppedImagePlugin
         {
             return JsonHelper.ToExactType<TrackPayload>(obj);
         }
+
         public object ObjectToGeneralSettings(JsonObject obj)
         {
             return null;
