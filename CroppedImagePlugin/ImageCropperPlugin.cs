@@ -132,24 +132,11 @@ namespace CroppedImagePlugin
                             var imgHeight = img.Height;
                             var targetRect = new Rect(newTp.XOffset, newTp.YOffset, newTp.Width, newTp.Height);
 
-                            /*for (var y = 1; y < imgHeight - 1; y++)
-                            {
-                                var rowOffset = y * imgWidth;
-                                var rowOffsetTarget = (imgHeight - y - 1) * imgWidth;
-                                for (var x = 0; x < imgWidth; x++)
-                                {
-                                    var pix = sourcePixels[rowOffset - imgWidth + x];
-                                    targetPixels[rowOffsetTarget - imgWidth + x] = pix;
-                                }
-                            }*/
-
                             for (var y = 1; y < imgHeight - 1; y++)
                             {
                                 for (var x = 0; x < imgWidth; x++)
                                 {
                                     var rowOffset = y * imgWidth;
-                                    var pixXCoord = x;
-                                    var pixYCoord = (y * imgHeight);
 
                                     if (targetRect.Contains(new Point(x, y - 1)))
                                     {
