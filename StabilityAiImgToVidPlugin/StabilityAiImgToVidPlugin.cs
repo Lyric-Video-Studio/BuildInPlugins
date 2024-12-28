@@ -194,6 +194,7 @@ namespace StabilityAiImgToVidPlugin
         {
             return JsonHelper.ToExactType<TrackPayload>(obj);
         }
+
         public object ObjectToGeneralSettings(JsonObject obj)
         {
             return JsonHelper.ToExactType<ConnectionSettings>(obj);
