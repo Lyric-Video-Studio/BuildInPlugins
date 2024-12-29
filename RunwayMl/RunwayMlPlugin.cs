@@ -54,6 +54,12 @@ namespace RunwayMlPlugin
                 {
                     newTp.Request.seed = newIp.Request.seed.Value;
                 }
+                else if (itemsPayload is ItemPayload ipOld)
+                {
+                    ipOld.Request.seed = new Random().Next(1, int.MaxValue);
+                    saveAndRefreshCallback.Invoke();
+                    newTp.Request.seed = ipOld.Request.seed;
+                }
 
                 if (string.IsNullOrEmpty(newIp.Request.ratio))
                 {
@@ -255,6 +261,7 @@ namespace RunwayMlPlugin
         {
             return JsonHelper.ToExactType<TrackPayload>(obj);
         }
+
         public object ObjectToGeneralSettings(JsonObject obj)
         {
             return JsonHelper.ToExactType<ConnectionSettings>(obj);
