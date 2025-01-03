@@ -43,7 +43,7 @@ namespace CroppedImagePlugin
 
         public bool IsCrop => !Scale;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void RaisePropertyChanged(string name)
         {
