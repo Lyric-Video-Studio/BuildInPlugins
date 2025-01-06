@@ -3,3 +3,4 @@ Plugins that are build-in in [Lyric Video Studio](https://lyricvideo.studio/) Mi
 
 Latest release: https://github.com/Lyric-Video-Studio/BuildInPlugins/releases/download/0.8.3/Plugins_0_8_3.zip
 
+Installation instructions: Download the zip and extract it. Either copy the plugins under Plugins-folder in the same forlder that the LVS is istalled OR go to Settings->General and set the path for the plugins folder, save and restart
