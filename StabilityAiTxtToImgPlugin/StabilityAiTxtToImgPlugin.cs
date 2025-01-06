@@ -18,7 +18,7 @@ namespace StabilityAiTxtToImgPlugin
 
         public string SettingsHelpText => "Hosted by stability.ai. You need to have your authorization token";
 
-        public string[] SettingsLinks => ["https://stability.ai"];
+        public string[] SettingsLinks => ["https://platform.stability.ai/account/keys"];
 
         public string ImageFormat => "png";
 

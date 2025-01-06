@@ -19,7 +19,7 @@ namespace StabilityAiImgToVidPlugin
 
         public string SettingsHelpText => "Hosted by stability.ai. You need to have your authorization token";
 
-        public string[] SettingsLinks => new[] { "https://stability.ai" };
+        public string[] SettingsLinks => new[] { "https://platform.stability.ai/account/keys" };
 
         public bool AsynchronousGeneration { get; } = true;
 
