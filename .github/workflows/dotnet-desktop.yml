@@ -104,8 +104,11 @@ jobs:
     - name: Publish LumaAi
       run: dotnet publish .\LumaAiDreamMachine\LumaAiDreamMachinePlugin.csproj -c Release -o publish
 
+    - name: Publish BFL
+      run: dotnet publish .\Bfl\BflAiTxtToImgPlugin.csproj -c Release -o publish
+
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Plugins
         path: .\publish\
