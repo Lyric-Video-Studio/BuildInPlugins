@@ -7,13 +7,9 @@ namespace BflTxtToImgPlugin
     public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
     {
         private static string accessTokenKey = "BflTxtToImgPlugin.accessKey";
-        private string url = "https://api.stability.ai";
         private string accessToken;
 
-        [Description("Url to stability API")]
-        public string Url { get => url; set => url = value; }
-
-        [Description("Access token. Each image creation uses credits. Access token is found from stability.ai/account/keys. " +
+        [Description("Access token. Each image creation uses credits. Access token is found from https://api.bfl.ml/auth/login. " +
             "This application is not resposible for possible usage of credits and will not in any way refund any used credits!!!")]
         [EditorWidth(300)]
         public string AccessToken { get => accessToken; set => accessToken = value; }

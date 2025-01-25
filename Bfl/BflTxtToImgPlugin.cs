@@ -18,11 +18,9 @@ namespace BflTxtToImgPlugin
 
         public bool IsInitialized => _isInitialized;
 
-        public string SettingsHelpText => "Hosted by blackforestlabs.ai/. You need to have your authorization token";
+        public string SettingsHelpText => "Hosted by blackforestlabs.ai/. You need to have your authorization token to use this API";
 
-        public string[] SettingsLinks => ["https://blackforestlabs.ai/"];
-
-        public string ImageFormat => "png";
+        public string[] SettingsLinks => ["https://api.bfl.ml/auth/login", "https://blackforestlabs.ai/"];
 
         public bool AsynchronousGeneration { get; } = true;
 
