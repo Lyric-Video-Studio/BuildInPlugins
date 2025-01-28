@@ -47,6 +47,21 @@ namespace LumaAiDreamMachinePlugin
             {
                 return ["16:9", "1:1", "9:16", "4:3", "3:4", "21:9", "9:21"];
             }
+
+            if (property == nameof(Request.resolution))
+            {
+                return ["720p", "540p"];
+            }
+
+            if (property == nameof(Request.duration))
+            {
+                return ["5s", "9s"];
+            }
+
+            if (property == nameof(Request.model))
+            {
+                return ["ray-2", "ray-1-6"];
+            }
             return Array.Empty<string>();
         }
     }

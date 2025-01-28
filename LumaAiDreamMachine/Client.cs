@@ -7,9 +7,14 @@ namespace LumaAiDreamMachinePlugin
 {
     public class Request
     {
+        public string model { get; set; } = "ray-2";
         public string prompt { get; set; } = "";
         public bool loop { get; set; }
+
         public string aspect_ratio { get; set; } = "16:9";
+        public string resolution { get; set; } = "720p";
+
+        public string duration { get; set; } = "5s";
 
         [IgnoreDynamicEdit]
         public KeyFrames keyframes { get; set; } = new KeyFrames();
