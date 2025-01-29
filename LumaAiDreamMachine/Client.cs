@@ -20,6 +20,16 @@ namespace LumaAiDreamMachinePlugin
         public KeyFrames keyframes { get; set; } = new KeyFrames();
     }
 
+    public class ImageRequest
+    {
+        public string model { get; set; } = "photon-1";
+        public string prompt { get; set; } = "";
+        public string aspect_ratio { get; set; } = "16:9";
+
+        //[IgnoreDynamicEdit]
+        //public KeyFrames keyframes { get; set; } = new KeyFrames();
+    }
+
     public class KeyFrames
     {
         [Description("Starting image/generation")]
@@ -56,6 +66,7 @@ namespace LumaAiDreamMachinePlugin
     public class Asset
     {
         public string video { get; set; }
+        public string image { get; set; }
     }
 
     internal class Client
@@ -142,6 +153,70 @@ namespace LumaAiDreamMachinePlugin
             }
         }
 
+        public async Task<ImageResponse> GetImg(ImageRequest request, ConnectionSettings connectionSettings,
+            ImageItemPayload refItemPlayload, Action saveAndRefreshCallback)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Remove("accept");
+
+                // It's best to keep these here: use can change these from item settings
+                httpClient.BaseAddress = new Uri(connectionSettings.Url);
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Bearer {connectionSettings.AccessToken}");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+
+                if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
+                {
+                    return await PollImageResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), refItemPlayload, saveAndRefreshCallback);
+                }
+
+                var serialized = "";
+
+                try
+                {
+                    serialized = JsonHelper.Serialize(request);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new ImageResponse() { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
+                }
+
+                var stringContent = new StringContent(serialized);
+                stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+                var resp = await httpClient.PostAsync("dream-machine/v1/generations/image", stringContent);
+                var respString = await resp.Content.ReadAsStringAsync();
+                Response respSerialized = null;
+
+                try
+                {
+                    respSerialized = JsonHelper.DeserializeString<Response>(respString);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new ImageResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
+                }
+
+                if (respSerialized != null && resp.IsSuccessStatusCode)
+                {
+                    return await PollImageResults(httpClient, respSerialized.assets, respSerialized.id, refItemPlayload, saveAndRefreshCallback);
+                }
+                else
+                {
+                    return new ImageResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
+                return new ImageResponse() { ErrorMsg = ex.Message, Success = false };
+            }
+        }
+
         private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, Asset assets, Guid id, ItemPayload refItemPlayload, string folderToSave, Action saveAndRefreshCallback)
         {
             var pollingDelay = TimeSpan.FromSeconds(20);
@@ -217,6 +292,82 @@ namespace LumaAiDreamMachinePlugin
             {
                 refItemPlayload.PollingId = "";
                 return new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
+            }
+        }
+
+        private static async Task<ImageResponse> PollImageResults(HttpClient httpClient, Asset assets, Guid id, ImageItemPayload refItemPlayload, Action saveAndRefreshCallback)
+        {
+            var pollingDelay = TimeSpan.FromSeconds(20);
+
+            refItemPlayload.PollingId = id.ToString();
+            saveAndRefreshCallback?.Invoke();
+
+            var imageUrl = assets?.image ?? "";
+
+            while (string.IsNullOrEmpty(assets?.image))
+            {
+                // Wait for assets to be filled
+                try
+                {
+                    var generationResp = await httpClient.GetAsync($"dream-machine/v1/generations/{id}");
+                    var respString = await generationResp.Content.ReadAsStringAsync();
+                    Response respSerialized = null;
+
+                    try
+                    {
+                        respSerialized = JsonHelper.DeserializeString<Response>(respString);
+                        assets = respSerialized.assets;
+
+                        if (respSerialized.state == "failed")
+                        {
+                            return new ImageResponse() { Success = false, ErrorMsg = "Luma Ai backend reported that video generating failed" };
+                        }
+
+                        System.Diagnostics.Debug.WriteLine($"State: {respSerialized.state}");
+
+                        if (assets == null)
+                        {
+                            await Task.Delay(pollingDelay);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    }
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+
+            imageUrl = assets?.image ?? "";
+
+            var file = Path.GetFileName(imageUrl);
+
+            var downloadClient = new HttpClient { BaseAddress = new Uri(imageUrl.Replace(file, "")) };
+
+            downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
+
+            // Store video request token to disk, in case connection is broken or something
+
+            var videoResp = await downloadClient.GetAsync(file);
+
+            while (videoResp.StatusCode != HttpStatusCode.OK)
+            {
+                await Task.Delay(pollingDelay);
+                videoResp = await downloadClient.GetAsync(file);
+            }
+
+            if (videoResp.StatusCode == HttpStatusCode.OK)
+            {
+                var respBytes = await videoResp.Content.ReadAsByteArrayAsync();
+                return new ImageResponse() { Success = true, Image = Convert.ToBase64String(respBytes), ImageFormat = "jpg" };
+            }
+            else
+            {
+                refItemPlayload.PollingId = "";
+                return new ImageResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
             }
         }
     }

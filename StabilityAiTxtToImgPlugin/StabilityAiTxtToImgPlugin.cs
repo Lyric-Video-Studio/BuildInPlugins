@@ -28,6 +28,8 @@ namespace StabilityAiTxtToImgPlugin
 
         private StabilityAiWrapper _wrapper = new StabilityAiWrapper();
 
+        public IPluginBase.TrackType CurrentTrackType { get; set; }
+
         public object DefaultPayloadForImageItem()
         {
             return new ItemPayload();

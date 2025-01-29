@@ -30,39 +30,28 @@ namespace LumaAiDreamMachinePlugin
             }
         }
 
+        public async Task<ImageResponse> GetImage(ImageRequest payload, ConnectionSettings connectionSettings, ImageItemPayload refItemPlayload, Action saveAndRefreshCallback)
+        {
+            if (client == null)
+            {
+                return new ImageResponse { Success = false, ErrorMsg = "Uninitialized" };
+            }
+            try
+            {
+                return await client.GetImg(payload, connectionSettings, refItemPlayload, saveAndRefreshCallback);
+            }
+            catch (Exception ex)
+            {
+                return new ImageResponse { Success = false, ErrorMsg = ex.Message };
+            }
+        }
+
         internal void CloseConnection()
         {
             if (client != null)
             {
                 client = null;
             }
-        }
-
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-
-        public async Task<string[]> GetSelectionForProperty(string property, ConnectionSettings settings)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-        {
-            if (property == nameof(Request.aspect_ratio))
-            {
-                return ["16:9", "1:1", "9:16", "4:3", "3:4", "21:9", "9:21"];
-            }
-
-            if (property == nameof(Request.resolution))
-            {
-                return ["720p", "540p"];
-            }
-
-            if (property == nameof(Request.duration))
-            {
-                return ["5s", "9s"];
-            }
-
-            if (property == nameof(Request.model))
-            {
-                return ["ray-2", "ray-1-6"];
-            }
-            return Array.Empty<string>();
         }
     }
 }

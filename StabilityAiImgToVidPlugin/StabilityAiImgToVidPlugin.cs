@@ -26,6 +26,8 @@ namespace StabilityAiImgToVidPlugin
         private ConnectionSettings _connectionSettings = new ConnectionSettings();
         private StabilityAiWrapper _wrapper = new StabilityAiWrapper();
 
+        public IPluginBase.TrackType CurrentTrackType { get; set; }
+
         public object DefaultPayloadForVideoItem()
         {
             return new ItemPayload();

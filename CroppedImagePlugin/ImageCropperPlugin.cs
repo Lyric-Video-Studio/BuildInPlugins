@@ -22,6 +22,8 @@ namespace CroppedImagePlugin
 
         public bool IsInitialized => true;
 
+        public IPluginBase.TrackType CurrentTrackType { get; set; }
+
         public void CloseConnection()
         {
         }

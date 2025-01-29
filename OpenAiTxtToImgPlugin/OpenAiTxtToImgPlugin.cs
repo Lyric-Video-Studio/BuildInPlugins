@@ -30,6 +30,8 @@ namespace OpenAiTxtToImgPlugin
 
         private OpenAIClient openAIClient;
 
+        public IPluginBase.TrackType CurrentTrackType { get; set; }
+
         public object DefaultPayloadForImageItem()
         {
             return new ItemPayload();
@@ -202,6 +204,7 @@ namespace OpenAiTxtToImgPlugin
         {
             return JsonHelper.ToExactType<TrackPayload>(obj);
         }
+
         public object ObjectToGeneralSettings(JsonObject obj)
         {
             return JsonHelper.ToExactType<ConnectionSettings>(obj);

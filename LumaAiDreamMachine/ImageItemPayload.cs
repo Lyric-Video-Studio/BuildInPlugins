@@ -3,14 +3,14 @@ using System.ComponentModel;
 
 namespace LumaAiDreamMachinePlugin
 {
-    public class ItemPayload
+    public class ImageItemPayload
     {
         [IgnoreDynamicEdit]
-        public bool IsVideo { get; set; } = true;
+        public bool IsVideo { get; set; } = false;
 
         private string prompt = "";
 
-        public KeyFrames KeyFrames { get; set; } = new KeyFrames();
+        //public KeyFrames KeyFrames { get; set; } = new KeyFrames();
 
         public string Prompt { get => prompt; set => prompt = value; }
 

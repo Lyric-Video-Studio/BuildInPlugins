@@ -22,6 +22,8 @@ namespace A1111TxtToImgPlugin
 
         private A1111Wrapper _wrapper = new A1111Wrapper();
 
+        public IPluginBase.TrackType CurrentTrackType { get; set; }
+
         public bool AsynchronousGeneration { get; } = false;
 
         public object DefaultPayloadForImageItem()
@@ -175,6 +177,7 @@ namespace A1111TxtToImgPlugin
         {
             return JsonHelper.ToExactType<TrackPayload>(obj);
         }
+
         public object ObjectToGeneralSettings(JsonObject obj)
         {
             return JsonHelper.ToExactType<ConnectionSettings>(obj);

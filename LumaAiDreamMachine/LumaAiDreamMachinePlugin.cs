@@ -5,7 +5,7 @@ namespace LumaAiDreamMachinePlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class LumaAiDreamMachineImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader
+    public class LumaAiDreamMachineImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin
     {
         public string UniqueName { get => "LumaAiDreamMachineImgToVidBuildIn"; }
         public string DisplayName { get => "Luma AI Dream Machine"; }
@@ -21,6 +21,8 @@ namespace LumaAiDreamMachinePlugin
         public bool AsynchronousGeneration { get; } = true;
 
         public string[] SettingsLinks => new[] { "https://lumalabs.ai/dream-machine/api/keys" };
+
+        public IPluginBase.TrackType CurrentTrackType { get; set; }
 
         private ConnectionSettings _connectionSettings = new ConnectionSettings();
         private LumaAiDreamMachineWrapper _wrapper = new LumaAiDreamMachineWrapper();
@@ -80,6 +82,13 @@ namespace LumaAiDreamMachinePlugin
                     }
                 }
 
+                if (newTp.Settings.model == "ray-1-6")
+                {
+                    // TODO: quick hack, remember to do thatdunamic thingies as well
+                    newTp.Settings.duration = null;
+                    newTp.Settings.resolution = null;
+                }
+
                 return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
             }
             else
@@ -114,7 +123,37 @@ namespace LumaAiDreamMachinePlugin
             {
                 return Array.Empty<string>();
             }
-            return await _wrapper.GetSelectionForProperty(propertyName, _connectionSettings);
+            // TODO: Mutta miten jos tää onkin image? Samassa siis
+            if (propertyName == nameof(Request.aspect_ratio))
+            {
+                return ["16:9", "1:1", "9:16", "4:3", "3:4", "21:9", "9:21"];
+            }
+
+            if (propertyName == nameof(Request.resolution))
+            {
+                return ["720p", "540p"];
+            }
+
+            if (propertyName == nameof(Request.duration))
+            {
+                return ["5s", "9s"];
+            }
+
+            if (propertyName == nameof(Request.model))
+            {
+                switch (CurrentTrackType)
+                {
+                    case IPluginBase.TrackType.Image:
+                        return ["photon-1", "photon-flash-1"];
+
+                    case IPluginBase.TrackType.Video:
+                        return ["ray-2", "ray-1-6"];
+
+                    default:
+                        break;
+                }
+            }
+            return Array.Empty<string>();
         }
 
         public object CopyPayloadForVideoTrack(object obj)
@@ -179,34 +218,6 @@ namespace LumaAiDreamMachinePlugin
                 {
                     return (false, "Prompt empty");
                 }
-                /*if (string.IsNullOrEmpty(ip.PathToImage))
-                {
-                    return (false, "No source");
-                }
-
-                if (!File.Exists(ip.PathToImage))
-                {
-                    return (false, $"Source file {ip.PathToImage} missing");
-                }
-                else
-                {
-                    try
-                    {
-                        var imageInfo = SKBitmap.Decode(ip.PathToImage);
-                        var supportedSizes = new List<string>() { "1024x576", "576x1024", "768x768" };
-
-                        var imageSizeAsString = $"{imageInfo.Width}x{imageInfo.Height}";
-
-                        if (!supportedSizes.Any(s => s == imageSizeAsString))
-                        {
-                            return (false, $"Image is not correct size, supported sizes are: {string.Join(", ", supportedSizes)}, selected image was: {imageSizeAsString}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        return (false, ex.Message);
-                    }
-                }*/
             }
             return (true, "");
         }
@@ -238,16 +249,101 @@ namespace LumaAiDreamMachinePlugin
 
         public object ObjectToItemPayload(JsonObject obj)
         {
-            return JsonHelper.ToExactType<ItemPayload>(obj);
+            if (obj[nameof(ItemPayload.IsVideo)].AsValue().TryGetValue<bool>(out var isVid) && isVid)
+            {
+                var resp = JsonHelper.ToExactType<ItemPayload>(obj);
+                return resp;
+            }
+
+            return JsonHelper.ToExactType<ImageItemPayload>(obj);
         }
 
         public object ObjectToTrackPayload(JsonObject obj)
         {
-            return JsonHelper.ToExactType<TrackPayload>(obj);
+            if (obj[nameof(TrackPayload.IsVideo)].AsValue().TryGetValue<bool>(out var isVid) && isVid)
+            {
+                var resp = JsonHelper.ToExactType<TrackPayload>(obj);
+                return resp;
+            }
+
+            return JsonHelper.ToExactType<ImageTrackPayload>(obj);
         }
+
         public object ObjectToGeneralSettings(JsonObject obj)
         {
             return JsonHelper.ToExactType<ConnectionSettings>(obj);
+        }
+
+        // Image stuffs
+        public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
+        {
+            if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            {
+                return new ImageResponse { Success = false, ErrorMsg = "Uninitialized" };
+            }
+
+            if (JsonHelper.DeepCopy<ImageTrackPayload>(trackPayload) is ImageTrackPayload newTp && JsonHelper.DeepCopy<ImageItemPayload>(itemsPayload) is ImageItemPayload newIp)
+            {
+                // combine prompts
+
+                // Also, when img2Vid
+
+                newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
+
+                // Upload to cloud first
+
+                return await _wrapper.GetImage(newTp.Settings, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback);
+            }
+            else
+            {
+                return new ImageResponse { ErrorMsg = "Track playoad or item payload object not valid", Success = false };
+            }
+        }
+
+        public object DefaultPayloadForImageTrack()
+        {
+            return new ImageTrackPayload();
+        }
+
+        public object DefaultPayloadForImageItem()
+        {
+            return new ImageItemPayload();
+        }
+
+        public object CopyPayloadForImageTrack(object obj)
+        {
+            if (obj is ImageTrackPayload ip)
+            {
+                return JsonHelper.DeepCopy<ImageTrackPayload>(ip);
+            }
+            return null;
+        }
+
+        public object CopyPayloadForImageItem(object obj)
+        {
+            if (obj is ImageItemPayload ip)
+            {
+                return JsonHelper.DeepCopy<ImageItemPayload>(ip);
+            }
+            return null;
+        }
+
+        public (bool payloadOk, string reasonIfNot) ValidateImagePayload(object payload)
+        {
+            if (payload is ImageItemPayload ip)
+            {
+                if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
+                {
+                    return (false, "Auth token empty!!!");
+                }
+
+                if (string.IsNullOrEmpty(ip.Prompt))
+                {
+                    return (false, "Prompt empty");
+                }
+            }
+
+            return (true, "");
         }
     }
 

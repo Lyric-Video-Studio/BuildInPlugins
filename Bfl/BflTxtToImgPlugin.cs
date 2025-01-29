@@ -30,6 +30,8 @@ namespace BflTxtToImgPlugin
         private ResultClient client;
         private Client imgClient;
 
+        public IPluginBase.TrackType CurrentTrackType { get; set; }
+
         public object DefaultPayloadForImageItem()
         {
             return new ItemPayload();

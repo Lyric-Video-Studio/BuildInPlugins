@@ -24,6 +24,8 @@ namespace A1111ImgToImgPlugin
 
         public bool AsynchronousGeneration { get; } = false;
 
+        public IPluginBase.TrackType CurrentTrackType { get; set; }
+
         public object DefaultPayloadForImageItem()
         {
             return new ItemPayload();
