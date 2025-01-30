@@ -97,6 +97,31 @@ namespace LumaAiDreamMachinePlugin
             }
         }
 
+        public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
+        {
+            if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            {
+                return new ImageResponse { Success = false, ErrorMsg = "Uninitialized" };
+            }
+
+            if (JsonHelper.DeepCopy<ImageTrackPayload>(trackPayload) is ImageTrackPayload newTp && JsonHelper.DeepCopy<ImageItemPayload>(itemsPayload) is ImageItemPayload newIp)
+            {
+                // combine prompts
+
+                // Also, when img2Vid
+
+                newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
+
+                // Upload to cloud first
+
+                return await _wrapper.GetImage(newTp.Settings, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback);
+            }
+            else
+            {
+                return new ImageResponse { ErrorMsg = "Track playoad or item payload object not valid", Success = false };
+            }
+        }
+
         public async Task<string> Initialize(object settings)
         {
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)
@@ -275,30 +300,6 @@ namespace LumaAiDreamMachinePlugin
         }
 
         // Image stuffs
-        public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
-        {
-            if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
-            {
-                return new ImageResponse { Success = false, ErrorMsg = "Uninitialized" };
-            }
-
-            if (JsonHelper.DeepCopy<ImageTrackPayload>(trackPayload) is ImageTrackPayload newTp && JsonHelper.DeepCopy<ImageItemPayload>(itemsPayload) is ImageItemPayload newIp)
-            {
-                // combine prompts
-
-                // Also, when img2Vid
-
-                newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
-
-                // Upload to cloud first
-
-                return await _wrapper.GetImage(newTp.Settings, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback);
-            }
-            else
-            {
-                return new ImageResponse { ErrorMsg = "Track playoad or item payload object not valid", Success = false };
-            }
-        }
 
         public object DefaultPayloadForImageTrack()
         {

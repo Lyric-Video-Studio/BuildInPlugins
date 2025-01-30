@@ -12,8 +12,11 @@ namespace LumaAiDreamMachinePlugin
         public bool loop { get; set; }
 
         public string aspect_ratio { get; set; } = "16:9";
+
+        [Description("Only for ray-2 model")]
         public string resolution { get; set; } = "720p";
 
+        [Description("Only for ray-2 model")]
         public string duration { get; set; } = "5s";
 
         [IgnoreDynamicEdit]
@@ -32,11 +35,11 @@ namespace LumaAiDreamMachinePlugin
 
     public class KeyFrames
     {
-        [Description("Starting image/generation")]
+        [Description("Starting image/generation, ignored on ray-2 model")]
         [ParentName("Start frame")]
         public KeyFrame frame0 { get; set; } = new KeyFrame();
 
-        [Description("Ending image/generation")]
+        [Description("Ending image/generation, ignored on ray-2 model")]
         [ParentName("End frame")]
         public KeyFrame frame1 { get; set; } = new KeyFrame();
     }
@@ -46,10 +49,10 @@ namespace LumaAiDreamMachinePlugin
         [IgnoreDynamicEdit]
         public string type { get; set; }
 
-        [Description("Image source")]
+        [Description("Image source, ignored on ray-2 model")]
         public string url { get; set; }
 
-        [Description("For extending video, add pollingId of another luma ai video here")]
+        [Description("For extending video, add pollingId of another luma ai video here, ignored on ray-2 model")]
         public string id { get; set; }
     }
 
