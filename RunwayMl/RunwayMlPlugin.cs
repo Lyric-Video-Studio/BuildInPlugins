@@ -68,7 +68,7 @@ namespace RunwayMlPlugin
                     newTp.Request.ratio = newIp.Request.ratio;
                 }
 
-                if (newIp.Request.duration != newTp.Request.duration)
+                if (newIp.Request.duration != -1)
                 {
                     newTp.Request.duration = newIp.Request.duration;
                 }
@@ -87,6 +87,16 @@ namespace RunwayMlPlugin
                 {
                     newTp.Request.promptImage = fileUpload.uploadedUrl;
                     saveAndRefreshCallback.Invoke();
+                }
+
+                if (string.IsNullOrEmpty(newTp.Request.ratio))
+                {
+                    newTp.Request.ratio = "16:9";
+                }
+
+                if (newTp.Request.duration == -1)
+                {
+                    newTp.Request.duration = 5;
                 }
 
                 var videoResp = await new Client().GetImgToVid(newTp.Request, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
@@ -121,10 +131,10 @@ namespace RunwayMlPlugin
             switch (propertyName)
             {
                 case nameof(Request.ratio):
-                    return ["16:9", "9:16"];
+                    return ["", "16:9", "9:16"];
 
                 case nameof(Request.duration):
-                    return ["5", "10"];
+                    return ["-1", "5", "10"];
 
                 default:
                     break;
