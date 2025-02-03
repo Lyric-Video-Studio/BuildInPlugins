@@ -255,7 +255,7 @@ namespace RunwayMlPlugin
         public object ItemPayloadFromImageSource(string imgSource)
         {
             var output = new ItemPayload();
-            output.Request.promptImage = imgSource;
+            output.ImageSource = imgSource;
             return output;
         }
 
