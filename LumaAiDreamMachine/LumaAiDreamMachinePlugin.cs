@@ -113,6 +113,75 @@ namespace LumaAiDreamMachinePlugin
                 newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
 
                 // Upload to cloud first
+                if (newIp.ImageRef != null && !string.IsNullOrEmpty(newIp.ImageRef.ImageSource))
+                {
+                    newTp.Settings.image_ref = [new ImageRequestRefImage()];
+
+                    var resp = await _uploader.RequestContentUpload(newIp.ImageRef.ImageSource);
+
+                    if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                    {
+                        newTp.Settings.image_ref[0].url = resp.uploadedUrl;
+                    }
+                    else
+                    {
+                        return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                    }
+
+                    newTp.Settings.image_ref[0].weight = newIp.ImageRef.weight;
+                }
+
+                if (newIp.StyleRef != null && !string.IsNullOrEmpty(newIp.StyleRef.ImageSource))
+                {
+                    newTp.Settings.style_ref = [new ImageRequestRefImage()];
+
+                    var resp = await _uploader.RequestContentUpload(newIp.StyleRef.ImageSource);
+
+                    if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                    {
+                        newTp.Settings.style_ref[0].url = resp.uploadedUrl;
+                    }
+                    else
+                    {
+                        return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                    }
+
+                    newTp.Settings.style_ref[0].weight = newIp.StyleRef.weight;
+                }
+
+                if (newIp.ModifyImage != null && !string.IsNullOrEmpty(newIp.ModifyImage.ImageSource))
+                {
+                    newTp.Settings.modify_image_ref = new ImageRequestRefImage();
+
+                    var resp = await _uploader.RequestContentUpload(newIp.ModifyImage.ImageSource);
+
+                    if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                    {
+                        newTp.Settings.modify_image_ref.url = resp.uploadedUrl;
+                    }
+                    else
+                    {
+                        return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                    }
+
+                    newTp.Settings.modify_image_ref.weight = newIp.ModifyImage.weight;
+                }
+
+                if (newIp.CharacterRef != null && !string.IsNullOrEmpty(newIp.CharacterRef.CharacterSource))
+                {
+                    newTp.Settings.character_ref = new ImageRequestRefCharacter();
+
+                    var resp = await _uploader.RequestContentUpload(newIp.CharacterRef.CharacterSource);
+
+                    if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                    {
+                        newTp.Settings.character_ref.identity0.images[0] = resp.uploadedUrl;
+                    }
+                    else
+                    {
+                        return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                    }
+                }
 
                 return await _wrapper.GetImage(newTp.Settings, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback);
             }

@@ -29,8 +29,39 @@ namespace LumaAiDreamMachinePlugin
         public string prompt { get; set; } = "";
         public string aspect_ratio { get; set; } = "16:9";
 
+        [IgnoreDynamicEdit]
+        public ImageRequestRefImage[] image_ref { get; set; }
+
+        [IgnoreDynamicEdit]
+        public ImageRequestRefImage[] style_ref { get; set; }
+
+        [IgnoreDynamicEdit]
+        public ImageRequestRefCharacter character_ref { get; set; }
+
+        [IgnoreDynamicEdit]
+        public ImageRequestRefImage modify_image_ref { get; set; }
+
         //[IgnoreDynamicEdit]
         //public KeyFrames keyframes { get; set; } = new KeyFrames();
+    }
+
+    public class ImageRequestRefImage
+    {
+        public string url { get; set; } = "";
+        public double weight { get; set; } = 0.85;
+
+        //[IgnoreDynamicEdit]
+        //public KeyFrames keyframes { get; set; } = new KeyFrames();
+    }
+
+    public class ImageRequestRefCharacter
+    {
+        public RefCharacter identity0 { get; set; } = new RefCharacter();
+    }
+
+    public class RefCharacter
+    {
+        public string[] images { get; set; } = new string[1];
     }
 
     public class KeyFrames
