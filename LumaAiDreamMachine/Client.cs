@@ -81,6 +81,7 @@ namespace LumaAiDreamMachinePlugin
         public string type { get; set; }
 
         [Description("Image source, ignored on ray-2 model")]
+        [EnableFileDrop]
         public string url { get; set; }
 
         [Description("For extending video, add pollingId of another luma ai video here, ignored on ray-2 model")]

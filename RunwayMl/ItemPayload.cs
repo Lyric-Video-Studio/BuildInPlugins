@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using PluginBase;
+using System.ComponentModel;
 
 namespace RunwayMlPlugin
 {
@@ -13,6 +14,7 @@ namespace RunwayMlPlugin
         private Request request = new Request();
         public Request Request { get => request; set => request = value; }
 
+        [EnableFileDrop]
         public string ImageSource { get => imageSource; set => imageSource = value; }
 
         private string imageSource;

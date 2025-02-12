@@ -82,7 +82,9 @@ namespace LumaAiDreamMachinePlugin
 
     public class ImageRef
     {
+        [EnableFileDrop]
         public string ImageSource { get; set; }
+
         public double weight { get; set; } = 0.85;
     }
 

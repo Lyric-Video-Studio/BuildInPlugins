@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using PluginBase;
+using System.ComponentModel;
 
 namespace A1111ImgToImgPlugin
 {
@@ -15,6 +16,7 @@ namespace A1111ImgToImgPlugin
         [Description("0 = use seed from track settings")]
         public int Seed { get => seed; set => seed = value; }
 
+        [EnableFileDrop]
         public string PathToImage { get => pathToImage; set => pathToImage = value; }
     }
 }
