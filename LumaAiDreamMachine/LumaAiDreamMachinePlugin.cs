@@ -326,14 +326,28 @@ namespace LumaAiDreamMachinePlugin
 
         public object ItemPayloadFromLyrics(string text)
         {
-            return new ItemPayload() { Prompt = text };
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            {
+                return new ItemPayload() { Prompt = text };
+            }
+            else
+            {
+                return new ImageItemPayload() { Prompt = text };
+            }
         }
 
         public object ItemPayloadFromImageSource(string imgSource)
         {
-            var output = new ItemPayload();
-            output.KeyFrames.frame0.url = imgSource;
-            return output;
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            {
+                var output = new ItemPayload();
+                output.KeyFrames.frame0.url = imgSource;
+                return output;
+            }
+            else
+            {
+                return new ImageItemPayload() { ImageRef = new ImageRef() { ImageSource = imgSource } };
+            }
         }
 
         public void ContentUploaderProvided(IContentUploader uploader)
