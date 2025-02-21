@@ -316,5 +316,10 @@ namespace CroppedImagePlugin
         {
             return null;
         }
+
+        public string TextualRepresentation(object itemPayload)
+        {
+            return "";
+        }
     }
 }

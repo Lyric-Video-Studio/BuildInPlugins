@@ -182,5 +182,14 @@ namespace A1111TxtToImgPlugin
         {
             return JsonHelper.ToExactType<ConnectionSettings>(obj);
         }
+
+        public string TextualRepresentation(object itemPayload)
+        {
+            if (itemPayload is ItemPayload ip)
+            {
+                return ip.PositivePrompt;
+            }
+            return "";
+        }
     }
 }

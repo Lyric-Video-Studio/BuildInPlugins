@@ -299,6 +299,15 @@ namespace BflTxtToImgPlugin
         {
             return new ItemPayload() { ImageSource = imgSource };
         }
+
+        public string TextualRepresentation(object itemPayload)
+        {
+            if (itemPayload is ItemPayload ip)
+            {
+                return ip.Prompt;
+            }
+            return "";
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

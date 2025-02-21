@@ -429,6 +429,20 @@ namespace LumaAiDreamMachinePlugin
 
             return (true, "");
         }
+
+        public string TextualRepresentation(object itemPayload)
+        {
+            if (itemPayload is ItemPayload ip)
+            {
+                return ip.Prompt;
+            }
+
+            if (itemPayload is ImageItemPayload imgIp)
+            {
+                return imgIp.Prompt;
+            }
+            return "";
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

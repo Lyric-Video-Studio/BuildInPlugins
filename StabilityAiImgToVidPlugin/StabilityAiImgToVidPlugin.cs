@@ -201,6 +201,11 @@ namespace StabilityAiImgToVidPlugin
         {
             return JsonHelper.ToExactType<ConnectionSettings>(obj);
         }
+
+        public string TextualRepresentation(object itemPayload)
+        {
+            return "";
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
