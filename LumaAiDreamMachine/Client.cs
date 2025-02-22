@@ -13,7 +13,7 @@ namespace LumaAiDreamMachinePlugin
 
         public string aspect_ratio { get; set; } = "16:9";
 
-        [Description("Only for ray-2 model")]
+        [Description("Only for ray-2 model. Resolutions higher than 720p only supported in txtToVideo")]
         public string resolution { get; set; } = "720p";
 
         [Description("Only for ray-2 model")]
@@ -66,11 +66,11 @@ namespace LumaAiDreamMachinePlugin
 
     public class KeyFrames
     {
-        [Description("Starting image/generation, ignored on ray-2 model")]
+        [Description("Starting image/generation,")]
         [ParentName("Start frame")]
         public KeyFrame frame0 { get; set; } = new KeyFrame();
 
-        [Description("Ending image/generation, ignored on ray-2 model")]
+        [Description("Ending image/generation")]
         [ParentName("End frame")]
         public KeyFrame frame1 { get; set; } = new KeyFrame();
     }
@@ -80,11 +80,11 @@ namespace LumaAiDreamMachinePlugin
         [IgnoreDynamicEdit]
         public string type { get; set; }
 
-        [Description("Image source, ignored on ray-2 model")]
+        [Description("Image source")]
         [EnableFileDrop]
         public string url { get; set; }
 
-        [Description("For extending video, add pollingId of another luma ai video here, ignored on ray-2 model")]
+        [Description("For extending video, add pollingId of another luma ai video here")]
         public string id { get; set; }
     }
 
@@ -254,7 +254,7 @@ namespace LumaAiDreamMachinePlugin
 
         private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, Asset assets, Guid id, ItemPayload refItemPlayload, string folderToSave, Action saveAndRefreshCallback)
         {
-            var pollingDelay = TimeSpan.FromSeconds(20);
+            var pollingDelay = TimeSpan.FromSeconds(7);
 
             refItemPlayload.PollingId = id.ToString();
             saveAndRefreshCallback?.Invoke();
@@ -282,7 +282,7 @@ namespace LumaAiDreamMachinePlugin
 
                         System.Diagnostics.Debug.WriteLine($"State: {respSerialized.state}");
 
-                        if (assets == null)
+                        if (string.IsNullOrEmpty(assets?.video))
                         {
                             await Task.Delay(pollingDelay);
                         }
@@ -332,7 +332,7 @@ namespace LumaAiDreamMachinePlugin
 
         private static async Task<ImageResponse> PollImageResults(HttpClient httpClient, Asset assets, Guid id, ImageItemPayload refItemPlayload, Action saveAndRefreshCallback)
         {
-            var pollingDelay = TimeSpan.FromSeconds(20);
+            var pollingDelay = TimeSpan.FromSeconds(7);
 
             refItemPlayload.PollingId = id.ToString();
             saveAndRefreshCallback?.Invoke();
@@ -360,7 +360,7 @@ namespace LumaAiDreamMachinePlugin
 
                         System.Diagnostics.Debug.WriteLine($"State: {respSerialized.state}");
 
-                        if (assets == null)
+                        if (string.IsNullOrEmpty(assets?.image))
                         {
                             await Task.Delay(pollingDelay);
                         }

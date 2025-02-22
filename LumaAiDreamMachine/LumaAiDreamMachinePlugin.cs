@@ -225,7 +225,7 @@ namespace LumaAiDreamMachinePlugin
 
             if (propertyName == nameof(Request.resolution))
             {
-                return ["720p", "540p"];
+                return ["1080", "4k", "720p", "540p"];
             }
 
             if (propertyName == nameof(Request.duration))
