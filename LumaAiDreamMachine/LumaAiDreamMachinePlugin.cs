@@ -225,7 +225,7 @@ namespace LumaAiDreamMachinePlugin
 
             if (propertyName == nameof(Request.resolution))
             {
-                return ["1080", "4k", "720p", "540p"];
+                return resolutions.ToArray();
             }
 
             if (propertyName == nameof(Request.duration))
@@ -249,6 +249,8 @@ namespace LumaAiDreamMachinePlugin
             }
             return Array.Empty<string>();
         }
+
+        private static List<string> resolutions = ["720p", "1080", "4k", "540p"];
 
         public object CopyPayloadForVideoTrack(object obj)
         {
@@ -311,6 +313,14 @@ namespace LumaAiDreamMachinePlugin
                 if (string.IsNullOrEmpty(ip.Prompt))
                 {
                     return (false, "Prompt empty");
+                }
+            }
+
+            if (payload is TrackPayload tp)
+            {
+                if (tp.Settings.model == "ray-2" && resolutions.IndexOf(tp.Settings.resolution) > 0)
+                {
+                    return (false, "Ray-2 model supports only 720p");
                 }
             }
             return (true, "");

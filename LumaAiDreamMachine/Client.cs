@@ -66,7 +66,7 @@ namespace LumaAiDreamMachinePlugin
 
     public class KeyFrames
     {
-        [Description("Starting image/generation,")]
+        [Description("Starting image/generation")]
         [ParentName("Start frame")]
         public KeyFrame frame0 { get; set; } = new KeyFrame();
 
