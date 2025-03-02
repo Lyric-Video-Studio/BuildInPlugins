@@ -10,12 +10,14 @@ namespace CroppedImagePlugin
         private int yOffset;
         private bool scale;
 
+        [Description("When scaling, set width or height to 0 to scale keeping the aspect ratio")]
         public int Width
         {
             get { return width; }
             set { if (width == value) return; width = value; RaisePropertyChanged(nameof(Width)); }
         }
 
+        [Description("When scaling, set width or height to 0 to scale keeping the aspect ratio")]
         public int Height
         {
             get { return height; }

@@ -124,7 +124,7 @@ namespace CroppedImagePlugin
         private Border bottomRightMarker;
         private Border fullCrop;
 
-        private int size = 20;
+        private int size = 10;
 
         private void CheckFullCrop()
         {
@@ -197,6 +197,11 @@ namespace CroppedImagePlugin
             Canvas.SetTop(elementToDrag, rect.Top);
             Canvas.SetRight(elementToDrag, rect.Right);
             Canvas.SetBottom(elementToDrag, rect.Bottom);
+
+            if (topLeftMarker != null && bottomRightMarker != null && DataContext is TrackPayload tp)
+            {
+                SetVisualizationBorder(topLeftMarker, bottomRightMarker, tp, false);
+            }
         }
 
         internal void PointerGestureRecognizer_PointerExited(object? sender, PointerReleasedEventArgs e)
@@ -225,6 +230,7 @@ namespace CroppedImagePlugin
             else if (bottomRightMarker == null)
             {
                 SetElement(ref bottomRightMarker, relativeToContainerPosition, true);
+                SetVisualizationBorder(topLeftMarker, bottomRightMarker, DataContext as TrackPayload);
             }
             else
             {
@@ -266,6 +272,8 @@ namespace CroppedImagePlugin
             marker.BorderBrush = new SolidColorBrush(Color.FromRgb(0, 0, 0));
             marker.BorderThickness = new Thickness(2);
             marker.Background = new SolidColorBrush(Color.FromRgb(1, 1, 1));
+            marker.Width = size;
+            marker.Height = size;
 
             marker.PropertyChanged += Marker_PropertyChanged;
             var offset = isBottomRight ? -size : 0;
@@ -275,6 +283,30 @@ namespace CroppedImagePlugin
             Canvas.SetTop(marker, relativeToContainerPosition.Y + offset);
             Canvas.SetRight(marker, relativeToContainerPosition.X + offset + size);
             Canvas.SetBottom(marker, relativeToContainerPosition.Y + offset + size);
+        }
+
+        private Border visualizationBorder;
+
+        public void SetVisualizationBorder(Border topLeft, Border bottomRight, TrackPayload tp, bool createNew = true)
+        {
+            if (visualizationBorder != null && createNew)
+            {
+                cropCanvas.Children.Remove(visualizationBorder);
+            }
+
+            if (createNew)
+            {
+                visualizationBorder = new Border();
+                cropCanvas.Children.Add(visualizationBorder);
+            }
+
+            visualizationBorder!.BorderThickness = new Thickness(2);
+            visualizationBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(150, 0, 0, 0));
+            visualizationBorder.Width = tp.Width * ScaleMultiplier;
+            visualizationBorder.Height = tp.Height * ScaleMultiplier;
+
+            Canvas.SetLeft(visualizationBorder, Canvas.GetLeft(topLeft));
+            Canvas.SetTop(visualizationBorder, Canvas.GetTop(topLeft));
         }
 
         private void Marker_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)

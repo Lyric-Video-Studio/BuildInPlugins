@@ -91,6 +91,20 @@ namespace CroppedImagePlugin
                     {
                         if (newTp.Scale)
                         {
+                            if (newTp.Width <= 0)
+                            {
+                                // Set width based on heigth
+                                var scale = (double)newTp.Height / newIp.SourceBitmap.Size.Height;
+                                newTp.Width = (int)(newIp.SourceBitmap.Size.Width * scale);
+                            }
+
+                            if (newTp.Height <= 0)
+                            {
+                                // Set width based on heigth
+                                var scale = (double)newTp.Width / newIp.SourceBitmap.Size.Width;
+                                newTp.Height = (int)(newIp.SourceBitmap.Size.Height * scale);
+                            }
+
                             var info = new SKImageInfo(newTp.Width, newTp.Height, img.ColorType);
                             var output = SKImage.Create(info);
                             img.ScalePixels(output.PeekPixels(), SKSamplingOptions.Default);
