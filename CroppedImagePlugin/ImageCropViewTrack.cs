@@ -26,27 +26,25 @@ namespace CroppedImagePlugin
             if (DataContext is TrackPayload tp && !tp.Scale)
             {
                 // DataContext set
-                if (tp.XOffset >= 0 && tp.YOffset >= 0 && tp.XOffset + tp.Width < imageContainer.Bounds.Width && tp.YOffset + tp.Height < imageContainer.Bounds.Height)
+
+                if (topLeftMarker != null)
                 {
-                    if (topLeftMarker != null)
-                    {
-                        cropCanvas.Children.Remove(topLeftMarker);
-                        topLeftMarker.PropertyChanged -= Marker_PropertyChanged;
-                    }
-                    if (bottomRightMarker != null)
-                    {
-                        cropCanvas.Children.Remove(bottomRightMarker);
-                        bottomRightMarker.PropertyChanged -= Marker_PropertyChanged;
-                    }
-
-                    topLeftMarker = null;
-                    bottomRightMarker = null;
-
-                    SetMarkers(new Point(tp.XOffset, tp.YOffset));
-                    SetMarkers(new Point(tp.XOffset + tp.Width, tp.YOffset + tp.Height));
-
-                    InvertColorsChanged(null, null);
+                    cropCanvas.Children.Remove(topLeftMarker);
+                    topLeftMarker.PropertyChanged -= Marker_PropertyChanged;
                 }
+                if (bottomRightMarker != null)
+                {
+                    cropCanvas.Children.Remove(bottomRightMarker);
+                    bottomRightMarker.PropertyChanged -= Marker_PropertyChanged;
+                }
+
+                topLeftMarker = null;
+                bottomRightMarker = null;
+
+                SetMarkers(new Point(tp.XOffset * ScaleMultiplier, tp.YOffset * ScaleMultiplier));
+                SetMarkers(new Point((tp.XOffset + tp.Width) * ScaleMultiplier, (tp.YOffset + tp.Height) * ScaleMultiplier));
+
+                InvertColorsChanged(null, null);
             }
         }
 
@@ -58,20 +56,20 @@ namespace CroppedImagePlugin
             {
                 currentTp = tp;
 
-                void SetScaleConteiner()
+                /*void SetScaleConteiner()
                 {
                     imageContainer.Stretch = Stretch.Fill;
                     imageContainer.MaxWidth = currentTp.Width;
                     imageContainer.MaxHeight = currentTp.Height;
                     imageContainer.MinWidth = currentTp.Width;
                     imageContainer.MinHeight = currentTp.Height;
-                }
+                }*/
 
                 void SetPictureFrameProperties()
                 {
                     if (tp.Scale)
                     {
-                        SetScaleConteiner();
+                        //SetScaleConteiner();
                         cropCanvas.Children.Clear();
 
                         if (topLeftMarker != null)
@@ -89,7 +87,6 @@ namespace CroppedImagePlugin
                     }
                     else
                     {
-                        imageContainer.Stretch = Stretch.None;
                         CheckCropInit();
                     }
                 }
@@ -100,7 +97,7 @@ namespace CroppedImagePlugin
                     {
                         if (b.PropertyName == nameof(TrackPayload.Width) || b.PropertyName == nameof(TrackPayload.Height))
                         {
-                            SetScaleConteiner();
+                            //SetScaleConteiner();
                         }
                     }
                 };
@@ -127,7 +124,7 @@ namespace CroppedImagePlugin
         private Border bottomRightMarker;
         private Border fullCrop;
 
-        private int size = 10;
+        private int size = 20;
 
         private void CheckFullCrop()
         {
@@ -151,14 +148,16 @@ namespace CroppedImagePlugin
 
                 if (DataContext is TrackPayload tp)
                 {
-                    tp.XOffset = (int)topLeft.X;
-                    tp.YOffset = (int)topLeft.Y;
+                    tp.XOffset = (int)(topLeft.X / ScaleMultiplier);
+                    tp.YOffset = (int)(topLeft.Y / ScaleMultiplier);
 
-                    tp.Width = (int)width + size;
-                    tp.Height = (int)heigth + size;
+                    tp.Width = (int)((width + size) / ScaleMultiplier);
+                    tp.Height = (int)((heigth + size) / ScaleMultiplier);
                 }
             }
         }
+
+        public double ScaleMultiplier => imageContainer.DesiredSize.Width / originalWidth;
 
         internal void PointerGestureRecognizer_PointerMoved(object? sender, PointerEventArgs e)
         {
@@ -184,11 +183,11 @@ namespace CroppedImagePlugin
             {
                 var topLeft = GetLayoutBounds(topLeftMarker);
                 var bottomRight = GetLayoutBounds(bottomRightMarker);
-                currentTp.XOffset = (int)topLeft.Left;
-                currentTp.YOffset = (int)topLeft.Top;
+                currentTp.XOffset = (int)(topLeft.Left / ScaleMultiplier);
+                currentTp.YOffset = (int)(topLeft.Top / ScaleMultiplier);
 
-                currentTp.Width = (int)(bottomRight.Right - topLeft.Left);
-                currentTp.Height = (int)(bottomRight.Bottom - topLeft.Top);
+                currentTp.Width = (int)((bottomRight.Right - topLeft.Left) / ScaleMultiplier);
+                currentTp.Height = (int)((bottomRight.Bottom - topLeft.Top) / ScaleMultiplier);
             }
         }
 
@@ -309,10 +308,17 @@ namespace CroppedImagePlugin
             CheckCropInit();
         }
 
+        private double originalWidth = 1;
+
         internal void SetItemPayload(ItemPayload ip)
         {
             void SetImageProperties()
             {
+                if (ip.SourceBitmap != null)
+                {
+                    originalWidth = ip.SourceBitmap.Size.Width;
+                }
+
                 imageContainer.Source = ip.SourceBitmap;
                 // Source has changed, must set the width and heigh to match the picture
                 if (DataContext is TrackPayload trackPayload)
@@ -373,19 +379,19 @@ namespace CroppedImagePlugin
                 trackPayload.YOffset = (int)((ip.SourceBitmap.Size.Height * 0.25d) / 2);
             }
 
-            if (!trackPayload.Scale)
+            /*if (!trackPayload.Scale)
             {
                 SetCanvasSize(cropCanvas, ip.SourceBitmap);
                 SetCanvasSize(imageContainer, ip.SourceBitmap);
-            }
+            }*/
         }
 
-        private void SetCanvasSize(Control v, Bitmap b)
+        /*private void SetCanvasSize(Control v, Bitmap b)
         {
             v.MaxWidth = b.Size.Width;
             v.MaxHeight = b.Size.Width;
             v.MinWidth = b.Size.Width;
             v.MinHeight = b.Size.Width;
-        }
+        }*/
     }
 }

@@ -80,11 +80,15 @@
         x:Name="imageContainer"
         Grid.Row="4"
         Grid.ColumnSpan="4"
-        Stretch="None" />
+        MaxWidth="700"
+        MaxHeight="700"
+        Stretch="Uniform" />
     <Canvas
         x:Name="cropCanvas"
         Grid.Row="4"
         Grid.ColumnSpan="4"
+        Width="{Binding #imageContainer.Width}"
+        Height="{Binding #imageContainer.Height}"
         IsVisible="{Binding IsCrop}"
         PointerMoved="PointerGestureRecognizer_PointerMoved"
         PointerPressed="PointerGestureRecognizer_PointerPressed"
