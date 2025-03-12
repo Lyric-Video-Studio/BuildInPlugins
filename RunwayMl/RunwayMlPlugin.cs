@@ -8,7 +8,7 @@ namespace RunwayMlPlugin
     public class RunwayMlImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader
     {
         public string UniqueName { get => "RunwayMlImgToVidBuildIn"; }
-        public string DisplayName { get => "Runway LM "; }
+        public string DisplayName { get => "Runway ML "; }
 
         public object GeneralDefaultSettings => new ConnectionSettings();
 
