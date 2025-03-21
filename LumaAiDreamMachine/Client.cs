@@ -1,8 +1,11 @@
-﻿using LumaAiDreamMachinePlugin.VideoUpscale;
+﻿using LumaAiDreamMachinePlugin.AddAudio;
+using LumaAiDreamMachinePlugin.VideoUpscale;
 using PluginBase;
 using System.ComponentModel;
+using System.IO;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Reflection.PortableExecutable;
 
 namespace LumaAiDreamMachinePlugin
 {
@@ -280,6 +283,59 @@ namespace LumaAiDreamMachinePlugin
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
                 var resp = await httpClient.PostAsync($"dream-machine/v1/generations/{generationId}/upscale", stringContent);
+                var respString = await resp.Content.ReadAsStringAsync();
+                Response respSerialized = null;
+
+                try
+                {
+                    respSerialized = JsonHelper.DeserializeString<Response>(respString);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new VideoResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
+                }
+
+                if (respSerialized != null && resp.IsSuccessStatusCode)
+                {
+                    refItemPlayload.PollingId = respSerialized.id.ToString();
+                    saveAndRefreshCallback.Invoke();
+                    return await PollVideoResults(httpClient, respSerialized.assets, respSerialized.id, folderToSave);
+                }
+                else
+                {
+                    return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
+                return new VideoResponse() { ErrorMsg = ex.Message, Success = false };
+            }
+        }
+
+        public async Task<VideoResponse> AddAudioToGeneration(string generationId, string positivePrompt, string megativePrompt, string folderToSave, ConnectionSettings connectionSettings,
+            GenerationAddAudioItemPayload refItemPlayload, Action saveAndRefreshCallback)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Remove("accept");
+
+                // It's best to keep these here: use can change these from item settings
+                httpClient.BaseAddress = new Uri(connectionSettings.Url);
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Bearer {connectionSettings.AccessToken}");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+
+                if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
+                {
+                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave);
+                }
+                var test = "{\"prompt\":\"" + positivePrompt.Trim() + "\",\"negative_prompt\":\"" + megativePrompt.Trim() + "\"}";
+                var stringContent = new StringContent(test);
+                stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+                var resp = await httpClient.PostAsync($"dream-machine/v1/generations/{generationId}/audio", stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
                 Response respSerialized = null;
 

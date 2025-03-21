@@ -1,14 +1,14 @@
 ﻿using PluginBase;
 using System.Text.Json.Nodes;
 
-namespace LumaAiDreamMachinePlugin.VideoUpscale
+namespace LumaAiDreamMachinePlugin.AddAudio
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class LumaAiDreamMachineGenerationUpscalePlugin : IVideoPlugin, ISaveAndRefresh, IContentId
+    public class LumaAiDreamMachineGenerationAddAudioPlugin : IVideoPlugin, ISaveAndRefresh, IContentId
     {
-        public string UniqueName { get => "LumaAiDreamMachineGenerationUpscaleBuildIn"; }
-        public string DisplayName { get => "Luma AI Dream Machine Generation upscale"; }
+        public string UniqueName { get => "LumaAiDreamMachineGenerationAddAudtioBuildIn"; }
+        public string DisplayName { get => "Luma AI Dream Machine Add audio"; }
 
         public object GeneralDefaultSettings => new ConnectionSettings();
 
@@ -29,12 +29,12 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
 
         public object DefaultPayloadForVideoItem()
         {
-            return new GenerationUpscaleItemPayload();
+            return new GenerationAddAudioItemPayload();
         }
 
         public object DefaultPayloadForVideoTrack()
         {
-            return new GenerationUpscaleTrackPayload();
+            return new GenerationAddAudioTrackPayload();
         }
 
         public async Task<VideoResponse> GetVideo(object GenerationUpscaleTrackPayload, object itemsPayload, string folderToSaveVideo)
@@ -44,14 +44,33 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
                 return new VideoResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
 
-            if (JsonHelper.DeepCopy<GenerationUpscaleTrackPayload>(GenerationUpscaleTrackPayload) is GenerationUpscaleTrackPayload newTp &&
-                JsonHelper.DeepCopy<GenerationUpscaleItemPayload>(itemsPayload) is GenerationUpscaleItemPayload newIp)
+            while (LumaAiDreamMachineImgToVidPlugin.CurrentTasks > 19)
             {
-                return await client.UpscaleGeneration(newIp.GenerationId, newTp.Resolution, folderToSaveVideo, _connectionSettings, itemsPayload as GenerationUpscaleItemPayload, saveAndRefreshCallback);
+                await Task.Delay(1000);
             }
-            else
+
+            LumaAiDreamMachineImgToVidPlugin.CurrentTasks++;
+
+            try
             {
-                return new VideoResponse { ErrorMsg = "Track playoad or item payload object not valid", Success = false };
+                if (JsonHelper.DeepCopy<GenerationAddAudioTrackPayload>(GenerationUpscaleTrackPayload) is GenerationAddAudioTrackPayload newTp &&
+                JsonHelper.DeepCopy<GenerationAddAudioItemPayload>(itemsPayload) is GenerationAddAudioItemPayload newIp)
+                {
+                    return await client.AddAudioToGeneration(newIp.GenerationId, newIp.Prompt + " " + newTp.Prompt, newIp.NegativePrompt + " " + newTp.NegativePrompt, folderToSaveVideo,
+                        _connectionSettings, itemsPayload as GenerationAddAudioItemPayload, saveAndRefreshCallback);
+                }
+                else
+                {
+                    return new VideoResponse { ErrorMsg = "Track playoad or item payload object not valid", Success = false };
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                LumaAiDreamMachineImgToVidPlugin.CurrentTasks--;
             }
         }
 
@@ -79,18 +98,12 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
             {
                 return Array.Empty<string>();
             }
-            // TODO: Mutta miten jos tää onkin image? Samassa siis
-            if (propertyName == nameof(GenerationUpscaleTrackPayload.Resolution))
-            {
-                return ["1080p", "4k"];
-            }
-
             return Array.Empty<string>();
         }
 
         public object CopyPayloadForVideoTrack(object obj)
         {
-            if (JsonHelper.DeepCopy<GenerationUpscaleTrackPayload>(obj) is GenerationUpscaleTrackPayload set)
+            if (JsonHelper.DeepCopy<GenerationAddAudioTrackPayload>(obj) is GenerationAddAudioTrackPayload set)
             {
                 return set;
             }
@@ -99,7 +112,7 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
 
         public object CopyPayloadForVideoItem(object obj)
         {
-            if (JsonHelper.DeepCopy<GenerationUpscaleItemPayload>(obj) is GenerationUpscaleItemPayload set)
+            if (JsonHelper.DeepCopy<GenerationAddAudioItemPayload>(obj) is GenerationAddAudioItemPayload set)
             {
                 return set;
             }
@@ -108,12 +121,12 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
 
         public object DeserializePayload(string fileName)
         {
-            return JsonHelper.Deserialize<GenerationUpscaleTrackPayload>(fileName);
+            return JsonHelper.Deserialize<GenerationAddAudioTrackPayload>(fileName);
         }
 
         public IPluginBase CreateNewInstance()
         {
-            return new LumaAiDreamMachineGenerationUpscalePlugin();
+            return new LumaAiDreamMachineGenerationAddAudioPlugin();
         }
 
         public async Task<string> TestInitialization()
@@ -140,7 +153,7 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
 
         public (bool payloadOk, string reasonIfNot) ValidateVideoPayload(object payload)
         {
-            if (payload is GenerationUpscaleItemPayload ip)
+            if (payload is GenerationAddAudioItemPayload ip)
             {
                 if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
                 {
@@ -149,6 +162,11 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
                 if (string.IsNullOrEmpty(ip.GenerationId))
                 {
                     return (false, "Generation id empty. Right click existing DreamMachine video item to copy id to clipboard");
+                }
+
+                if (string.IsNullOrEmpty(ip.Prompt))
+                {
+                    return (false, "Prompt empty");
                 }
             }
 
@@ -164,12 +182,12 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
 
         public object ObjectToItemPayload(JsonObject obj)
         {
-            return JsonHelper.ToExactType<GenerationUpscaleItemPayload>(obj);
+            return JsonHelper.ToExactType<GenerationAddAudioItemPayload>(obj);
         }
 
         public object ObjectToTrackPayload(JsonObject obj)
         {
-            return JsonHelper.ToExactType<GenerationUpscaleTrackPayload>(obj);
+            return JsonHelper.ToExactType<GenerationAddAudioTrackPayload>(obj);
         }
 
         public object ObjectToGeneralSettings(JsonObject obj)
@@ -189,7 +207,7 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
 
         public string GetContentFromPayloadId(object payload)
         {
-            if (payload is GenerationUpscaleItemPayload ip)
+            if (payload is GenerationAddAudioItemPayload ip)
             {
                 return ip.PollingId;
             }

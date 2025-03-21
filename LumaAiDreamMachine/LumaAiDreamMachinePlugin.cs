@@ -27,6 +27,8 @@ namespace LumaAiDreamMachinePlugin
         private ConnectionSettings _connectionSettings = new ConnectionSettings();
         private LumaAiDreamMachineWrapper _wrapper = new LumaAiDreamMachineWrapper();
 
+        public static int CurrentTasks = 0;
+
         public object DefaultPayloadForVideoItem()
         {
             return new ItemPayload();
@@ -44,56 +46,74 @@ namespace LumaAiDreamMachinePlugin
                 return new VideoResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
 
-            if (JsonHelper.DeepCopy<TrackPayload>(trackPayload) is TrackPayload newTp && JsonHelper.DeepCopy<ItemPayload>(itemsPayload) is ItemPayload newIp)
+            while (CurrentTasks > 19)
             {
-                // combine prompts
-
-                // Also, when img2Vid
-
-                newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
-                newTp.Settings.keyframes = newIp.KeyFrames;
-
-                // Upload to cloud first
-                if (!string.IsNullOrEmpty(newTp.Settings.keyframes.frame0.url))
-                {
-                    var resp = await _uploader.RequestContentUpload(newTp.Settings.keyframes.frame0.url);
-
-                    if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
-                    {
-                        newTp.Settings.keyframes.frame0.url = resp.uploadedUrl;
-                    }
-                    else
-                    {
-                        return new VideoResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(newTp.Settings.keyframes.frame1.url))
-                {
-                    var resp = await _uploader.RequestContentUpload(newTp.Settings.keyframes.frame1.url);
-
-                    if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
-                    {
-                        newTp.Settings.keyframes.frame1.url = resp.uploadedUrl;
-                    }
-                    else
-                    {
-                        return new VideoResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
-                    }
-                }
-
-                if (newTp.Settings.model == "ray-1-6")
-                {
-                    // TODO: quick hack, remember to do thatdunamic thingies as well
-                    newTp.Settings.duration = null;
-                    newTp.Settings.resolution = null;
-                }
-
-                return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
+                await Task.Delay(1000);
             }
-            else
+
+            CurrentTasks++;
+
+            try
             {
-                return new VideoResponse { ErrorMsg = "Track playoad or item payload object not valid", Success = false };
+                if (JsonHelper.DeepCopy<TrackPayload>(trackPayload) is TrackPayload newTp && JsonHelper.DeepCopy<ItemPayload>(itemsPayload) is ItemPayload newIp)
+                {
+                    // combine prompts
+
+                    // Also, when img2Vid
+
+                    newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
+                    newTp.Settings.keyframes = newIp.KeyFrames;
+
+                    // Upload to cloud first
+                    if (!string.IsNullOrEmpty(newTp.Settings.keyframes.frame0.url))
+                    {
+                        var resp = await _uploader.RequestContentUpload(newTp.Settings.keyframes.frame0.url);
+
+                        if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                        {
+                            newTp.Settings.keyframes.frame0.url = resp.uploadedUrl;
+                        }
+                        else
+                        {
+                            return new VideoResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(newTp.Settings.keyframes.frame1.url))
+                    {
+                        var resp = await _uploader.RequestContentUpload(newTp.Settings.keyframes.frame1.url);
+
+                        if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                        {
+                            newTp.Settings.keyframes.frame1.url = resp.uploadedUrl;
+                        }
+                        else
+                        {
+                            return new VideoResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                        }
+                    }
+
+                    if (newTp.Settings.model == "ray-1-6")
+                    {
+                        // TODO: quick hack, remember to do thatdunamic thingies as well
+                        newTp.Settings.duration = null;
+                        newTp.Settings.resolution = null;
+                    }
+
+                    return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
+                }
+                else
+                {
+                    return new VideoResponse { ErrorMsg = "Track playoad or item payload object not valid", Success = false };
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                CurrentTasks--;
             }
         }
 
@@ -104,90 +124,108 @@ namespace LumaAiDreamMachinePlugin
                 return new ImageResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
 
-            if (JsonHelper.DeepCopy<ImageTrackPayload>(trackPayload) is ImageTrackPayload newTp && JsonHelper.DeepCopy<ImageItemPayload>(itemsPayload) is ImageItemPayload newIp)
+            while (CurrentTasks > 19)
             {
-                // combine prompts
-
-                // Also, when img2Vid
-
-                newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
-
-                // Upload to cloud first
-                if (newIp.ImageRef != null && !string.IsNullOrEmpty(newIp.ImageRef.ImageSource))
-                {
-                    newTp.Settings.image_ref = [new ImageRequestRefImage()];
-
-                    var resp = await _uploader.RequestContentUpload(newIp.ImageRef.ImageSource);
-
-                    if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
-                    {
-                        newTp.Settings.image_ref[0].url = resp.uploadedUrl;
-                    }
-                    else
-                    {
-                        return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
-                    }
-
-                    newTp.Settings.image_ref[0].weight = newIp.ImageRef.weight;
-                }
-
-                if (newIp.StyleRef != null && !string.IsNullOrEmpty(newIp.StyleRef.ImageSource))
-                {
-                    newTp.Settings.style_ref = [new ImageRequestRefImage()];
-
-                    var resp = await _uploader.RequestContentUpload(newIp.StyleRef.ImageSource);
-
-                    if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
-                    {
-                        newTp.Settings.style_ref[0].url = resp.uploadedUrl;
-                    }
-                    else
-                    {
-                        return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
-                    }
-
-                    newTp.Settings.style_ref[0].weight = newIp.StyleRef.weight;
-                }
-
-                if (newIp.ModifyImage != null && !string.IsNullOrEmpty(newIp.ModifyImage.ImageSource))
-                {
-                    newTp.Settings.modify_image_ref = new ImageRequestRefImage();
-
-                    var resp = await _uploader.RequestContentUpload(newIp.ModifyImage.ImageSource);
-
-                    if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
-                    {
-                        newTp.Settings.modify_image_ref.url = resp.uploadedUrl;
-                    }
-                    else
-                    {
-                        return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
-                    }
-
-                    newTp.Settings.modify_image_ref.weight = newIp.ModifyImage.weight;
-                }
-
-                if (newIp.CharacterRef != null && !string.IsNullOrEmpty(newIp.CharacterRef.CharacterSource))
-                {
-                    newTp.Settings.character_ref = new ImageRequestRefCharacter();
-
-                    var resp = await _uploader.RequestContentUpload(newIp.CharacterRef.CharacterSource);
-
-                    if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
-                    {
-                        newTp.Settings.character_ref.identity0.images[0] = resp.uploadedUrl;
-                    }
-                    else
-                    {
-                        return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
-                    }
-                }
-
-                return await _wrapper.GetImage(newTp.Settings, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback);
+                await Task.Delay(1000);
             }
-            else
+
+            CurrentTasks++;
+
+            try
             {
-                return new ImageResponse { ErrorMsg = "Track playoad or item payload object not valid", Success = false };
+                if (JsonHelper.DeepCopy<ImageTrackPayload>(trackPayload) is ImageTrackPayload newTp && JsonHelper.DeepCopy<ImageItemPayload>(itemsPayload) is ImageItemPayload newIp)
+                {
+                    // combine prompts
+
+                    // Also, when img2Vid
+
+                    newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
+
+                    // Upload to cloud first
+                    if (newIp.ImageRef != null && !string.IsNullOrEmpty(newIp.ImageRef.ImageSource))
+                    {
+                        newTp.Settings.image_ref = [new ImageRequestRefImage()];
+
+                        var resp = await _uploader.RequestContentUpload(newIp.ImageRef.ImageSource);
+
+                        if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                        {
+                            newTp.Settings.image_ref[0].url = resp.uploadedUrl;
+                        }
+                        else
+                        {
+                            return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                        }
+
+                        newTp.Settings.image_ref[0].weight = newIp.ImageRef.weight;
+                    }
+
+                    if (newIp.StyleRef != null && !string.IsNullOrEmpty(newIp.StyleRef.ImageSource))
+                    {
+                        newTp.Settings.style_ref = [new ImageRequestRefImage()];
+
+                        var resp = await _uploader.RequestContentUpload(newIp.StyleRef.ImageSource);
+
+                        if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                        {
+                            newTp.Settings.style_ref[0].url = resp.uploadedUrl;
+                        }
+                        else
+                        {
+                            return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                        }
+
+                        newTp.Settings.style_ref[0].weight = newIp.StyleRef.weight;
+                    }
+
+                    if (newIp.ModifyImage != null && !string.IsNullOrEmpty(newIp.ModifyImage.ImageSource))
+                    {
+                        newTp.Settings.modify_image_ref = new ImageRequestRefImage();
+
+                        var resp = await _uploader.RequestContentUpload(newIp.ModifyImage.ImageSource);
+
+                        if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                        {
+                            newTp.Settings.modify_image_ref.url = resp.uploadedUrl;
+                        }
+                        else
+                        {
+                            return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                        }
+
+                        newTp.Settings.modify_image_ref.weight = newIp.ModifyImage.weight;
+                    }
+
+                    if (newIp.CharacterRef != null && !string.IsNullOrEmpty(newIp.CharacterRef.CharacterSource))
+                    {
+                        newTp.Settings.character_ref = new ImageRequestRefCharacter();
+
+                        var resp = await _uploader.RequestContentUpload(newIp.CharacterRef.CharacterSource);
+
+                        if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                        {
+                            newTp.Settings.character_ref.identity0.images[0] = resp.uploadedUrl;
+                        }
+                        else
+                        {
+                            return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                        }
+                    }
+
+                    return await _wrapper.GetImage(newTp.Settings, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback);
+                }
+                else
+                {
+                    return new ImageResponse { ErrorMsg = "Track playoad or item payload object not valid", Success = false };
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                CurrentTasks--;
             }
         }
 
