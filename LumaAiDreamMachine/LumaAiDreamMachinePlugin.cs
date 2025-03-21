@@ -5,7 +5,7 @@ namespace LumaAiDreamMachinePlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class LumaAiDreamMachineImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin
+    public class LumaAiDreamMachineImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin, IContentId
     {
         public string UniqueName { get => "LumaAiDreamMachineImgToVidBuildIn"; }
         public string DisplayName { get => "Luma AI Dream Machine"; }
@@ -241,7 +241,7 @@ namespace LumaAiDreamMachinePlugin
                         return ["photon-1", "photon-flash-1"];
 
                     case IPluginBase.TrackType.Video:
-                        return ["ray-2", "ray-1-6"];
+                        return ["ray-2", "ray-flash-2", "ray-1-6"];
 
                     default:
                         break;
@@ -450,6 +450,20 @@ namespace LumaAiDreamMachinePlugin
             if (itemPayload is ImageItemPayload imgIp)
             {
                 return imgIp.Prompt;
+            }
+            return "";
+        }
+
+        public string GetContentFromPayloadId(object payload)
+        {
+            if (payload is ItemPayload ip)
+            {
+                return ip.PollingId;
+            }
+
+            if (payload is ImageItemPayload imgIp)
+            {
+                return imgIp.PollingId;
             }
             return "";
         }

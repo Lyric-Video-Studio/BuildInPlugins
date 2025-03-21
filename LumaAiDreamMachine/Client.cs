@@ -1,4 +1,5 @@
-﻿using PluginBase;
+﻿using LumaAiDreamMachinePlugin.VideoUpscale;
+using PluginBase;
 using System.ComponentModel;
 using System.Net;
 using System.Net.Http.Headers;
@@ -122,7 +123,7 @@ namespace LumaAiDreamMachinePlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), refItemPlayload, folderToSave, saveAndRefreshCallback);
+                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave);
                 }
 
                 request.keyframes.frame0.type = string.IsNullOrEmpty(request.keyframes.frame0.url) ? "generation" : "image";
@@ -174,7 +175,9 @@ namespace LumaAiDreamMachinePlugin
 
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
-                    return await PollVideoResults(httpClient, respSerialized.assets, respSerialized.id, refItemPlayload, folderToSave, saveAndRefreshCallback);
+                    refItemPlayload.PollingId = respSerialized.id.ToString();
+                    saveAndRefreshCallback.Invoke();
+                    return await PollVideoResults(httpClient, respSerialized.assets, respSerialized.id, folderToSave);
                 }
                 else
                 {
@@ -204,7 +207,7 @@ namespace LumaAiDreamMachinePlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollImageResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), refItemPlayload, saveAndRefreshCallback);
+                    return await PollImageResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId));
                 }
 
                 var serialized = "";
@@ -238,7 +241,9 @@ namespace LumaAiDreamMachinePlugin
 
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
-                    return await PollImageResults(httpClient, respSerialized.assets, respSerialized.id, refItemPlayload, saveAndRefreshCallback);
+                    refItemPlayload.PollingId = respSerialized.id.ToString();
+                    saveAndRefreshCallback.Invoke();
+                    return await PollImageResults(httpClient, respSerialized.assets, respSerialized.id);
                 }
                 else
                 {
@@ -252,12 +257,63 @@ namespace LumaAiDreamMachinePlugin
             }
         }
 
-        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, Asset assets, Guid id, ItemPayload refItemPlayload, string folderToSave, Action saveAndRefreshCallback)
+        public async Task<VideoResponse> UpscaleGeneration(string generationId, string resolution, string folderToSave, ConnectionSettings connectionSettings,
+            GenerationUpscaleItemPayload refItemPlayload, Action saveAndRefreshCallback)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Remove("accept");
+
+                // It's best to keep these here: use can change these from item settings
+                httpClient.BaseAddress = new Uri(connectionSettings.Url);
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Bearer {connectionSettings.AccessToken}");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+
+                if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
+                {
+                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave);
+                }
+
+                var stringContent = new StringContent("{\"resolution\":\"" + resolution + "\"}");
+                stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+                var resp = await httpClient.PostAsync($"dream-machine/v1/generations/{generationId}/upscale", stringContent);
+                var respString = await resp.Content.ReadAsStringAsync();
+                Response respSerialized = null;
+
+                try
+                {
+                    respSerialized = JsonHelper.DeserializeString<Response>(respString);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new VideoResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
+                }
+
+                if (respSerialized != null && resp.IsSuccessStatusCode)
+                {
+                    refItemPlayload.PollingId = respSerialized.id.ToString();
+                    saveAndRefreshCallback.Invoke();
+                    return await PollVideoResults(httpClient, respSerialized.assets, respSerialized.id, folderToSave);
+                }
+                else
+                {
+                    return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
+                return new VideoResponse() { ErrorMsg = ex.Message, Success = false };
+            }
+        }
+
+        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, Asset assets, Guid id, string folderToSave)
         {
             var pollingDelay = TimeSpan.FromSeconds(7);
-
-            refItemPlayload.PollingId = id.ToString();
-            saveAndRefreshCallback?.Invoke();
 
             var videoUrl = assets?.video ?? "";
 
@@ -325,17 +381,13 @@ namespace LumaAiDreamMachinePlugin
             }
             else
             {
-                refItemPlayload.PollingId = "";
                 return new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
             }
         }
 
-        private static async Task<ImageResponse> PollImageResults(HttpClient httpClient, Asset assets, Guid id, ImageItemPayload refItemPlayload, Action saveAndRefreshCallback)
+        private static async Task<ImageResponse> PollImageResults(HttpClient httpClient, Asset assets, Guid id)
         {
             var pollingDelay = TimeSpan.FromSeconds(7);
-
-            refItemPlayload.PollingId = id.ToString();
-            saveAndRefreshCallback?.Invoke();
 
             var imageUrl = assets?.image ?? "";
 
@@ -401,7 +453,6 @@ namespace LumaAiDreamMachinePlugin
             }
             else
             {
-                refItemPlayload.PollingId = "";
                 return new ImageResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
             }
         }
