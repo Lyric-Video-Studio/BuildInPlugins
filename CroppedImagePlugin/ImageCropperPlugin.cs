@@ -335,5 +335,10 @@ namespace CroppedImagePlugin
         {
             return "";
         }
+
+        public void SetPayloads(object trackpayload, object trackOverridePayload, object itemPayload)
+        {
+            // Not used, DataContext set to UserCOntrol instances is enough for this plugin
+        }
     }
 }
