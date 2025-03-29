@@ -5,10 +5,10 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class LumaAiDreamMachineGenerationUpscalePlugin : IVideoPlugin, ISaveAndRefresh, IContentId
+    public class LumaAiDreamMachineGenerationUpscalePlugin : IVideoPlugin, ISaveAndRefresh, IContentId, IImportContentId
     {
         public string UniqueName { get => "LumaAiDreamMachineGenerationUpscaleBuildIn"; }
-        public string DisplayName { get => "Luma AI Dream Machine Generation upscale"; }
+        public string DisplayName { get => "Dream Machine Generation upscale"; }
 
         public object GeneralDefaultSettings => new ConnectionSettings();
 
@@ -212,6 +212,16 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
                 return ip.PollingId;
             }
             return "";
+        }
+
+        public bool CanImportFrom(string pluginUniqueName, IPluginBase.TrackType track)
+        {
+            return track == IPluginBase.TrackType.Video && pluginUniqueName == LumaAiDreamMachineImgToVidPlugin.PluginName;
+        }
+
+        public object ItemPayloadFromContentId(string id)
+        {
+            return new GenerationUpscaleItemPayload() { GenerationId = id };
         }
     }
 

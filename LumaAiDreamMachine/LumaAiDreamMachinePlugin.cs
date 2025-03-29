@@ -7,8 +7,9 @@ namespace LumaAiDreamMachinePlugin
 
     public class LumaAiDreamMachineImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin, IContentId
     {
-        public string UniqueName { get => "LumaAiDreamMachineImgToVidBuildIn"; }
-        public string DisplayName { get => "Luma AI Dream Machine"; }
+        public const string PluginName = "LumaAiDreamMachineImgToVidBuildIn";
+        public string UniqueName { get => PluginName; }
+        public string DisplayName { get => "Dream Machine"; }
 
         public object GeneralDefaultSettings => new ConnectionSettings();
 

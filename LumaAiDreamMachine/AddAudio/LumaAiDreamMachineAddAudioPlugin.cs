@@ -8,7 +8,7 @@ namespace LumaAiDreamMachinePlugin.AddAudio
     public class LumaAiDreamMachineGenerationAddAudioPlugin : IVideoPlugin, ISaveAndRefresh, IContentId
     {
         public string UniqueName { get => "LumaAiDreamMachineGenerationAddAudtioBuildIn"; }
-        public string DisplayName { get => "Luma AI Dream Machine Add audio"; }
+        public string DisplayName { get => "Dream Machine Add audio"; }
 
         public object GeneralDefaultSettings => new ConnectionSettings();
 
