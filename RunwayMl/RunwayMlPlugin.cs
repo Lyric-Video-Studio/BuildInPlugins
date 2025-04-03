@@ -52,7 +52,7 @@ namespace RunwayMlPlugin
 
                 newTp.Request.promptText = newIp.Request.promptText + " " + newTp.Request.promptText;
 
-                if (newIp.Request.seed.HasValue)
+                if (newIp.Request.seed.HasValue && newIp.Request.seed != 0)
                 {
                     newTp.Request.seed = newIp.Request.seed.Value;
                 }

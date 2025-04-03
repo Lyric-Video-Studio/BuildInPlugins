@@ -19,6 +19,8 @@ namespace RunwayMlPlugin
         public string promptImage { get => image; set => image = value; }
 
         public string ratio { get => videoRatio; set => videoRatio = value; }
+
+        [Description("Set to zero to get new random seed")]
         public int? seed { get => videoSeed; set => videoSeed = value; }
 
         [Description("Duration in seconds")]
