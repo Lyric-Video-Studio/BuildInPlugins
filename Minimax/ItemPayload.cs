@@ -1,9 +1,11 @@
 ﻿using PluginBase;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace MinimaxPlugin
 {
-    public class ItemPayload
+    public class ItemPayload : IJsonOnDeserialized
     {
         [IgnoreDynamicEdit]
         public bool IsVideo { get; set; } = true;
@@ -24,5 +26,21 @@ namespace MinimaxPlugin
         [Description("First frame for video")]
         [EnableFileDrop]
         public string ImagePath { get => imagePath; set => imagePath = value; }
+
+        public ObservableCollection<SubjectRef> SubjectReferences { get; set; } = new();
+
+        [CustomAction("Add subject reference")]
+        public void AddSubject()
+        {
+            SubjectReferences.Add(new SubjectRef(SubjectReferences));
+        }
+
+        public void OnDeserialized()
+        {
+            foreach (var item in SubjectReferences)
+            {
+                item.AddParent(SubjectReferences);
+            }
+        }
     }
 }

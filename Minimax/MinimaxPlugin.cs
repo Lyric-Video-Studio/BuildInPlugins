@@ -111,6 +111,36 @@ namespace MinimaxPlugin
                         newTp.Settings.first_frame_image = newUrl.uploadedUrl;
                     }
 
+                    if (newIp.SubjectReferences.Count > 0)
+                    {
+                        foreach (var item in newIp.SubjectReferences)
+                        {
+                            newTp.SubjectReferences.Add(item);
+                        }
+                    }
+
+                    if (newTp.SubjectReferences.Count > 0)
+                    {
+                        newTp.Settings.subject_reference = new KeyFrame[1];
+                        newTp.Settings.subject_reference[0] = new KeyFrame() { image = new string[newTp.SubjectReferences.Count(s => File.Exists(s.Path))] };
+                    }
+                    var actualIndex = 0;
+                    for (int i = 0; i < newTp.SubjectReferences.Count; i++)
+                    {
+                        if (File.Exists(newTp.SubjectReferences[i].Path))
+                        {
+                            var newUrl = await _uploader.RequestContentUpload(newTp.SubjectReferences[i].Path);
+
+                            if (newUrl.responseCode != System.Net.HttpStatusCode.OK)
+                            {
+                                return new VideoResponse { ErrorMsg = $"Failed to upload image, response code: {newUrl.responseCode}", Success = false };
+                            }
+
+                            newTp.Settings.subject_reference[0].image[actualIndex] = newUrl.uploadedUrl;
+                            actualIndex++;
+                        }
+                    }
+
                     return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
                 }
                 else

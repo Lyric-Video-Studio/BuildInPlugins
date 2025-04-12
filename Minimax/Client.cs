@@ -17,6 +17,7 @@ namespace MinimaxPlugin
         public string first_frame_image { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [IgnoreDynamicEdit]
         public KeyFrame[] subject_reference { get; set; }
 
         /*public bool loop { get; set; }
@@ -52,8 +53,6 @@ namespace MinimaxPlugin
         public string file_id { get; set; }
         public BaseResponse base_resp { get; set; }
     }
-
-    // {"file":{"file_id":257638321959088,"bytes":0,"created_at":1744453386,"filename":"output.mp4","purpose":"video_generation","download_url":"https://public-cdn-video-data-algeng.oss-cn-wulanchabu.aliyuncs.com/inference_output%2Fvideo%2F2025-04-12%2F162b098c-091a-4d2f-80e4-f88a8b638986%2Foutput.mp4?Expires=1744486283&OSSAccessKeyId=LTAI5tAmwsjSaaZVA6cEFAUu&Signature=SW1K0WX3lH%2BTq%2BVw1dv2m8MvQDQ%3D"},"base_resp":{"status_code":0,"status_msg":"success"}}
 
     public class VideoFileResponse
     {
