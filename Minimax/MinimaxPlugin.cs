@@ -42,7 +42,7 @@ namespace MinimaxPlugin
 
         public async Task<VideoResponse> GetVideo(object trackPayload, object itemsPayload, string folderToSaveVideo)
         {
-            if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken) || string.IsNullOrEmpty(_connectionSettings.GroupId))
+            if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
             {
                 return new VideoResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
@@ -93,6 +93,23 @@ namespace MinimaxPlugin
                             return new VideoResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
                         }
                     }*/
+
+                    if (!string.IsNullOrEmpty(newIp.ImagePath))
+                    {
+                        newTp.Settings.first_frame_image = newIp.ImagePath;
+                    }
+
+                    if (!string.IsNullOrEmpty(newTp.Settings.first_frame_image))
+                    {
+                        var newUrl = await _uploader.RequestContentUpload(newTp.Settings.first_frame_image);
+
+                        if (newUrl.responseCode != System.Net.HttpStatusCode.OK)
+                        {
+                            return new VideoResponse { ErrorMsg = $"Failed to upload image, response code: {newUrl.responseCode}", Success = false };
+                        }
+
+                        newTp.Settings.first_frame_image = newUrl.uploadedUrl;
+                    }
 
                     return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
                 }
@@ -229,7 +246,7 @@ namespace MinimaxPlugin
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)
             {
                 _connectionSettings = s;
-                _isInitialized = !string.IsNullOrEmpty(s.AccessToken) && !string.IsNullOrEmpty(s.GroupId);
+                _isInitialized = !string.IsNullOrEmpty(s.AccessToken);
                 return "";
             }
             else
@@ -359,7 +376,7 @@ namespace MinimaxPlugin
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 var output = new ItemPayload();
-                //output.KeyFrames.frame0.url = imgSource;
+                output.ImagePath = imgSource;
                 return output;
             }
             else

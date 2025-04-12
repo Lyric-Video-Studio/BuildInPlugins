@@ -120,7 +120,7 @@ namespace MinimaxPlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave, connectionSettings.GroupId);
+                    return await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave);
                 }
 
                 /*request.keyframes.frame0.type = string.IsNullOrEmpty(request.keyframes.frame0.url) ? "generation" : "image";
@@ -177,7 +177,7 @@ namespace MinimaxPlugin
                 {
                     refItemPlayload.PollingId = respSerialized.task_id.ToString();
                     saveAndRefreshCallback.Invoke();
-                    return await PollVideoResults(httpClient, respSerialized.task_id, folderToSave, connectionSettings.GroupId);
+                    return await PollVideoResults(httpClient, respSerialized.task_id, folderToSave);
                 }
                 else
                 {
@@ -257,7 +257,7 @@ namespace MinimaxPlugin
             }
         }*/
 
-        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string id, string folderToSave, string groupId)
+        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string id, string folderToSave)
         {
             var pollingDelay = TimeSpan.FromSeconds(7);
 
