@@ -229,7 +229,7 @@ namespace MinimaxPlugin
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)
             {
                 _connectionSettings = s;
-                _isInitialized = true;
+                _isInitialized = !string.IsNullOrEmpty(s.AccessToken) && !string.IsNullOrEmpty(s.GroupId);
                 return "";
             }
             else

@@ -431,7 +431,7 @@ namespace LumaAiDreamMachinePlugin
             if (videoResp.StatusCode == HttpStatusCode.OK)
             {
                 var respBytes = await videoResp.Content.ReadAsByteArrayAsync();
-                var pathToVideo = Path.Combine(folderToSave, $"{id}.{Path.GetExtension(file)}");
+                var pathToVideo = Path.Combine(folderToSave, $"{id}{Path.GetExtension(file)}");
                 await File.WriteAllBytesAsync(pathToVideo, respBytes);
                 return new VideoResponse() { Success = true, VideoFile = pathToVideo };
             }
