@@ -414,7 +414,7 @@ namespace LumaAiDreamMachinePlugin
 
             var file = Path.GetFileName(videoUrl);
 
-            var downloadClient = new HttpClient { BaseAddress = new Uri(videoUrl.Replace(file, "")) };
+            using var downloadClient = new HttpClient { BaseAddress = new Uri(videoUrl.Replace(file, "")) };
 
             downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
 
@@ -488,7 +488,7 @@ namespace LumaAiDreamMachinePlugin
 
             var file = Path.GetFileName(imageUrl);
 
-            var downloadClient = new HttpClient { BaseAddress = new Uri(imageUrl.Replace(file, "")) };
+            using var downloadClient = new HttpClient { BaseAddress = new Uri(imageUrl.Replace(file, "")) };
 
             downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
 
