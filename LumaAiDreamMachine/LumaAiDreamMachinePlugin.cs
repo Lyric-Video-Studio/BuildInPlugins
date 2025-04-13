@@ -62,7 +62,7 @@ namespace LumaAiDreamMachinePlugin
 
                     // Also, when img2Vid
 
-                    newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
+                    newTp.Settings.prompt = (newTp.Settings.prompt + " " + newIp.Prompt).Trim();
                     newTp.Settings.keyframes = newIp.KeyFrames;
 
                     // Upload to cloud first
@@ -140,7 +140,7 @@ namespace LumaAiDreamMachinePlugin
 
                     // Also, when img2Vid
 
-                    newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
+                    newTp.Settings.prompt = (newTp.Settings.prompt + " " + newIp.Prompt).Trim();
 
                     // Upload to cloud first
                     if (newIp.ImageRef != null && !string.IsNullOrEmpty(newIp.ImageRef.ImageSource))
