@@ -26,7 +26,7 @@ namespace LumaAiDreamMachinePlugin
         public IPluginBase.TrackType CurrentTrackType { get; set; }
 
         private ConnectionSettings _connectionSettings = new ConnectionSettings();
-        private LumaAiDreamMachineWrapper _wrapper = new LumaAiDreamMachineWrapper();
+        private Client _wrapper = new Client();
 
         public static int CurrentTasks = 0;
 
@@ -223,7 +223,7 @@ namespace LumaAiDreamMachinePlugin
                         }
                     }
 
-                    return await _wrapper.GetImage(newTp.Settings, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback);
+                    return await _wrapper.GetImg(newTp.Settings, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback);
                 }
                 else
                 {
@@ -245,8 +245,7 @@ namespace LumaAiDreamMachinePlugin
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)
             {
                 _connectionSettings = s;
-                _isInitialized = true;
-                _wrapper.InitializeClient();
+                _isInitialized = !string.IsNullOrEmpty(s.AccessToken);
                 return "";
             }
             else
@@ -257,7 +256,6 @@ namespace LumaAiDreamMachinePlugin
 
         public void CloseConnection()
         {
-            _wrapper.CloseConnection();
         }
 
         public async Task<string[]> SelectionOptionsForProperty(string propertyName)
