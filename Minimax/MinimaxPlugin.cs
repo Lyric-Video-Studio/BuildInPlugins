@@ -63,36 +63,6 @@ namespace MinimaxPlugin
                     // Also, when img2Vid
 
                     newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
-                    /*newTp.Settings.keyframes = newIp.KeyFrames;
-
-                    // Upload to cloud first
-                    if (!string.IsNullOrEmpty(newTp.Settings.keyframes.frame0.url))
-                    {
-                        var resp = await _uploader.RequestContentUpload(newTp.Settings.keyframes.frame0.url);
-
-                        if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
-                        {
-                            newTp.Settings.keyframes.frame0.url = resp.uploadedUrl;
-                        }
-                        else
-                        {
-                            return new VideoResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(newTp.Settings.keyframes.frame1.url))
-                    {
-                        var resp = await _uploader.RequestContentUpload(newTp.Settings.keyframes.frame1.url);
-
-                        if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
-                        {
-                            newTp.Settings.keyframes.frame1.url = resp.uploadedUrl;
-                        }
-                        else
-                        {
-                            return new VideoResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
-                        }
-                    }*/
 
                     if (!string.IsNullOrEmpty(newIp.ImagePath))
                     {
@@ -158,10 +128,11 @@ namespace MinimaxPlugin
             }
         }
 
+        private Random rnd = new Random();
+
         public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
         {
-            throw new NotImplementedException();
-            /*if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
             {
                 return new ImageResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
@@ -181,80 +152,51 @@ namespace MinimaxPlugin
 
                     // Also, when img2Vid
 
-                    newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
+                    newTp.Settings.prompt = newTp.Settings.prompt + " " + newIp.Prompt;
+
+                    newTp.Settings.prompt = newTp.Settings.prompt.Trim();
 
                     // Upload to cloud first
-                    if (newIp.ImageRef != null && !string.IsNullOrEmpty(newIp.ImageRef.ImageSource))
+                    if (!string.IsNullOrEmpty(newIp.CharacterRef))
                     {
-                        newTp.Settings.image_ref = [new ImageRequestRefImage()];
-
-                        var resp = await _uploader.RequestContentUpload(newIp.ImageRef.ImageSource);
-
-                        if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
-                        {
-                            newTp.Settings.image_ref[0].url = resp.uploadedUrl;
-                        }
-                        else
-                        {
-                            return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
-                        }
-
-                        newTp.Settings.image_ref[0].weight = newIp.ImageRef.weight;
+                        newTp.CharacterReference = newIp.CharacterRef;
                     }
 
-                    if (newIp.StyleRef != null && !string.IsNullOrEmpty(newIp.StyleRef.ImageSource))
+                    if (!string.IsNullOrEmpty(newTp.CharacterReference))
                     {
-                        newTp.Settings.style_ref = [new ImageRequestRefImage()];
+                        newTp.CharacterReference = newTp.CharacterReference.Replace("\"", "");
 
-                        var resp = await _uploader.RequestContentUpload(newIp.StyleRef.ImageSource);
-
-                        if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                        if (File.Exists(newTp.CharacterReference))
                         {
-                            newTp.Settings.style_ref[0].url = resp.uploadedUrl;
-                        }
-                        else
-                        {
-                            return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
-                        }
+                            newTp.Settings.subject_reference = new KeyFrameImage[1];
+                            newTp.Settings.subject_reference[0] = new KeyFrameImage();
 
-                        newTp.Settings.style_ref[0].weight = newIp.StyleRef.weight;
-                    }
+                            var resp = await _uploader.RequestContentUpload(newTp.CharacterReference);
 
-                    if (newIp.ModifyImage != null && !string.IsNullOrEmpty(newIp.ModifyImage.ImageSource))
-                    {
-                        newTp.Settings.modify_image_ref = new ImageRequestRefImage();
-
-                        var resp = await _uploader.RequestContentUpload(newIp.ModifyImage.ImageSource);
-
-                        if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
-                        {
-                            newTp.Settings.modify_image_ref.url = resp.uploadedUrl;
-                        }
-                        else
-                        {
-                            return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
-                        }
-
-                        newTp.Settings.modify_image_ref.weight = newIp.ModifyImage.weight;
-                    }
-
-                    if (newIp.CharacterRef != null && !string.IsNullOrEmpty(newIp.CharacterRef.CharacterSource))
-                    {
-                        newTp.Settings.character_ref = new ImageRequestRefCharacter();
-
-                        var resp = await _uploader.RequestContentUpload(newIp.CharacterRef.CharacterSource);
-
-                        if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
-                        {
-                            newTp.Settings.character_ref.identity0.images[0] = resp.uploadedUrl;
-                        }
-                        else
-                        {
-                            return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                            if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                            {
+                                newTp.Settings.subject_reference[0].image_file = resp.uploadedUrl;
+                            }
+                            else
+                            {
+                                return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                            }
                         }
                     }
 
-                    return await _wrapper.GetImage(newTp.Settings, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback);
+                    if (newIp.Seed > 0)
+                    {
+                        newTp.Settings.seed = newIp.Seed;
+                    }
+
+                    if (newTp.Settings.seed <= 0)
+                    {
+                        newTp.Settings.seed = rnd.NextInt64();
+                        (itemsPayload as ImageItemPayload).Seed = newTp.Settings.seed;
+                        saveAndRefreshCallback.Invoke();
+                    }
+
+                    return await _wrapper.GetImg(newTp.Settings, _connectionSettings);
                 }
                 else
                 {
@@ -268,7 +210,7 @@ namespace MinimaxPlugin
             finally
             {
                 CurrentTasks--;
-            }*/
+            }
         }
 
         public async Task<string> Initialize(object settings)
@@ -287,7 +229,6 @@ namespace MinimaxPlugin
 
         public void CloseConnection()
         {
-            _wrapper = null;
         }
 
         public async Task<string[]> SelectionOptionsForProperty(string propertyName)
@@ -301,15 +242,17 @@ namespace MinimaxPlugin
             {
                 switch (CurrentTrackType)
                 {
-                    case IPluginBase.TrackType.Image:
-                        return ["photon-1", "photon-flash-1"];
-
                     case IPluginBase.TrackType.Video:
                         return ["S2V-01", "T2V-01", "T2V-01-Director", "I2V-01", "I2V-01-Director", "I2V-01-live"];
 
                     default:
                         break;
                 }
+            }
+
+            if (propertyName == nameof(ImageRequest.aspect_ratio))
+            {
+                return ["16:9", "1:1", "4:3", "2:3", "3:4r", "9:16", "21:9"];
             }
             return Array.Empty<string>();
         }
@@ -411,7 +354,7 @@ namespace MinimaxPlugin
             }
             else
             {
-                return new ImageItemPayload() { ImageRef = new ImageRef() { ImageSource = imgSource } };
+                return new ImageItemPayload() { CharacterRef = imgSource };
             }
         }
 
@@ -422,7 +365,7 @@ namespace MinimaxPlugin
 
         public object ObjectToItemPayload(JsonObject obj)
         {
-            if (obj[nameof(ItemPayload.IsVideo)].AsValue().TryGetValue<bool>(out var isVid) && isVid)
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 var resp = JsonHelper.ToExactType<ItemPayload>(obj);
                 return resp;
@@ -433,7 +376,7 @@ namespace MinimaxPlugin
 
         public object ObjectToTrackPayload(JsonObject obj)
         {
-            if (obj[nameof(TrackPayload.IsVideo)].AsValue().TryGetValue<bool>(out var isVid) && isVid)
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 var resp = JsonHelper.ToExactType<TrackPayload>(obj);
                 return resp;

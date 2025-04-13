@@ -19,25 +19,48 @@ namespace MinimaxPlugin
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         [IgnoreDynamicEdit]
         public KeyFrame[] subject_reference { get; set; }
+    }
 
-        /*public bool loop { get; set; }
+    public class ImageRequest
+    {
+        [IgnoreDynamicEdit]
+        public string model { get; set; } = "image-01";
+
+        public string prompt { get; set; } = "";
+        public bool prompt_optimizer { get; set; } = true;
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [IgnoreDynamicEdit]
+        public KeyFrameImage[] subject_reference { get; set; }
 
         public string aspect_ratio { get; set; } = "16:9";
 
-        [Description("Only for ray-2 model. Resolutions higher than 720p only supported in txtToVideo")]
-        public string resolution { get; set; } = "720p";
+        [IgnoreDynamicEdit]
+        public string response_format { get; set; } = "base64";
 
-        [Description("Only for ray-2 model")]
-        public string duration { get; set; } = "5s";
+        [Description("0 = use random seed")]
+        public long seed { get; set; }
 
         [IgnoreDynamicEdit]
-        public KeyFrames keyframes { get; set; } = new KeyFrames();*/
+        public int n { get; set; } = 1;
     }
 
     public class Response
     {
         public string task_id { get; set; }
         public BaseResponse base_resp { get; set; }
+    }
+
+    public class MiniMaxImageResponse
+    {
+        public ImageData data { get; set; }
+        public BaseResponse base_resp { get; set; }
+    }
+
+    public class ImageData
+    {
+        public string[] image_urls { get; set; }
+        public string[] image_base64 { get; set; }
     }
 
     public class BaseResponse
@@ -70,34 +93,21 @@ namespace MinimaxPlugin
         public string download_url { get; set; }
     }
 
-    /*public class ImageRequest
-    {
-        public string model { get; set; } = "photon-1";
-        public string prompt { get; set; } = "";
-        public string aspect_ratio { get; set; } = "16:9";
-
-        [IgnoreDynamicEdit]
-        public ImageRequestRefImage[] image_ref { get; set; }
-
-        [IgnoreDynamicEdit]
-        public ImageRequestRefImage[] style_ref { get; set; }
-
-        [IgnoreDynamicEdit]
-        public ImageRequestRefCharacter character_ref { get; set; }
-
-        [IgnoreDynamicEdit]
-        public ImageRequestRefImage modify_image_ref { get; set; }
-
-        //[IgnoreDynamicEdit]
-        //public KeyFrames keyframes { get; set; } = new KeyFrames();
-    }*/
-
     public class KeyFrame
     {
         [IgnoreDynamicEdit]
         public string type { get; set; } = "character";
 
         public string[] image { get; set; }
+    }
+
+    public class KeyFrameImage
+    {
+        [IgnoreDynamicEdit]
+        public string type { get; set; } = "character";
+
+        [EnableFileDrop]
+        public string image_file { get; set; }
     }
 
     internal class Client
@@ -121,24 +131,6 @@ namespace MinimaxPlugin
                 {
                     return await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave);
                 }
-
-                /*request.keyframes.frame0.type = string.IsNullOrEmpty(request.keyframes.frame0.url) ? "generation" : "image";
-                request.keyframes.frame1.type = string.IsNullOrEmpty(request.keyframes.frame1.url) ? "generation" : "image";
-
-                if (string.IsNullOrEmpty(request.keyframes.frame0.url) && string.IsNullOrEmpty(request.keyframes.frame0.id))
-                {
-                    request.keyframes.frame0 = null;
-                }
-
-                if (string.IsNullOrEmpty(request.keyframes.frame1.url) && string.IsNullOrEmpty(request.keyframes.frame1.id))
-                {
-                    request.keyframes.frame1 = null;
-                }
-
-                if (request.keyframes.frame0 == null && request.keyframes.frame1 == null)
-                {
-                    request.keyframes = null;
-                }*/
 
                 var serialized = "";
 
@@ -190,8 +182,7 @@ namespace MinimaxPlugin
             }
         }
 
-        /*public async Task<ImageResponse> GetImg(ImageRequest request, ConnectionSettings connectionSettings,
-            ImageItemPayload refItemPlayload, Action saveAndRefreshCallback)
+        public async Task<ImageResponse> GetImg(ImageRequest request, ConnectionSettings connectionSettings)
         {
             try
             {
@@ -203,11 +194,6 @@ namespace MinimaxPlugin
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Bearer {connectionSettings.AccessToken}");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
-
-                if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
-                {
-                    return await PollImageResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId));
-                }
 
                 var serialized = "";
 
@@ -224,13 +210,13 @@ namespace MinimaxPlugin
                 var stringContent = new StringContent(serialized);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
-                var resp = await httpClient.PostAsync("dream-machine/v1/generations/image", stringContent);
+                var resp = await httpClient.PostAsync("/v1/image_generation", stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
-                Response respSerialized = null;
+                MiniMaxImageResponse respSerialized = null;
 
                 try
                 {
-                    respSerialized = JsonHelper.DeserializeString<Response>(respString);
+                    respSerialized = JsonHelper.DeserializeString<MiniMaxImageResponse>(respString);
                 }
                 catch (Exception ex)
                 {
@@ -238,11 +224,9 @@ namespace MinimaxPlugin
                     return new ImageResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
                 }
 
-                if (respSerialized != null && resp.IsSuccessStatusCode)
+                if (respSerialized != null && resp.IsSuccessStatusCode && respSerialized.base_resp.status_code == 0)
                 {
-                    refItemPlayload.PollingId = respSerialized.id.ToString();
-                    saveAndRefreshCallback.Invoke();
-                    return await PollImageResults(httpClient, respSerialized.assets, respSerialized.id);
+                    return new ImageResponse() { Success = true, Image = respSerialized.data.image_base64.First(), ImageFormat = "jpg" };
                 }
                 else
                 {
@@ -254,7 +238,7 @@ namespace MinimaxPlugin
                 System.Diagnostics.Debug.WriteLine(ex.ToString());
                 return new ImageResponse() { ErrorMsg = ex.Message, Success = false };
             }
-        }*/
+        }
 
         private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string id, string folderToSave)
         {
@@ -362,77 +346,5 @@ namespace MinimaxPlugin
                 return new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
             }
         }
-
-        /*private static async Task<ImageResponse> PollImageResults(HttpClient httpClient, Asset assets, Guid id)
-        {
-            var pollingDelay = TimeSpan.FromSeconds(7);
-
-            var imageUrl = assets?.image ?? "";
-
-            while (string.IsNullOrEmpty(assets?.image))
-            {
-                // Wait for assets to be filled
-                try
-                {
-                    var generationResp = await httpClient.GetAsync($"dream-machine/v1/generations/{id}");
-                    var respString = await generationResp.Content.ReadAsStringAsync();
-                    Response respSerialized = null;
-
-                    try
-                    {
-                        respSerialized = JsonHelper.DeserializeString<Response>(respString);
-                        assets = respSerialized.assets;
-
-                        if (respSerialized.state == "failed")
-                        {
-                            return new ImageResponse() { Success = false, ErrorMsg = "Luma Ai backend reported that video generating failed" };
-                        }
-
-                        System.Diagnostics.Debug.WriteLine($"State: {respSerialized.state}");
-
-                        if (string.IsNullOrEmpty(assets?.image))
-                        {
-                            await Task.Delay(pollingDelay);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine(ex.ToString());
-                    }
-                }
-                catch (Exception)
-                {
-                    throw;
-                }
-            }
-
-            imageUrl = assets?.image ?? "";
-
-            var file = Path.GetFileName(imageUrl);
-
-            var downloadClient = new HttpClient { BaseAddress = new Uri(imageUrl.Replace(file, "")) };
-
-            downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
-
-            // Store video request token to disk, in case connection is broken or something
-
-            var videoResp = await downloadClient.GetAsync(file);
-
-            while (videoResp.StatusCode != HttpStatusCode.OK)
-            {
-                await Task.Delay(pollingDelay);
-                videoResp = await downloadClient.GetAsync(file);
-            }
-
-            if (videoResp.StatusCode == HttpStatusCode.OK)
-            {
-                var respBytes = await videoResp.Content.ReadAsByteArrayAsync();
-                return new ImageResponse() { Success = true, Image = Convert.ToBase64String(respBytes), ImageFormat = "jpg" };
-            }
-            else
-            {
-                return new ImageResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
-            }
-        }*/
     }
 }

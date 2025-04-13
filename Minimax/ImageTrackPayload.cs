@@ -1,16 +1,16 @@
 ﻿using PluginBase;
 using System.ComponentModel;
+using System.Globalization;
 
 namespace MinimaxPlugin
 {
     public class ImageTrackPayload
     {
-        [IgnoreDynamicEdit]
-        public bool IsVideo { get; set; } = false;
-
-        /*private ImageRequest txtToImgPayload = new ImageRequest();
+        private ImageRequest txtToImgPayload = new ImageRequest();
 
         [Description("Image settings")]
-        public ImageRequest Settings { get => txtToImgPayload; set => txtToImgPayload = value; }*/
+        public ImageRequest Settings { get => txtToImgPayload; set => txtToImgPayload = value; }
+
+        public string CharacterReference { get; set; }
     }
 }
