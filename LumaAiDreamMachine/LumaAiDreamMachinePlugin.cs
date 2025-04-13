@@ -197,19 +197,29 @@ namespace LumaAiDreamMachinePlugin
                         newTp.Settings.modify_image_ref.weight = newIp.ModifyImage.weight;
                     }
 
-                    if (newIp.CharacterRef != null && !string.IsNullOrEmpty(newIp.CharacterRef.CharacterSource))
+                    for (int i = 0; i < newIp.CharacterRefs.Count; i++)
+                    {
+                        newIp.CharacterRefs[i].SourceFile = newIp.CharacterRefs[i].SourceFile.Replace("\"", ""); // Because windows source copy gives quotes...
+                    }
+
+                    var charRefs = newIp.CharacterRefs.Where(s => File.Exists(s.SourceFile)).ToList(); ;
+                    if (charRefs.Count > 0)
                     {
                         newTp.Settings.character_ref = new ImageRequestRefCharacter();
+                        newTp.Settings.character_ref.identity0.images = new string[charRefs.Count];
 
-                        var resp = await _uploader.RequestContentUpload(newIp.CharacterRef.CharacterSource);
+                        for (int i = 0; i < charRefs.Count; i++)
+                        {
+                            var resp = await _uploader.RequestContentUpload(charRefs[i].SourceFile);
 
-                        if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
-                        {
-                            newTp.Settings.character_ref.identity0.images[0] = resp.uploadedUrl;
-                        }
-                        else
-                        {
-                            return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                            if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                            {
+                                newTp.Settings.character_ref.identity0.images[i] = resp.uploadedUrl;
+                            }
+                            else
+                            {
+                                return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                            }
                         }
                     }
 

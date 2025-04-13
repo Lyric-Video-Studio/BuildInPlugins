@@ -1,9 +1,11 @@
 ﻿using PluginBase;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace LumaAiDreamMachinePlugin
 {
-    public class ImageItemPayload
+    public class ImageItemPayload : IJsonOnDeserialized
     {
         [IgnoreDynamicEdit]
         public bool IsVideo { get; set; } = false;
@@ -23,7 +25,8 @@ namespace LumaAiDreamMachinePlugin
         [ParentName("Modify imagee")]
         public ImageRef ModifyImage { get; set; }
 
-        public CharacterRef CharacterRef { get; set; }
+        [Description("Up to 4")]
+        public ObservableCollection<CharacterRef> CharacterRefs { get; set; } = new ObservableCollection<CharacterRef>();
 
         private string pollingId;
 
@@ -58,13 +61,12 @@ namespace LumaAiDreamMachinePlugin
         [CustomAction("Add character reference")]
         public void AddCharacterReference()
         {
-            CharacterRef = new CharacterRef();
-        }
-
-        [CustomAction("Remove character reference")]
-        public void RemoveCharacterReference()
-        {
-            CharacterRef = null;
+            if (CharacterRefs.Count < 4)
+            {
+                var r = new CharacterRef();
+                r.AddParent(CharacterRefs);
+                CharacterRefs.Add(r);
+            }
         }
 
         [CustomAction("Add modify image")]
@@ -78,6 +80,14 @@ namespace LumaAiDreamMachinePlugin
         {
             ModifyImage = null;
         }
+
+        public void OnDeserialized()
+        {
+            foreach (var item in CharacterRefs)
+            {
+                item.AddParent(CharacterRefs);
+            }
+        }
     }
 
     public class ImageRef
@@ -90,6 +100,20 @@ namespace LumaAiDreamMachinePlugin
 
     public class CharacterRef
     {
-        public string CharacterSource { get; set; }
+        private ObservableCollection<CharacterRef> parent;
+
+        public void AddParent(ObservableCollection<CharacterRef> list)
+        {
+            parent = list;
+        }
+
+        [EnableFileDrop]
+        public string SourceFile { get; set; }
+
+        [CustomAction("Remove character reference")]
+        public void RemoveCharacterReference()
+        {
+            parent.Remove(this);
+        }
     }
 }

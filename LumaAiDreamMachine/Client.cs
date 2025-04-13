@@ -65,7 +65,7 @@ namespace LumaAiDreamMachinePlugin
 
     public class RefCharacter
     {
-        public string[] images { get; set; } = new string[1];
+        public string[] images { get; set; }
     }
 
     public class KeyFrames
