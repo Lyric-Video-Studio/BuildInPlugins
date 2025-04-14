@@ -239,6 +239,48 @@ namespace LumaAiDreamMachinePlugin.AddAudio
             }
             throw new NotImplementedException();
         }
+
+        public object CopyPayloadForTrack(object obj)
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Video:
+                    return CopyPayloadForVideoTrack(obj);
+
+                default:
+                    break;
+            }
+            throw new NotImplementedException();
+        }
+
+        public object CopyPayloadForItem(object obj)
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Video:
+                    return CopyPayloadForVideoItem(obj);
+
+                default:
+                    break;
+            }
+            throw new NotImplementedException();
+        }
+
+        public (bool payloadOk, string reasonIfNot) ValidatePayload(object payload)
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Video:
+                    return ValidateVideoPayload(payload);
+
+                case IPluginBase.TrackType.Audio:
+                    return (true, "");
+
+                default:
+                    break;
+            }
+            return (true, "");
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

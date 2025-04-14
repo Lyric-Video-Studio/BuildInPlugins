@@ -366,5 +366,47 @@ namespace CroppedImagePlugin
             }
             throw new NotImplementedException();
         }
+
+        public object CopyPayloadForTrack(object obj)
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Image:
+                    return CopyPayloadForImageTrack(obj);
+
+                default:
+                    break;
+            }
+            throw new NotImplementedException();
+        }
+
+        public object CopyPayloadForItem(object obj)
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Image:
+                    return CopyPayloadForImageItem(obj);
+
+                default:
+                    break;
+            }
+            throw new NotImplementedException();
+        }
+
+        public (bool payloadOk, string reasonIfNot) ValidatePayload(object payload)
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Image:
+                    return ValidateImagePayload(payload);
+
+                case IPluginBase.TrackType.Audio:
+                    return (true, "");
+
+                default:
+                    break;
+            }
+            return (true, "");
+        }
     }
 }

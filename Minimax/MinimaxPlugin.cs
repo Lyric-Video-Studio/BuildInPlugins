@@ -1,11 +1,12 @@
 ﻿using PluginBase;
+using System.Reflection.Metadata.Ecma335;
 using System.Text.Json.Nodes;
 
 namespace MinimaxPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class MinimaxImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin
+    public class MinimaxImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin/*, IAudioPlugin*/
     {
         public const string PluginName = "MinimaxImgToVidBuildIn";
         public string UniqueName { get => PluginName; }
@@ -213,6 +214,11 @@ namespace MinimaxPlugin
             }
         }
 
+        public async Task<AudioResponse> GetAudio(object trackPayload, object itemsPayload)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<string> Initialize(object settings)
         {
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)
@@ -334,6 +340,10 @@ namespace MinimaxPlugin
 
         public object ItemPayloadFromLyrics(string text)
         {
+            if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                return null; // Not supported, should we somehow differentiate the iporting stuff between video, image and audio?
+            }
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 return new ItemPayload() { Prompt = text };
@@ -346,6 +356,10 @@ namespace MinimaxPlugin
 
         public object ItemPayloadFromImageSource(string imgSource)
         {
+            if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                return null; // Not supported, should we somehow differentiate the iporting stuff between video, image and audio?
+            }
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 var output = new ItemPayload();
@@ -365,6 +379,11 @@ namespace MinimaxPlugin
 
         public object ObjectToItemPayload(JsonObject obj)
         {
+            if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                var resp = JsonHelper.ToExactType<AudioItemPayload>(obj);
+                return resp;
+            }
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 var resp = JsonHelper.ToExactType<ItemPayload>(obj);
@@ -376,6 +395,11 @@ namespace MinimaxPlugin
 
         public object ObjectToTrackPayload(JsonObject obj)
         {
+            if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                var resp = JsonHelper.ToExactType<AudioTrackPayload>(obj);
+                return resp;
+            }
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 var resp = JsonHelper.ToExactType<TrackPayload>(obj);
@@ -482,6 +506,71 @@ namespace MinimaxPlugin
                     break;
             }
             throw new NotImplementedException();
+        }
+
+        public object CopyPayloadForTrack(object obj)
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Image:
+                    return CopyPayloadForImageTrack(obj);
+
+                case IPluginBase.TrackType.Video:
+                    return CopyPayloadForVideoTrack(obj);
+
+                case IPluginBase.TrackType.Audio:
+                    if (JsonHelper.DeepCopy<AudioTrackPayload>(obj) is AudioTrackPayload set)
+                    {
+                        return set;
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+            throw new NotImplementedException();
+        }
+
+        public object CopyPayloadForItem(object obj)
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Image:
+                    return CopyPayloadForImageItem(obj);
+
+                case IPluginBase.TrackType.Video:
+                    return CopyPayloadForVideoItem(obj);
+
+                case IPluginBase.TrackType.Audio:
+                    if (JsonHelper.DeepCopy<AudioItemPayload>(obj) is AudioItemPayload set)
+                    {
+                        return set;
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+            throw new NotImplementedException();
+        }
+
+        public (bool payloadOk, string reasonIfNot) ValidatePayload(object payload)
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Image:
+                    return ValidateImagePayload(payload);
+
+                case IPluginBase.TrackType.Video:
+                    return ValidateVideoPayload(payload);
+
+                case IPluginBase.TrackType.Audio:
+                    return (true, "");
+
+                default:
+                    break;
+            }
+            return (true, "");
         }
     }
 
