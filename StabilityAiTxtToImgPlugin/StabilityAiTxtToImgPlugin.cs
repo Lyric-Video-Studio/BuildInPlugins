@@ -185,6 +185,32 @@ namespace StabilityAiTxtToImgPlugin
             }
             return "";
         }
+
+        public object DefaultPayloadForTrack()
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Image:
+                    return DefaultPayloadForImageTrack();
+
+                default:
+                    break;
+            }
+            throw new NotImplementedException();
+        }
+
+        public object DefaultPayloadForItem()
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Image:
+                    return DefaultPayloadForImageItem();
+
+                default:
+                    break;
+            }
+            throw new NotImplementedException();
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

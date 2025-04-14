@@ -191,5 +191,31 @@ namespace A1111TxtToImgPlugin
             }
             return "";
         }
+
+        public object DefaultPayloadForTrack()
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Image:
+                    return DefaultPayloadForImageTrack();
+
+                default:
+                    break;
+            }
+            throw new NotImplementedException();
+        }
+
+        public object DefaultPayloadForItem()
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Image:
+                    return DefaultPayloadForImageItem();
+
+                default:
+                    break;
+            }
+            throw new NotImplementedException();
+        }
     }
 }

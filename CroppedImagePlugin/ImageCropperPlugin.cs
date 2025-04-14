@@ -340,5 +340,31 @@ namespace CroppedImagePlugin
         {
             // Not used, DataContext set to UserCOntrol instances is enough for this plugin
         }
+
+        public object DefaultPayloadForTrack()
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Image:
+                    return DefaultPayloadForImageTrack();
+
+                default:
+                    break;
+            }
+            throw new NotImplementedException();
+        }
+
+        public object DefaultPayloadForItem()
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Image:
+                    return DefaultPayloadForImageItem();
+
+                default:
+                    break;
+            }
+            throw new NotImplementedException();
+        }
     }
 }

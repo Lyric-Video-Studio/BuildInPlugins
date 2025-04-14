@@ -287,6 +287,32 @@ namespace RunwayMlPlugin
             }
             return "";
         }
+
+        public object DefaultPayloadForTrack()
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Video:
+                    return DefaultPayloadForVideoTrack();
+
+                default:
+                    break;
+            }
+            throw new NotImplementedException();
+        }
+
+        public object DefaultPayloadForItem()
+        {
+            switch (CurrentTrackType)
+            {
+                case IPluginBase.TrackType.Video:
+                    return DefaultPayloadForVideoItem();
+
+                default:
+                    break;
+            }
+            throw new NotImplementedException();
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
