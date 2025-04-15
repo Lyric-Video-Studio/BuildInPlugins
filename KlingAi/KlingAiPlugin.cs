@@ -2,15 +2,15 @@
 using System.Reflection.Metadata.Ecma335;
 using System.Text.Json.Nodes;
 
-namespace MinimaxPlugin
+namespace KlingAiPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class MinimaxImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin
+    public class KlingAiImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin
     {
-        public const string PluginName = "MinimaxImgToVidBuildIn";
+        public const string PluginName = "KlingAiImgToVidBuildIn";
         public string UniqueName { get => PluginName; }
-        public string DisplayName { get => "Minimax"; }
+        public string DisplayName { get => "KlingAi"; }
 
         public object GeneralDefaultSettings => new ConnectionSettings();
 
@@ -18,11 +18,11 @@ namespace MinimaxPlugin
 
         public bool IsInitialized => _isInitialized;
 
-        public string SettingsHelpText => "Hosted by Minimax. You need to have your authorization token";
+        public string SettingsHelpText => "Hosted by KlingAi. You need to have your authorization token";
 
         public bool AsynchronousGeneration { get; } = true;
 
-        public string[] SettingsLinks => new[] { "https://www.minimax.io/platform/user-center/basic-information/interface-key", "https://www.minimax.io/platform/user-center/basic-information" };
+        public string[] SettingsLinks => new[] { "https://klingai.com/global/dev/model/video#package", "https://console.klingai.com/console/access-control/accesskey-management" };
 
         public IPluginBase.TrackType CurrentTrackType { get; set; }
 
@@ -48,7 +48,7 @@ namespace MinimaxPlugin
                 return new VideoResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
 
-            while (CurrentTasks > 19)
+            while (CurrentTasks > 3)
             {
                 await Task.Delay(1000);
             }
@@ -63,55 +63,7 @@ namespace MinimaxPlugin
 
                     // Also, when img2Vid
 
-                    newTp.Settings.prompt = newIp.Prompt + " " + newTp.Settings.prompt;
-
-                    if (!string.IsNullOrEmpty(newIp.ImagePath))
-                    {
-                        newTp.Settings.first_frame_image = newIp.ImagePath;
-                    }
-
-                    if (!string.IsNullOrEmpty(newTp.Settings.first_frame_image))
-                    {
-                        var newUrl = await _uploader.RequestContentUpload(newTp.Settings.first_frame_image);
-
-                        if (newUrl.responseCode != System.Net.HttpStatusCode.OK)
-                        {
-                            return new VideoResponse { ErrorMsg = $"Failed to upload image, response code: {newUrl.responseCode}", Success = false };
-                        }
-
-                        newTp.Settings.first_frame_image = newUrl.uploadedUrl;
-                    }
-
-                    if (newIp.SubjectReferences.Count > 0)
-                    {
-                        foreach (var item in newIp.SubjectReferences)
-                        {
-                            newTp.SubjectReferences.Add(item);
-                        }
-                    }
-
-                    if (newTp.SubjectReferences.Count > 0)
-                    {
-                        newTp.Settings.subject_reference = new KeyFrame[1];
-                        newTp.Settings.subject_reference[0] = new KeyFrame() { image = new string[newTp.SubjectReferences.Count(s => File.Exists(s.Path))] };
-                    }
-                    var actualIndex = 0;
-                    for (int i = 0; i < newTp.SubjectReferences.Count; i++)
-                    {
-                        if (File.Exists(newTp.SubjectReferences[i].Path))
-                        {
-                            var newUrl = await _uploader.RequestContentUpload(newTp.SubjectReferences[i].Path);
-
-                            if (newUrl.responseCode != System.Net.HttpStatusCode.OK)
-                            {
-                                return new VideoResponse { ErrorMsg = $"Failed to upload image, response code: {newUrl.responseCode}", Success = false };
-                            }
-
-                            newTp.Settings.subject_reference[0].image[actualIndex] = newUrl.uploadedUrl;
-                            actualIndex++;
-                        }
-                    }
-
+                    newTp.Settings.Prompt = (newIp.Prompt + " " + newTp.Settings.Prompt).Trim();
                     return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
                 }
                 else
@@ -138,12 +90,12 @@ namespace MinimaxPlugin
                 return new ImageResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
 
-            while (CurrentTasks > 19)
+            while (CurrentTasks > 3)
             {
                 await Task.Delay(1000);
             }
-
-            CurrentTasks++;
+            throw new NotImplementedException();
+            /*CurrentTasks++;
 
             try
             {
@@ -161,28 +113,6 @@ namespace MinimaxPlugin
                     if (!string.IsNullOrEmpty(newIp.CharacterRef))
                     {
                         newTp.CharacterReference = newIp.CharacterRef;
-                    }
-
-                    if (!string.IsNullOrEmpty(newTp.CharacterReference))
-                    {
-                        newTp.CharacterReference = newTp.CharacterReference.Replace("\"", "");
-
-                        if (File.Exists(newTp.CharacterReference))
-                        {
-                            newTp.Settings.subject_reference = new KeyFrameImage[1];
-                            newTp.Settings.subject_reference[0] = new KeyFrameImage();
-
-                            var resp = await _uploader.RequestContentUpload(newTp.CharacterReference);
-
-                            if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
-                            {
-                                newTp.Settings.subject_reference[0].image_file = resp.uploadedUrl;
-                            }
-                            else
-                            {
-                                return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
-                            }
-                        }
                     }
 
                     if (newIp.Seed > 0)
@@ -211,7 +141,7 @@ namespace MinimaxPlugin
             finally
             {
                 CurrentTasks--;
-            }
+            }*/
         }
 
         public async Task<AudioResponse> GetAudio(object trackPayload, object itemsPayload, string folderToSaveAudio)
@@ -226,7 +156,7 @@ namespace MinimaxPlugin
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)
             {
                 _connectionSettings = s;
-                _isInitialized = !string.IsNullOrEmpty(s.AccessToken);
+                _isInitialized = !string.IsNullOrEmpty(s.AccessToken) && !string.IsNullOrEmpty(s.AccessSecret);
                 return "";
             }
             else
@@ -246,22 +176,54 @@ namespace MinimaxPlugin
                 return Array.Empty<string>();
             }
 
-            if (propertyName == nameof(Request.model))
+            if (propertyName == nameof(KlingVideoRequest.ModelName))
             {
                 switch (CurrentTrackType)
                 {
                     case IPluginBase.TrackType.Video:
-                        return ["S2V-01", "T2V-01", "T2V-01-Director", "I2V-01", "I2V-01-Director", "I2V-01-live"];
+                        return [/*"kling-v2", */"kling-v1-6"];
 
                     default:
                         break;
                 }
             }
 
-            if (propertyName == nameof(ImageRequest.aspect_ratio))
+            if (propertyName == nameof(KlingVideoRequest.Mode))
             {
-                return ["16:9", "1:1", "4:3", "2:3", "3:4", "9:16", "21:9"];
+                switch (CurrentTrackType)
+                {
+                    case IPluginBase.TrackType.Video:
+                        return ["std", "pro"];
+
+                    default:
+                        break;
+                }
             }
+
+            if (propertyName == nameof(KlingVideoRequest.AspectRatio))
+            {
+                switch (CurrentTrackType)
+                {
+                    case IPluginBase.TrackType.Video:
+                        return ["16:9", "1:1", "9:16"];
+
+                    default:
+                        break;
+                }
+            }
+
+            if (propertyName == nameof(KlingVideoRequest.Duration))
+            {
+                switch (CurrentTrackType)
+                {
+                    case IPluginBase.TrackType.Video:
+                        return ["5", "10"];
+
+                    default:
+                        break;
+                }
+            }
+
             return Array.Empty<string>();
         }
 
@@ -290,7 +252,7 @@ namespace MinimaxPlugin
 
         public IPluginBase CreateNewInstance()
         {
-            return new MinimaxImgToVidPlugin();
+            return new KlingAiImgToVidPlugin();
         }
 
         public async Task<string> TestInitialization()
@@ -365,7 +327,7 @@ namespace MinimaxPlugin
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 var output = new ItemPayload();
-                output.ImagePath = imgSource;
+                //output.ImagePath = imgSource;
                 return output;
             }
             else
@@ -534,6 +496,21 @@ namespace MinimaxPlugin
 
         public (bool payloadOk, string reasonIfNot) ValidatePayload(object payload)
         {
+            if (_connectionSettings == null)
+            {
+                return (false, "Uninitized");
+            }
+
+            if (string.IsNullOrEmpty(_connectionSettings.AccessSecret))
+            {
+                return (false, "Access secret missing");
+            }
+
+            if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            {
+                return (false, "Access key");
+            }
+
             switch (CurrentTrackType)
             {
                 case IPluginBase.TrackType.Image:
