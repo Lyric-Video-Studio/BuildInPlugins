@@ -33,6 +33,12 @@ namespace KlingAiPlugin
 
         [JsonPropertyName("mode")]
         public string Mode { get; set; } = "std";
+
+        [JsonPropertyName("image")]
+        public string StartFramePath { get; set; }
+
+        [JsonPropertyName("image_tail")]
+        public string EndFramePath { get; set; }
     }
 
     // --- Response DTOs ---
@@ -187,9 +193,11 @@ namespace KlingAiPlugin
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authority", "api.KlingAii.chat");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
 
+                var endPoint = !string.IsNullOrEmpty(request.StartFramePath) ? "image2video" : "text2video";
+
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave);
+                    return await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave, endPoint);
                 }
 
                 var serialized = "";
@@ -207,7 +215,7 @@ namespace KlingAiPlugin
                 var stringContent = new StringContent(serialized);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
-                var resp = await httpClient.PostAsync("v1/videos/text2video", stringContent);
+                var resp = await httpClient.PostAsync($"v1/videos/{endPoint}", stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
                 KlingSuccessResponse? respSerialized = null;
                 string? errMsg = null;
@@ -226,7 +234,7 @@ namespace KlingAiPlugin
                 {
                     refItemPlayload.PollingId = respSerialized.Data?.TaskId.ToString();
                     saveAndRefreshCallback.Invoke();
-                    return await PollVideoResults(httpClient, respSerialized.Data?.TaskId, folderToSave);
+                    return await PollVideoResults(httpClient, respSerialized.Data?.TaskId, folderToSave, endPoint);
                 }
                 else
                 {
@@ -298,7 +306,7 @@ namespace KlingAiPlugin
             }
         }*/
 
-        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string id, string folderToSave)
+        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string id, string folderToSave, string endPoint)
         {
             var pollingDelay = TimeSpan.FromSeconds(7);
 
@@ -309,7 +317,7 @@ namespace KlingAiPlugin
                 // Wait for assets to be filled
                 try
                 {
-                    var generationResp = await httpClient.GetAsync($"/v1/videos/text2video/{id}");
+                    var generationResp = await httpClient.GetAsync($"/v1/videos/{endPoint}/{id}");
                     var respString = await generationResp.Content.ReadAsStringAsync();
                     KlingTaskStatusResponse? respSerialized = null;
 

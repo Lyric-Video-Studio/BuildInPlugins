@@ -64,6 +64,41 @@ namespace KlingAiPlugin
                     // Also, when img2Vid
 
                     newTp.Settings.Prompt = (newIp.Prompt + " " + newTp.Settings.Prompt).Trim();
+
+                    if (!string.IsNullOrEmpty(newIp.StartFramePath))
+                    {
+                        newTp.Settings.StartFramePath = newIp.StartFramePath;
+                    }
+
+                    if (!string.IsNullOrEmpty(newIp.EndFramePath))
+                    {
+                        newTp.Settings.EndFramePath = newIp.EndFramePath;
+                    }
+
+                    if (!string.IsNullOrEmpty(newTp.Settings.StartFramePath))
+                    {
+                        var newUrl = await _uploader.RequestContentUpload(newTp.Settings.StartFramePath);
+
+                        if (newUrl.responseCode != System.Net.HttpStatusCode.OK)
+                        {
+                            return new VideoResponse { ErrorMsg = $"Failed to upload image, response code: {newUrl.responseCode}", Success = false };
+                        }
+
+                        newTp.Settings.StartFramePath = newUrl.uploadedUrl;
+                    }
+
+                    if (!string.IsNullOrEmpty(newTp.Settings.EndFramePath))
+                    {
+                        var newUrl = await _uploader.RequestContentUpload(newTp.Settings.EndFramePath);
+
+                        if (newUrl.responseCode != System.Net.HttpStatusCode.OK)
+                        {
+                            return new VideoResponse { ErrorMsg = $"Failed to upload image, response code: {newUrl.responseCode}", Success = false };
+                        }
+
+                        newTp.Settings.EndFramePath = newUrl.uploadedUrl;
+                    }
+
                     return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
                 }
                 else
@@ -327,7 +362,7 @@ namespace KlingAiPlugin
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 var output = new ItemPayload();
-                //output.ImagePath = imgSource;
+                output.StartFramePath = imgSource;
                 return output;
             }
             else

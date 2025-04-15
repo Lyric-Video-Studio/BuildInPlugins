@@ -7,8 +7,13 @@ namespace KlingAiPlugin
     public class ItemPayload
     {
         private string prompt = "";
-
         public string Prompt { get => prompt; set => prompt = value; }
+
+        [EnableFileDrop]
+        public string StartFramePath { get; set; }
+
+        [EnableFileDrop]
+        public string EndFramePath { get; set; }
 
         private string pollingId;
 
