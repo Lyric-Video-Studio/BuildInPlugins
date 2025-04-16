@@ -214,13 +214,6 @@ namespace MinimaxPlugin
             }
         }
 
-        public async Task<AudioResponse> GetAudio(object trackPayload, object itemsPayload, string folderToSaveAudio)
-        {
-            var fileName = Path.Combine(folderToSaveAudio, Guid.NewGuid() + ".wav");
-            File.Copy("C:\\Users\\copyhere2\\Downloads\\Wistful Journey.wav", fileName);
-            return new AudioResponse() { AudioFile = fileName, Success = true };
-        }
-
         public async Task<string> Initialize(object settings)
         {
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)

@@ -1,21 +1,15 @@
-﻿using Avalonia.Logging;
-using PluginBase;
-using System.ComponentModel;
+﻿using PluginBase;
 
 namespace KlingAiPlugin
 {
     public class ImageItemPayload
     {
-        private string prompt = "";
-
-        //public KeyFrames KeyFrames { get; set; } = new KeyFrames();
-
-        public string Prompt { get => prompt; set => prompt = value; }
+        public string Prompt { get; set; }
+        public string NegativePrompt { get; set; }
 
         [EnableFileDrop]
         public string CharacterRef { get; set; }
 
-        [Description("0 = new random seed")]
-        public long Seed { get; set; }
+        public string? PollingId { get; internal set; }
     }
 }

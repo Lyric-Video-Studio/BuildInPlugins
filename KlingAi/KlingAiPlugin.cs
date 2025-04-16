@@ -22,7 +22,10 @@ namespace KlingAiPlugin
 
         public bool AsynchronousGeneration { get; } = true;
 
-        public string[] SettingsLinks => new[] { "https://klingai.com/global/dev/model/video#package", "https://console.klingai.com/console/access-control/accesskey-management" };
+        public string[] SettingsLinks => new[] {
+            "https://klingai.com/global/dev/model/video#package",
+            "https://klingai.com/global/dev/model/image",
+            "https://console.klingai.com/console/access-control/accesskey-management" };
 
         public IPluginBase.TrackType CurrentTrackType { get; set; }
 
@@ -129,40 +132,45 @@ namespace KlingAiPlugin
             {
                 await Task.Delay(1000);
             }
-            throw new NotImplementedException();
-            /*CurrentTasks++;
+            CurrentTasks++;
 
             try
             {
-                if (JsonHelper.DeepCopy<ImageTrackPayload>(trackPayload) is ImageTrackPayload newTp && JsonHelper.DeepCopy<ImageItemPayload>(itemsPayload) is ImageItemPayload newIp)
+                if (JsonHelper.DeepCopy<ImageTrackPayload>(trackPayload) is ImageTrackPayload newTp && JsonHelper.DeepCopy<ImageItemPayload>(itemsPayload) is ImageItemPayload newIp && itemsPayload is ImageItemPayload origIp)
                 {
                     // combine prompts
 
                     // Also, when img2Vid
 
-                    newTp.Settings.prompt = newTp.Settings.prompt + " " + newIp.Prompt;
+                    newTp.Settings.Prompt = (newTp.Settings.Prompt + " " + newIp.Prompt).Trim();
+                    newTp.Settings.NegativePrompt = (newTp.Settings.NegativePrompt + " " + newIp.NegativePrompt).Trim();
 
-                    newTp.Settings.prompt = newTp.Settings.prompt.Trim();
-
-                    // Upload to cloud first
                     if (!string.IsNullOrEmpty(newIp.CharacterRef))
                     {
-                        newTp.CharacterReference = newIp.CharacterRef;
+                        newTp.Settings.ImageReferencePath = newIp.CharacterRef;
                     }
 
-                    if (newIp.Seed > 0)
+                    // Upload to cloud first
+                    if (!string.IsNullOrEmpty(newTp.Settings.ImageReferencePath))
                     {
-                        newTp.Settings.seed = newIp.Seed;
+                        newTp.Settings.ImageReferencePath = newTp.Settings.ImageReferencePath.Replace("\"", "");
+
+                        if (File.Exists(newTp.Settings.ImageReferencePath))
+                        {
+                            var resp = await _uploader.RequestContentUpload(newTp.Settings.ImageReferencePath);
+
+                            if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                            {
+                                newTp.Settings.ImageReferencePath = resp.uploadedUrl;
+                            }
+                            else
+                            {
+                                return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                            }
+                        }
                     }
 
-                    if (newTp.Settings.seed <= 0)
-                    {
-                        newTp.Settings.seed = rnd.NextInt64();
-                        (itemsPayload as ImageItemPayload).Seed = newTp.Settings.seed;
-                        saveAndRefreshCallback.Invoke();
-                    }
-
-                    return await _wrapper.GetImg(newTp.Settings, _connectionSettings);
+                    return await _wrapper.GetImg(newTp.Settings, _connectionSettings, origIp, saveAndRefreshCallback);
                 }
                 else
                 {
@@ -176,14 +184,7 @@ namespace KlingAiPlugin
             finally
             {
                 CurrentTasks--;
-            }*/
-        }
-
-        public async Task<AudioResponse> GetAudio(object trackPayload, object itemsPayload, string folderToSaveAudio)
-        {
-            var fileName = Path.Combine(folderToSaveAudio, Guid.NewGuid() + ".wav");
-            File.Copy("C:\\Users\\copyhere2\\Downloads\\Wistful Journey.wav", fileName);
-            return new AudioResponse() { AudioFile = fileName, Success = true };
+            }
         }
 
         public async Task<string> Initialize(object settings)
@@ -218,6 +219,9 @@ namespace KlingAiPlugin
                     case IPluginBase.TrackType.Video:
                         return [/*"kling-v2", */"kling-v1-6"];
 
+                    case IPluginBase.TrackType.Image:
+                        return ["kling-v1"];
+
                     default:
                         break;
                 }
@@ -242,6 +246,9 @@ namespace KlingAiPlugin
                     case IPluginBase.TrackType.Video:
                         return ["16:9", "1:1", "9:16"];
 
+                    case IPluginBase.TrackType.Image:
+                        return ["16:9", "9:16", "1:1", "4:3", "3:4", "3:2", "2:3", "21:9"];
+
                     default:
                         break;
                 }
@@ -253,6 +260,18 @@ namespace KlingAiPlugin
                 {
                     case IPluginBase.TrackType.Video:
                         return ["5", "10"];
+
+                    default:
+                        break;
+                }
+            }
+
+            if (propertyName == nameof(KlingImageRequest.ImageType))
+            {
+                switch (CurrentTrackType)
+                {
+                    case IPluginBase.TrackType.Image:
+                        return ["subject", "face"];
 
                     default:
                         break;

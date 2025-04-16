@@ -1,16 +1,16 @@
 ﻿using PluginBase;
 using System.ComponentModel;
-using System.Globalization;
 
 namespace KlingAiPlugin
 {
     public class ImageTrackPayload
     {
-        /*private ImageRequest txtToImgPayload = new ImageRequest();
+        private KlingImageRequest imgPayload = new KlingImageRequest();
 
         [Description("Image settings")]
-        public ImageRequest Settings { get => txtToImgPayload; set => txtToImgPayload = value; }
+        public KlingImageRequest Settings { get => imgPayload; set => imgPayload = value; }
 
-        public string CharacterReference { get; set; }*/
+        [EnableFileDrop]
+        public string ImageReference { get; set; }
     }
 }

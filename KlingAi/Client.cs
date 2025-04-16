@@ -2,6 +2,7 @@
 using PluginBase;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -12,9 +13,6 @@ namespace KlingAiPlugin
     {
         [JsonPropertyName("model_name")]
         public string ModelName { get; set; } = "kling-v1-6"; // Default example
-
-        [JsonPropertyName("style")]
-        public string Style { get; set; } = "cinematic"; // Default example
 
         [JsonPropertyName("prompt")]
         public string Prompt { get; set; } = string.Empty;
@@ -39,6 +37,33 @@ namespace KlingAiPlugin
 
         [JsonPropertyName("image_tail")]
         public string EndFramePath { get; set; }
+    }
+
+    public class KlingImageRequest
+    {
+        [JsonPropertyName("model_name")]
+        public string ModelName { get; set; } = "kling-v1"; // Default example
+
+        [JsonPropertyName("prompt")]
+        public string Prompt { get; set; } = string.Empty;
+
+        [JsonPropertyName("negative_prompt")]
+        public string? NegativePrompt { get; set; }
+
+        [JsonPropertyName("aspect_ratio")]
+        public string AspectRatio { get; set; } = "16:9"; // Default example
+
+        [JsonPropertyName("image")]
+        public string ImageReferencePath { get; set; }
+
+        [JsonPropertyName("image_reference")]
+        public string ImageType { get; set; } = "subject";
+
+        [JsonPropertyName("image_fidelity")]
+        public double ImageFidelity { get; set; } = 0.5;
+
+        [JsonPropertyName("human_fidelity")]
+        public double HumanFidelity { get; set; } = 0.5;
     }
 
     // --- Response DTOs ---
@@ -176,6 +201,69 @@ namespace KlingAiPlugin
         // Example: double.TryParse(Duration, out double durationSeconds);
     }
 
+    /// <summary>
+    /// Represents the root object of the Kling API response for an image task status/result.
+    /// </summary>
+    public class KlingImageTaskStatusResponse
+    {
+        [JsonPropertyName("code")]
+        public int Code { get; set; } // Error code; 0 typically means success
+
+        [JsonPropertyName("message")]
+        public string? Message { get; set; } // Status or error message, potentially null
+
+        [JsonPropertyName("request_id")]
+        public string? RequestId { get; set; } // Unique ID for the request, potentially null
+
+        [JsonPropertyName("data")]
+        public KlingImageTaskData? Data { get; set; } // Contains the task details and results, potentially null if the request itself failed fundamentally
+    }
+
+    /// <summary>
+    /// Represents the main data payload containing image task information and results.
+    /// </summary>
+    public class KlingImageTaskData
+    {
+        [JsonPropertyName("task_id")]
+        public string TaskId { get; set; } = string.Empty; // System-generated Task ID
+
+        [JsonPropertyName("task_status")]
+        public string TaskStatus { get; set; } = string.Empty; // e.g., "submitted", "processing", "succeed", "failed"
+
+        [JsonPropertyName("task_status_msg")]
+        public string? TaskStatusMsg { get; set; } // Optional message, especially for failures, potentially null
+
+        [JsonPropertyName("created_at")]
+        public long CreatedAt { get; set; } // Task creation time (Unix timestamp, milliseconds)
+
+        [JsonPropertyName("updated_at")]
+        public long UpdatedAt { get; set; } // Task last update time (Unix timestamp, milliseconds)
+
+        [JsonPropertyName("task_result")]
+        public KlingImageTaskResult? TaskResult { get; set; } // Results of the task (e.g., image URLs), likely present only on success, potentially null
+    }
+
+    /// <summary>
+    /// Represents the successful result of an image generation task.
+    /// </summary>
+    public class KlingImageTaskResult
+    {
+        [JsonPropertyName("images")]
+        public List<KlingImageInfo> Images { get; set; } = new List<KlingImageInfo>(); // List of generated images, initialized to prevent null reference
+    }
+
+    /// <summary>
+    /// Represents information about a single generated image.
+    /// </summary>
+    public class KlingImageInfo
+    {
+        [JsonPropertyName("index")]
+        public int Index { get; set; } // Image number (0-9)
+
+        [JsonPropertyName("url")]
+        public string Url { get; set; } = string.Empty; // URL to access the image
+    }
+
     internal class Client
     {
         public async Task<VideoResponse> GetImgToVid(KlingVideoRequest request, string folderToSave, ConnectionSettings connectionSettings,
@@ -248,7 +336,7 @@ namespace KlingAiPlugin
             }
         }
 
-        /*public async Task<ImageResponse> GetImg(ImageRequest request, ConnectionSettings connectionSettings)
+        public async Task<ImageResponse> GetImg(KlingImageRequest request, ConnectionSettings connectionSettings, ImageItemPayload ip, Action saveAndRefresh)
         {
             try
             {
@@ -257,11 +345,21 @@ namespace KlingAiPlugin
 
                 // It's best to keep these here: use can change these from item settings
                 httpClient.BaseAddress = new Uri(connectionSettings.Url);
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Bearer {connectionSettings.AccessToken}");
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", EncodeJwtToken(connectionSettings.AccessToken, connectionSettings.AccessSecret));
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
 
+                if (string.IsNullOrEmpty(request.ImageReferencePath))
+                {
+                    request.ImageType = "";
+                }
+
                 var serialized = "";
+
+                if (!string.IsNullOrEmpty(ip.PollingId))
+                {
+                    return await PollImageResults(httpClient, ip.PollingId);
+                }
 
                 try
                 {
@@ -276,13 +374,13 @@ namespace KlingAiPlugin
                 var stringContent = new StringContent(serialized);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
-                var resp = await httpClient.PostAsync("/v1/image_generation", stringContent);
+                var resp = await httpClient.PostAsync("/v1/images/generations", stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
-                KlingAiImageResponse respSerialized = null;
+                KlingImageTaskStatusResponse? respSerialized = null;
 
                 try
                 {
-                    respSerialized = JsonHelper.DeserializeString<KlingAiImageResponse>(respString);
+                    respSerialized = JsonHelper.DeserializeString<KlingImageTaskStatusResponse>(respString);
                 }
                 catch (Exception ex)
                 {
@@ -290,9 +388,11 @@ namespace KlingAiPlugin
                     return new ImageResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
                 }
 
-                if (respSerialized != null && resp.IsSuccessStatusCode && respSerialized.base_resp.status_code == 0)
+                if (respSerialized != null && resp.IsSuccessStatusCode && respSerialized.Code == 0)
                 {
-                    return new ImageResponse() { Success = true, Image = respSerialized.data.image_base64.First(), ImageFormat = "jpg" };
+                    ip.PollingId = respSerialized.RequestId;
+                    saveAndRefresh.Invoke();
+                    return await PollImageResults(httpClient, ip.PollingId);
                 }
                 else
                 {
@@ -304,7 +404,7 @@ namespace KlingAiPlugin
                 System.Diagnostics.Debug.WriteLine(ex.ToString());
                 return new ImageResponse() { ErrorMsg = ex.Message, Success = false };
             }
-        }*/
+        }
 
         private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string id, string folderToSave, string endPoint)
         {
@@ -377,6 +477,76 @@ namespace KlingAiPlugin
             else
             {
                 return new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
+            }
+        }
+
+        private static async Task<ImageResponse> PollImageResults(HttpClient httpClient, string id)
+        {
+            var pollingDelay = TimeSpan.FromSeconds(7);
+
+            var videoUrl = "";
+
+            while (string.IsNullOrEmpty(videoUrl))
+            {
+                // Wait for assets to be filled
+                try
+                {
+                    var generationResp = await httpClient.GetAsync($"/v1/images/generations/{id}");
+                    var respString = await generationResp.Content.ReadAsStringAsync();
+                    KlingImageTaskStatusResponse? respSerialized = null;
+
+                    try
+                    {
+                        respSerialized = JsonHelper.DeserializeString<KlingImageTaskStatusResponse>(respString);
+
+                        if (respSerialized.Code != 0)
+                        {
+                            return new ImageResponse() { Success = false, ErrorMsg = $"KlingAi reported that video generating failed: {respSerialized.Code}" };
+                        }
+
+                        videoUrl = respSerialized?.Data?.TaskResult?.Images?.Select(v => v.Url)?.FirstOrDefault() ?? "";
+
+                        System.Diagnostics.Debug.WriteLine($"State: {respSerialized?.Data?.TaskStatus}");
+
+                        if (string.IsNullOrEmpty(videoUrl))
+                        {
+                            await Task.Delay(pollingDelay);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    }
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+
+            // Store video request token to disk, in case connection is broken or something
+            var file = Path.GetFileName(videoUrl);
+
+            using var downloadClient = new HttpClient { BaseAddress = new Uri(videoUrl.Replace(file, "")) };
+
+            // Store video request token to disk, in case connection is broken or something
+
+            var imageResp = await downloadClient.GetAsync(file);
+
+            while (imageResp.StatusCode != HttpStatusCode.OK)
+            {
+                await Task.Delay(pollingDelay);
+                imageResp = await downloadClient.GetAsync(file);
+            }
+
+            if (imageResp.StatusCode == HttpStatusCode.OK)
+            {
+                var respBytes = await imageResp.Content.ReadAsByteArrayAsync();
+                return new ImageResponse() { Success = true, Image = Convert.ToBase64String(respBytes), ImageFormat = Path.GetExtension(file).Replace(".", "") };
+            }
+            else
+            {
+                return new ImageResponse() { ErrorMsg = $"Error: {imageResp.StatusCode}", Success = false };
             }
         }
 
