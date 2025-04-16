@@ -1,5 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using PluginBase;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http;
@@ -64,6 +66,127 @@ namespace KlingAiPlugin
 
         [JsonPropertyName("human_fidelity")]
         public double HumanFidelity { get; set; } = 0.5;
+    }
+
+    public class KlingLipsyncRequest
+    {
+        // Well, that's lame, KlingAi, your document says this is fine, but it aint... Thanks...
+        [JsonPropertyName("video_url")]
+        [IgnoreDynamicEdit]
+        public string VideoUrl { get; set; } = string.Empty;
+
+        [JsonPropertyName("video_id")]
+        [IgnoreDynamicEdit]
+        public string VideoId { get; set; } = string.Empty;
+
+        [IgnoreDynamicEdit]
+        [JsonPropertyName("mode")]
+        public string Mode { get; set; } = "text2video";
+
+        [JsonPropertyName("text")]
+        [IgnoreDynamicEdit]
+        public string Text { get; set; }
+
+        [JsonPropertyName("voice_id")]
+        [Description("Required value when using text, see https://lyricvideo.studio/plugins for more info")]
+        public string VoiceId { get; set; }
+
+        [Range(0.8, 2)]
+        [JsonPropertyName("voice_speed")]
+        public double VoiceSpeed { get; set; } = 1.0;
+
+        [JsonPropertyName("voice_language")]
+        [IgnoreDynamicEdit]
+        public string VoiceLanguage { get; set; } = "en";
+
+        [JsonPropertyName("audio_type")]
+        [IgnoreDynamicEdit]
+        public string AudioType { get; set; } = "url";
+
+        [JsonPropertyName("audio_url")]
+        [IgnoreDynamicEdit]
+        public string AudioUrl { get; set; }
+
+        [JsonIgnore]
+        public static string[,] AvailableVoices = new string[,]
+        {
+            // Chinese Voices (zh)
+            { "genshin_vindi2", "zh" },
+            { "zhinen_xuesheng", "zh" },
+            { "tiyuxi_xuedi", "zh" },
+            { "ai_shatang", "zh" },
+            { "genshin_klee2", "zh" },
+            { "genshin_kirara", "zh" },
+            { "ai_kaiya", "zh" },
+            { "tiexin_nanyou", "zh" },
+            { "ai_chenjiahao_712", "zh" },
+            { "girlfriend_1_speech02", "zh" },
+            { "chat1_female_new-3", "zh" },
+            { "girlfriend_2_speech02", "zh" },
+            { "cartoon-boy-07", "zh" },
+            { "cartoon-girl-01", "zh" },
+            { "ai_huangyaoshi_712", "zh" },
+            { "you_pingjing", "zh" },
+            { "ai_laoguowang_712", "zh" },
+            { "chengshu_jiejie", "zh" },
+            { "zhuxi_speech02", "zh" },
+            { "uk_oldman3", "zh" }, // Note: ID seems English, but marked 'zh' in source data
+            { "laopopo_speech02", "zh" },
+            { "heainainai_speech02", "zh" },
+            { "dongbeilaotie_speech02", "zh" },
+            { "chongqingxiaohuo_speech02", "zh" },
+            { "chuanmeizi_speech02", "zh" },
+            { "chaoshandashu_speech02", "zh" },
+            { "ai_taiwan_man2_speech02", "zh" },
+            { "xianzhanggui_speech02", "zh" },
+            { "tianjinjiejie_speech02", "zh" },
+            { "diyinnansang_DB_CN_M_04-v2", "zh" },
+            { "yizhipiannan-v1", "zh" },
+            { "guanxiaofang-v2", "zh" },
+            { "tianmeixuemei-v1", "zh" },
+            { "daopianyansang-v1", "zh" },
+            { "mengwa-v1", "zh" },
+
+            // English Voices (en)
+            { "genshin_vindi2", "en" },
+            { "zhinen_xuesheng", "en" }, // Note: ID seems Chinese, but marked 'en' in source data
+            { "AOT", "en" },
+            { "ai_shatang", "en" }, // Note: ID seems Chinese, but marked 'en' in source data
+            { "genshin_klee2", "en" },
+            { "genshin_kirara", "en" },
+            { "ai_kaiya", "en" }, // Note: ID seems Chinese, but marked 'en' in source data
+            { "oversea_male1", "en" },
+            { "ai_chenjiahao_712", "en" }, // Note: ID seems Chinese, but marked 'en' in source data
+            { "girlfriend_4_speech02", "en" },
+            { "chat1_female_new-3", "en" },
+            { "chat_0407_5-1", "en" },
+            { "cartoon-boy-07", "en" },
+            { "uk_boy1", "en" },
+            { "cartoon-girl-01", "en" },
+            { "PeppaPig_platform", "en" },
+            { "ai_huangzhong_712", "en" }, // Note: ID seems Chinese, but marked 'en' in source data
+            { "ai_huangyaoshi_712", "en" }, // Note: ID seems Chinese, but marked 'en' in source data
+            { "ai_laoguowang_712", "en" }, // Note: ID seems Chinese, but marked 'en' in source data
+            { "chengshu_jiejie", "en" }, // Note: ID seems Chinese, but marked 'en' in source data
+            { "you_pingjing", "en" }, // Note: ID seems Chinese, but marked 'en' in source data
+            { "calm_story1", "en" },
+            { "uk_man2", "en" },
+            { "laopopo_speech02", "en" }, // Note: ID seems Chinese, but marked 'en' in source data
+            { "heainainai_speech02", "en" }, // Note: ID seems Chinese, but marked 'en' in source data
+            { "reader_en_m-v1", "en" },
+            { "commercial_lady_en_f-v1", "en" }
+        };
+
+        public static List<string> GetPrintableVoices()
+        {
+            var output = new List<string>();
+            for (int i = 0; i < AvailableVoices.GetLength(0); i++)
+            {
+                output.Add(AvailableVoices[i, 0] + $" ({AvailableVoices[i, 1]})");
+            }
+
+            return output;
+        }
     }
 
     // --- Response DTOs ---
@@ -285,7 +408,10 @@ namespace KlingAiPlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave, endPoint);
+                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave, endPoint);
+                    refItemPlayload.VideoId = res.videoId;
+                    saveAndRefreshCallback.Invoke();
+                    return res.Item2;
                 }
 
                 var serialized = "";
@@ -322,7 +448,82 @@ namespace KlingAiPlugin
                 {
                     refItemPlayload.PollingId = respSerialized.Data?.TaskId.ToString();
                     saveAndRefreshCallback.Invoke();
-                    return await PollVideoResults(httpClient, respSerialized.Data?.TaskId, folderToSave, endPoint);
+                    var res = await PollVideoResults(httpClient, respSerialized.Data?.TaskId, folderToSave, endPoint);
+                    refItemPlayload.VideoId = res.videoId;
+                    saveAndRefreshCallback.Invoke();
+                    return res.Item2;
+                }
+                else
+                {
+                    return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {(errMsg ?? respString)}", Success = false };
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
+                return new VideoResponse() { ErrorMsg = ex.Message, Success = false };
+            }
+        }
+
+        public async Task<VideoResponse> GetImgToVid(KlingLipsyncRequest request, string folderToSave, ConnectionSettings connectionSettings,
+            ItemPayloadLipsync refItemPlayload, Action saveAndRefreshCallback)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Remove("accept");
+
+                // It's best to keep these here: use can change these from item settings
+                httpClient.BaseAddress = new Uri(connectionSettings.Url);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", EncodeJwtToken(connectionSettings.AccessToken, connectionSettings.AccessSecret));
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authority", "api.KlingAii.chat");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+
+                var endPoint = "lip-sync";
+
+                if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
+                {
+                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave, endPoint);
+                    return res.Item2;
+                }
+
+                var serialized = "";
+
+                try
+                {
+                    serialized = JsonHelper.Serialize(request);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new VideoResponse() { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
+                }
+
+                var stringContent = new StringContent(serialized);
+                stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+                var resp = await httpClient.PostAsync($"v1/videos/{endPoint}", stringContent);
+                var respString = await resp.Content.ReadAsStringAsync();
+                KlingSuccessResponse? respSerialized = null;
+                string? errMsg = null;
+                try
+                {
+                    respSerialized = JsonHelper.DeserializeString<KlingSuccessResponse>(respString);
+                    errMsg = respSerialized?.Message;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new VideoResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
+                }
+
+                if (respSerialized != null && resp.IsSuccessStatusCode && respSerialized.Code == 0)
+                {
+                    refItemPlayload.PollingId = respSerialized.Data?.TaskId.ToString();
+                    saveAndRefreshCallback.Invoke();
+                    var res = await PollVideoResults(httpClient, respSerialized.Data?.TaskId, folderToSave, endPoint);
+                    return res.Item2;
                 }
                 else
                 {
@@ -406,11 +607,12 @@ namespace KlingAiPlugin
             }
         }
 
-        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string id, string folderToSave, string endPoint)
+        private static async Task<(string videoId, VideoResponse)> PollVideoResults(HttpClient httpClient, string id, string folderToSave, string endPoint)
         {
             var pollingDelay = TimeSpan.FromSeconds(7);
 
             var videoUrl = "";
+            var videoId = "";
 
             while (string.IsNullOrEmpty(videoUrl))
             {
@@ -427,10 +629,11 @@ namespace KlingAiPlugin
 
                         if (respSerialized.Code != 0)
                         {
-                            return new VideoResponse() { Success = false, ErrorMsg = $"KlingAi reported that video generating failed: {respSerialized.Code}" };
+                            return (videoId, new VideoResponse() { Success = false, ErrorMsg = $"KlingAi reported that video generating failed: {respSerialized.Code}" });
                         }
 
                         videoUrl = respSerialized?.Data?.TaskResult?.Videos?.Select(v => v.Url)?.FirstOrDefault() ?? "";
+                        videoId = respSerialized?.Data?.TaskResult?.Videos?.Select(v => v.Id)?.FirstOrDefault() ?? "";
 
                         System.Diagnostics.Debug.WriteLine($"State: {respSerialized?.Data?.TaskStatus}");
 
@@ -472,11 +675,11 @@ namespace KlingAiPlugin
                 var respBytes = await videoResp.Content.ReadAsByteArrayAsync();
                 var pathToVideo = Path.Combine(folderToSave, $"{id}.mp4");
                 await File.WriteAllBytesAsync(pathToVideo, respBytes);
-                return new VideoResponse() { Success = true, VideoFile = pathToVideo };
+                return (videoId, new VideoResponse() { Success = true, VideoFile = pathToVideo });
             }
             else
             {
-                return new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
+                return (videoId, new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false });
             }
         }
 

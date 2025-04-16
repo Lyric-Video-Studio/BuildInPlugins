@@ -6,7 +6,7 @@ namespace KlingAiPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class KlingAiImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin
+    public class KlingAiImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin, IContentId
     {
         public const string PluginName = "KlingAiImgToVidBuildIn";
         public string UniqueName { get => PluginName; }
@@ -580,6 +580,16 @@ namespace KlingAiPlugin
                     break;
             }
             return (true, "");
+        }
+
+        public string GetContentFromPayloadId(object payload)
+        {
+            if (payload is ItemPayload ip)
+            {
+                return ip.VideoId;
+            }
+
+            return "";
         }
     }
 
