@@ -7,7 +7,7 @@ namespace KlingAiPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class KlingAiLipSync : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IRequestContentUploader, IImportContentId
+    public class KlingAiLipSync /*: IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IRequestContentUploader, IImportContentId*/ // Disabled for a while
     {
         public const string PluginName = "KlingAiImgToVidBuildInLipSync";
         public string UniqueName { get => PluginName; }
@@ -182,7 +182,8 @@ namespace KlingAiPlugin
 
         public IPluginBase CreateNewInstance()
         {
-            return new KlingAiLipSync();
+            throw new NotImplementedException("If you can see this, I'm sorry, something went horribly wrong :) This plugin should not be selectedble...");
+            //return new KlingAiLipSync();
         }
 
         public async Task<string> TestInitialization()

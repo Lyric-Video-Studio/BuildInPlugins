@@ -9,7 +9,7 @@ namespace GoogleVeoPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class GoogleVeoImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IRequestContentUploader, ICancellableGeneration
+    public class GoogleVeoImgToVidPlugin /*: IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IRequestContentUploader, ICancellableGeneration*/
     {
         public const string PluginName = "GoogleVeoTxtToVidBuildIn";
         public string UniqueName { get => PluginName; }
@@ -295,7 +295,8 @@ namespace GoogleVeoPlugin
 
         public IPluginBase CreateNewInstance()
         {
-            return new GoogleVeoImgToVidPlugin();
+            throw new NotImplementedException("Google sucks ass with their API 'documentation' what zilloin different platforms where this api is not available. And it's costly too!!!")
+            //return new GoogleVeoImgToVidPlugin();
         }
 
         public async Task<string> TestInitialization()
