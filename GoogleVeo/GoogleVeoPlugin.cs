@@ -295,7 +295,7 @@ namespace GoogleVeoPlugin
 
         public IPluginBase CreateNewInstance()
         {
-            throw new NotImplementedException("Google sucks ass with their API 'documentation' what zilloin different platforms where this api is not available. And it's costly too!!!")
+            throw new NotImplementedException("Google sucks ass with their API 'documentation' what zilloin different platforms where this api is not available. And it's costly too!!!");
             //return new GoogleVeoImgToVidPlugin();
         }
 
