@@ -44,7 +44,7 @@ namespace RunwayMlPlugin
     internal class Client
     {
         public async Task<VideoResponse> GetImgToVid(Request request, string folderToSave, ConnectionSettings connectionSettings,
-            ItemPayload refItemPlayload, Action saveAndRefreshCallback)
+            ItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
         {
             try
             {
@@ -60,7 +60,7 @@ namespace RunwayMlPlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), refItemPlayload, folderToSave, saveAndRefreshCallback);
+                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), refItemPlayload, folderToSave, saveAndRefreshCallback, textualProgressAction);
                 }
 
                 var serialized = "";
@@ -109,7 +109,7 @@ namespace RunwayMlPlugin
 
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
-                    return await PollVideoResults(httpClient, respSerialized.output, respSerialized.id, refItemPlayload, folderToSave, saveAndRefreshCallback);
+                    return await PollVideoResults(httpClient, respSerialized.output, respSerialized.id, refItemPlayload, folderToSave, saveAndRefreshCallback, textualProgressAction);
                 }
                 else
                 {
@@ -123,7 +123,8 @@ namespace RunwayMlPlugin
             }
         }
 
-        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string[] assets, Guid id, ItemPayload refItemPlayload, string folderToSave, Action saveAndRefreshCallback)
+        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string[] assets, Guid id, ItemPayload refItemPlayload, string folderToSave, Action saveAndRefreshCallback,
+            Action<string> textualProgressAction)
         {
             var pollingDelay = TimeSpan.FromSeconds(20);
 
@@ -151,6 +152,7 @@ namespace RunwayMlPlugin
                         }
 
                         System.Diagnostics.Debug.WriteLine($"State: {respSerialized.status}");
+                        textualProgressAction.Invoke(respSerialized.status);
 
                         videoUrl = respSerialized.output != null && respSerialized.output.Length > 0 ? respSerialized.output[0] : "";
 
@@ -177,6 +179,8 @@ namespace RunwayMlPlugin
             downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
 
             // Store video request token to disk, in case connection is broken or something
+
+            textualProgressAction.Invoke("Downloading");
 
             var videoResp = await downloadClient.GetAsync(file);
 

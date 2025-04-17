@@ -5,7 +5,7 @@ namespace RunwayMlPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class RunwayMlImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader
+    public class RunwayMlImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, ITextualProgressIndication
     {
         public string UniqueName { get => "RunwayMlImgToVidBuildIn"; }
         public string DisplayName { get => "Runway ML "; }
@@ -99,7 +99,7 @@ namespace RunwayMlPlugin
                     newTp.Request.duration = 5;
                 }
 
-                var videoResp = await new Client().GetImgToVid(newTp.Request, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
+                var videoResp = await new Client().GetImgToVid(newTp.Request, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
                 return videoResp;
             }
             else
@@ -354,6 +354,13 @@ namespace RunwayMlPlugin
                     break;
             }
             return (true, "");
+        }
+
+        private Action<string> textualProgressAction;
+
+        public void SetTextProgressCallback(Action<string> action)
+        {
+            textualProgressAction = action;
         }
     }
 

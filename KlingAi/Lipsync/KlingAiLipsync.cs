@@ -7,7 +7,7 @@ namespace KlingAiPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class KlingAiLipSync /*: IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IRequestContentUploader, IImportContentId*/ // Disabled for a while
+    public class KlingAiLipSync /*: ITextualProgressIndication IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IRequestContentUploader, IImportContentId*/ // Disabled for a while
     {
         public const string PluginName = "KlingAiImgToVidBuildInLipSync";
         public string UniqueName { get => PluginName; }
@@ -100,7 +100,7 @@ namespace KlingAiPlugin
                         newTp.Settings.VoiceId = "";
                     }
 
-                    return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayloadLipsync, saveAndRefreshCallback);
+                    return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayloadLipsync, saveAndRefreshCallback, textProgressAction);
                 }
                 else
                 {
@@ -377,6 +377,13 @@ namespace KlingAiPlugin
         public object ItemPayloadFromContentId(string id)
         {
             return new ItemPayloadLipsync() { InputVideoId = id };
+        }
+
+        private Action<string> textProgressAction;
+
+        public void SetTextProgressCallback(Action<string> action)
+        {
+            textProgressAction = action;
         }
     }
 

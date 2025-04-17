@@ -6,7 +6,7 @@ namespace KlingAiPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class KlingAiImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin, IContentId
+    public class KlingAiImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin, IContentId, ITextualProgressIndication
     {
         public const string PluginName = "KlingAiImgToVidBuildIn";
         public string UniqueName { get => PluginName; }
@@ -102,7 +102,7 @@ namespace KlingAiPlugin
                         newTp.Settings.EndFramePath = newUrl.uploadedUrl;
                     }
 
-                    return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
+                    return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressIndication);
                 }
                 else
                 {
@@ -118,8 +118,6 @@ namespace KlingAiPlugin
                 CurrentTasks--;
             }
         }
-
-        private Random rnd = new Random();
 
         public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
         {
@@ -590,6 +588,13 @@ namespace KlingAiPlugin
             }
 
             return "";
+        }
+
+        private Action<string> textualProgressIndication;
+
+        public void SetTextProgressCallback(Action<string> action)
+        {
+            textualProgressIndication = action;
         }
     }
 

@@ -5,7 +5,7 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class LumaAiDreamMachineGenerationUpscalePlugin : IVideoPlugin, ISaveAndRefresh, IContentId, IImportContentId
+    public class LumaAiDreamMachineGenerationUpscalePlugin : IVideoPlugin, ISaveAndRefresh, IContentId, IImportContentId, ITextualProgressIndication
     {
         public string UniqueName { get => "LumaAiDreamMachineGenerationUpscaleBuildIn"; }
         public string DisplayName { get => "Dream Machine Generation upscale"; }
@@ -56,7 +56,7 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
                 if (JsonHelper.DeepCopy<GenerationUpscaleTrackPayload>(GenerationUpscaleTrackPayload) is GenerationUpscaleTrackPayload newTp &&
                 JsonHelper.DeepCopy<GenerationUpscaleItemPayload>(itemsPayload) is GenerationUpscaleItemPayload newIp)
                 {
-                    return await client.UpscaleGeneration(newIp.GenerationId, newTp.Resolution, folderToSaveVideo, _connectionSettings, itemsPayload as GenerationUpscaleItemPayload, saveAndRefreshCallback);
+                    return await client.UpscaleGeneration(newIp.GenerationId, newTp.Resolution, folderToSaveVideo, _connectionSettings, itemsPayload as GenerationUpscaleItemPayload, saveAndRefreshCallback, progressAction);
                 }
                 else
                 {
@@ -290,6 +290,13 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
                     break;
             }
             return (true, "");
+        }
+
+        private Action<string> progressAction;
+
+        public void SetTextProgressCallback(Action<string> action)
+        {
+            progressAction = action;
         }
     }
 

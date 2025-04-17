@@ -6,7 +6,7 @@ namespace MinimaxPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class MinimaxImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin
+    public class MinimaxImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin, ITextualProgressIndication
     {
         public const string PluginName = "MinimaxImgToVidBuildIn";
         public string UniqueName { get => PluginName; }
@@ -112,7 +112,7 @@ namespace MinimaxPlugin
                         }
                     }
 
-                    return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
+                    return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
                 }
                 else
                 {
@@ -542,6 +542,13 @@ namespace MinimaxPlugin
                     break;
             }
             return (true, "");
+        }
+
+        private Action<string> textualProgressAction;
+
+        public void SetTextProgressCallback(Action<string> action)
+        {
+            textualProgressAction = action;
         }
     }
 

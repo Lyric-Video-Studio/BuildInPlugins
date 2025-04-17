@@ -5,7 +5,7 @@ namespace LumaAiDreamMachinePlugin.AddAudio
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class LumaAiDreamMachineGenerationAddAudioPlugin : IVideoPlugin, ISaveAndRefresh, IContentId
+    public class LumaAiDreamMachineGenerationAddAudioPlugin : IVideoPlugin, ISaveAndRefresh, IContentId, ITextualProgressIndication
     {
         public string UniqueName { get => "LumaAiDreamMachineGenerationAddAudtioBuildIn"; }
         public string DisplayName { get => "Dream Machine Add audio"; }
@@ -57,7 +57,7 @@ namespace LumaAiDreamMachinePlugin.AddAudio
                 JsonHelper.DeepCopy<GenerationAddAudioItemPayload>(itemsPayload) is GenerationAddAudioItemPayload newIp)
                 {
                     return await client.AddAudioToGeneration(newIp.GenerationId, newIp.Prompt + " " + newTp.Prompt, newIp.NegativePrompt + " " + newTp.NegativePrompt, folderToSaveVideo,
-                        _connectionSettings, itemsPayload as GenerationAddAudioItemPayload, saveAndRefreshCallback);
+                        _connectionSettings, itemsPayload as GenerationAddAudioItemPayload, saveAndRefreshCallback, textualProgress);
                 }
                 else
                 {
@@ -280,6 +280,13 @@ namespace LumaAiDreamMachinePlugin.AddAudio
                     break;
             }
             return (true, "");
+        }
+
+        private Action<string> textualProgress;
+
+        public void SetTextProgressCallback(Action<string> action)
+        {
+            textualProgress = action;
         }
     }
 

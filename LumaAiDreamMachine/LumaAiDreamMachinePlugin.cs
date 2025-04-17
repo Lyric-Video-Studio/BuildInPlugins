@@ -5,7 +5,7 @@ namespace LumaAiDreamMachinePlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class LumaAiDreamMachineImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin, IContentId
+    public class LumaAiDreamMachineImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin, IContentId, ITextualProgressIndication
     {
         public const string PluginName = "LumaAiDreamMachineImgToVidBuildIn";
         public string UniqueName { get => PluginName; }
@@ -101,7 +101,7 @@ namespace LumaAiDreamMachinePlugin
                         newTp.Settings.resolution = null;
                     }
 
-                    return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback);
+                    return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
                 }
                 else
                 {
@@ -596,6 +596,13 @@ namespace LumaAiDreamMachinePlugin
                     break;
             }
             return (true, "");
+        }
+
+        private Action<string> textualProgressAction;
+
+        public void SetTextProgressCallback(Action<string> action)
+        {
+            textualProgressAction = action;
         }
     }
 

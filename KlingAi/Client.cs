@@ -390,7 +390,7 @@ namespace KlingAiPlugin
     internal class Client
     {
         public async Task<VideoResponse> GetImgToVid(KlingVideoRequest request, string folderToSave, ConnectionSettings connectionSettings,
-            ItemPayload refItemPlayload, Action saveAndRefreshCallback)
+            ItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressIndication)
         {
             try
             {
@@ -408,7 +408,7 @@ namespace KlingAiPlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave, endPoint);
+                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave, endPoint, textualProgressIndication);
                     refItemPlayload.VideoId = res.videoId;
                     saveAndRefreshCallback.Invoke();
                     return res.Item2;
@@ -448,7 +448,7 @@ namespace KlingAiPlugin
                 {
                     refItemPlayload.PollingId = respSerialized.Data?.TaskId.ToString();
                     saveAndRefreshCallback.Invoke();
-                    var res = await PollVideoResults(httpClient, respSerialized.Data?.TaskId, folderToSave, endPoint);
+                    var res = await PollVideoResults(httpClient, respSerialized.Data?.TaskId, folderToSave, endPoint, textualProgressIndication);
                     refItemPlayload.VideoId = res.videoId;
                     saveAndRefreshCallback.Invoke();
                     return res.Item2;
@@ -466,7 +466,7 @@ namespace KlingAiPlugin
         }
 
         public async Task<VideoResponse> GetImgToVid(KlingLipsyncRequest request, string folderToSave, ConnectionSettings connectionSettings,
-            ItemPayloadLipsync refItemPlayload, Action saveAndRefreshCallback)
+            ItemPayloadLipsync refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressIndication)
         {
             try
             {
@@ -484,7 +484,7 @@ namespace KlingAiPlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave, endPoint);
+                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave, endPoint, textualProgressIndication);
                     return res.Item2;
                 }
 
@@ -522,7 +522,7 @@ namespace KlingAiPlugin
                 {
                     refItemPlayload.PollingId = respSerialized.Data?.TaskId.ToString();
                     saveAndRefreshCallback.Invoke();
-                    var res = await PollVideoResults(httpClient, respSerialized.Data?.TaskId, folderToSave, endPoint);
+                    var res = await PollVideoResults(httpClient, respSerialized.Data?.TaskId, folderToSave, endPoint, textualProgressIndication);
                     return res.Item2;
                 }
                 else
@@ -607,7 +607,7 @@ namespace KlingAiPlugin
             }
         }
 
-        private static async Task<(string videoId, VideoResponse)> PollVideoResults(HttpClient httpClient, string id, string folderToSave, string endPoint)
+        private static async Task<(string videoId, VideoResponse)> PollVideoResults(HttpClient httpClient, string id, string folderToSave, string endPoint, Action<string> textualProgressIndication)
         {
             var pollingDelay = TimeSpan.FromSeconds(7);
 
@@ -637,6 +637,8 @@ namespace KlingAiPlugin
 
                         System.Diagnostics.Debug.WriteLine($"State: {respSerialized?.Data?.TaskStatus}");
 
+                        textualProgressIndication.Invoke(respSerialized?.Data?.TaskStatus);
+
                         if (string.IsNullOrEmpty(videoUrl))
                         {
                             await Task.Delay(pollingDelay);
@@ -661,6 +663,8 @@ namespace KlingAiPlugin
             downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
 
             // Store video request token to disk, in case connection is broken or something
+
+            textualProgressIndication.Invoke("Downloading");
 
             var videoResp = await downloadClient.GetAsync(file);
 

@@ -113,7 +113,7 @@ namespace MinimaxPlugin
     internal class Client
     {
         public async Task<VideoResponse> GetImgToVid(Request request, string folderToSave, ConnectionSettings connectionSettings,
-            ItemPayload refItemPlayload, Action saveAndRefreshCallback)
+            ItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
         {
             try
             {
@@ -129,7 +129,7 @@ namespace MinimaxPlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave);
+                    return await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave, textualProgressAction);
                 }
 
                 var serialized = "";
@@ -168,7 +168,7 @@ namespace MinimaxPlugin
                 {
                     refItemPlayload.PollingId = respSerialized.task_id.ToString();
                     saveAndRefreshCallback.Invoke();
-                    return await PollVideoResults(httpClient, respSerialized.task_id, folderToSave);
+                    return await PollVideoResults(httpClient, respSerialized.task_id, folderToSave, textualProgressAction);
                 }
                 else
                 {
@@ -240,7 +240,7 @@ namespace MinimaxPlugin
             }
         }
 
-        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string id, string folderToSave)
+        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string id, string folderToSave, Action<string> textualProgressAction)
         {
             var pollingDelay = TimeSpan.FromSeconds(7);
 
@@ -267,6 +267,7 @@ namespace MinimaxPlugin
                         videoUrl = respSerialized?.file_id;
 
                         System.Diagnostics.Debug.WriteLine($"State: {respSerialized.status}");
+                        textualProgressAction.Invoke(respSerialized.status);
 
                         if (string.IsNullOrEmpty(respSerialized?.file_id))
                         {
@@ -325,7 +326,7 @@ namespace MinimaxPlugin
             downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
 
             // Store video request token to disk, in case connection is broken or something
-
+            textualProgressAction.Invoke("Downloading");
             var videoResp = await downloadClient.GetAsync(file);
 
             while (videoResp.StatusCode != HttpStatusCode.OK)
