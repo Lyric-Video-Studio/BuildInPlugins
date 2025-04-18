@@ -26,9 +26,7 @@ namespace RunwayMlPlugin
         [Description("Duration in seconds")]
         public int duration { get => videoDuration; set => videoDuration = value; }
 
-        private string modelToUse = "gen3a_turbo";
-
-        [IgnoreDynamicEdit]
+        private string modelToUse = "gen4_turbo";
         public string model { get => modelToUse; set => modelToUse = value; }
     }
 

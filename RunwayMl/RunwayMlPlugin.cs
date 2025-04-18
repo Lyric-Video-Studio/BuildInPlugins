@@ -136,6 +136,9 @@ namespace RunwayMlPlugin
                 case nameof(Request.duration):
                     return ["-1", "5", "10"];
 
+                case nameof(Request.model):
+                    return ["gen4_turbo", "gen3a_turbo"];
+
                 default:
                     break;
             }
