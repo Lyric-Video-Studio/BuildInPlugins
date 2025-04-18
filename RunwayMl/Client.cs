@@ -10,7 +10,7 @@ namespace RunwayMlPlugin
         private string prompt = "";
         private string image = "";
         private int videoDuration = 5;
-        private string videoRatio = "16:9";
+        private string videoRatio = "1280:720";
         private int? videoSeed;
 
         public string? promptText { get => prompt; set => prompt = value; }

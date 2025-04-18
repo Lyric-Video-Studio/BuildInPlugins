@@ -131,7 +131,7 @@ namespace RunwayMlPlugin
             switch (propertyName)
             {
                 case nameof(Request.ratio):
-                    return ["", "16:9", "9:16"];
+                    return ["1280:720", "720:1280", "1104:832", "832:1104", "960:960", "1584:672", "1280:768"];
 
                 case nameof(Request.duration):
                     return ["-1", "5", "10"];
