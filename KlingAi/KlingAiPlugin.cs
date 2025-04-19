@@ -163,7 +163,7 @@ namespace KlingAiPlugin
                             }
                             else
                             {
-                                return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                                return new ImageResponse { ErrorMsg = $"Failed to upload image to cloud, {resp.responseCode}", Success = false };
                             }
                         }
                     }

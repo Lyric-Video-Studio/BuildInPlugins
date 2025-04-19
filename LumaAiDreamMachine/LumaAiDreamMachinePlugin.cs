@@ -76,7 +76,7 @@ namespace LumaAiDreamMachinePlugin
                         }
                         else
                         {
-                            return new VideoResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                            return new VideoResponse { ErrorMsg = $"Failed to upload image to cloud, {resp.responseCode}", Success = false };
                         }
                     }
 
@@ -90,7 +90,7 @@ namespace LumaAiDreamMachinePlugin
                         }
                         else
                         {
-                            return new VideoResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                            return new VideoResponse { ErrorMsg = $"Failed to upload image to cloud, {resp.responseCode}", Success = false };
                         }
                     }
 
@@ -155,7 +155,7 @@ namespace LumaAiDreamMachinePlugin
                         }
                         else
                         {
-                            return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                            return new ImageResponse { ErrorMsg = $"Failed to upload image to cloud, {resp.responseCode}", Success = false };
                         }
 
                         newTp.Settings.image_ref[0].weight = newIp.ImageRef.weight;
@@ -173,7 +173,7 @@ namespace LumaAiDreamMachinePlugin
                         }
                         else
                         {
-                            return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                            return new ImageResponse { ErrorMsg = $"Failed to upload image to cloud, {resp.responseCode}", Success = false };
                         }
 
                         newTp.Settings.style_ref[0].weight = newIp.StyleRef.weight;
@@ -191,7 +191,7 @@ namespace LumaAiDreamMachinePlugin
                         }
                         else
                         {
-                            return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                            return new ImageResponse { ErrorMsg = $"Failed to upload image to cloud, {resp.responseCode}", Success = false };
                         }
 
                         newTp.Settings.modify_image_ref.weight = newIp.ModifyImage.weight;
@@ -218,7 +218,7 @@ namespace LumaAiDreamMachinePlugin
                             }
                             else
                             {
-                                return new ImageResponse { ErrorMsg = $"Failed to image upload to cloud, {resp.responseCode}", Success = false };
+                                return new ImageResponse { ErrorMsg = $"Failed to upload image to cloud, {resp.responseCode}", Success = false };
                             }
                         }
                     }
