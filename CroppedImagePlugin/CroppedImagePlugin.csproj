@@ -13,6 +13,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AvaloniaResource Include="Localizations\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Localizations\AppResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>AppResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Add the 'Watch' directive to watch for XAML file changes. -->
     <Watch Include="**\*.axaml" />
   </ItemGroup>
@@ -27,5 +38,13 @@
       <Private>false</Private>
       <ExcludeAssets>runtime</ExcludeAssets>
     </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Update="Localizations\AppResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AppResources.resx</DependentUpon>
+    </AvaloniaResource>
   </ItemGroup>
 </Project>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root"
+    xmlns=""
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Height" xml:space="preserve">
+    <value>Korkeus</value>
+    <comment>Original english: Height</comment>
+  </data>
+  <data name="Width" xml:space="preserve">
+    <value>Leveys</value>
+    <comment>Original english: Leveys</comment>
+  </data>
+  <data name="Xoffset" xml:space="preserve">
+    <value>X-siirrost</value>
+    <comment>Original english: X offset</comment>
+  </data>
+  <data name="Yoffset" xml:space="preserve">
+    <value>Y-siirros</value>
+    <comment>Original english: Y offset</comment>
+  </data>
+  <data name="pickFromFiles" xml:space="preserve">
+    <value>Valitse tiedostoista</value>
+    <comment>Original english: Pick from files</comment>
+  </data>
+  <data name="modeCrapScale" xml:space="preserve">
+    <value>Tila (rajaa/skaalaa)</value>
+    <comment>Original english: Mode (crop/scale)</comment>
+  </data>
+  <data name="Refreshcropping" xml:space="preserve">
+    <value>Päivitä</value>
+    <comment>Original english: Refresh cropping</comment>
+  </data>
+  <data name="RefreshcroppingTooltip" xml:space="preserve">
+    <value>Klikkaa tästä, jos muutat arvoja manuaalisesti ja haluat synkronoida näkymän</value>
+    <comment>Original english: Click here if you modified values manually and want to ui to sync up</comment>
+  </data>
+  <data name="Invertcropcontrolcolors" xml:space="preserve">
+    <value>Käänteinen väri rajaustyökaluun</value>
+    <comment>Original english: Invert crop control colors</comment>
+  </data>
+</root>

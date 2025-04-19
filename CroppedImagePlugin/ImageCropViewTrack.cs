@@ -56,20 +56,10 @@ namespace CroppedImagePlugin
             {
                 currentTp = tp;
 
-                /*void SetScaleConteiner()
-                {
-                    imageContainer.Stretch = Stretch.Fill;
-                    imageContainer.MaxWidth = currentTp.Width;
-                    imageContainer.MaxHeight = currentTp.Height;
-                    imageContainer.MinWidth = currentTp.Width;
-                    imageContainer.MinHeight = currentTp.Height;
-                }*/
-
                 void SetPictureFrameProperties()
                 {
                     if (tp.Scale)
                     {
-                        //SetScaleConteiner();
                         cropCanvas.Children.Clear();
 
                         if (topLeftMarker != null)
@@ -90,31 +80,6 @@ namespace CroppedImagePlugin
                         CheckCropInit();
                     }
                 }
-
-                tp.PropertyChanged += (a, b) =>
-                {
-                    if (currentTp != null && currentTp.Scale)
-                    {
-                        if (b.PropertyName == nameof(TrackPayload.Width) || b.PropertyName == nameof(TrackPayload.Height))
-                        {
-                            //SetScaleConteiner();
-                        }
-                    }
-                };
-
-                /*tp.PropertyChanged += (a, b) =>
-                {
-                    if (b.PropertyName == nameof(TrackPayload.Scale))
-                    {
-                        SetPictureFrameProperties();
-                    }
-
-                    if (b.PropertyName == nameof(TrackPayload.Width) || b.PropertyName == nameof(TrackPayload.Height) ||
-                        b.PropertyName == nameof(TrackPayload.XOffset) || b.PropertyName == nameof(TrackPayload.YOffset))
-                    {
-                        SetPictureFrameProperties();
-                    }
-                };*/
 
                 SetPictureFrameProperties();
             }
@@ -377,21 +342,6 @@ namespace CroppedImagePlugin
             }
             SetImageProperties();
 
-            /*Task.Run(() =>
-            {
-                try
-                {
-                    if (DataContext is TrackPayload tp)
-                    {
-                        var w = tp.Width;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    throw;
-                }
-            });*/
-
             ip.PropertyChanged += (a, b) =>
             {
                 if (b.PropertyName == nameof(ItemPayload.SourceBitmap))
@@ -410,20 +360,6 @@ namespace CroppedImagePlugin
                 trackPayload.XOffset = (int)((ip.SourceBitmap.Size.Width * 0.25d) / 2);
                 trackPayload.YOffset = (int)((ip.SourceBitmap.Size.Height * 0.25d) / 2);
             }
-
-            /*if (!trackPayload.Scale)
-            {
-                SetCanvasSize(cropCanvas, ip.SourceBitmap);
-                SetCanvasSize(imageContainer, ip.SourceBitmap);
-            }*/
         }
-
-        /*private void SetCanvasSize(Control v, Bitmap b)
-        {
-            v.MaxWidth = b.Size.Width;
-            v.MaxHeight = b.Size.Width;
-            v.MinWidth = b.Size.Width;
-            v.MinHeight = b.Size.Width;
-        }*/
     }
 }

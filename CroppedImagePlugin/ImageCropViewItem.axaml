@@ -3,12 +3,13 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:CroppedImagePlugin"
+    xmlns:strings="clr-namespace:CroppedImagePlugin.Localizations"
     x:DataType="local:ItemPayload">
   <StackPanel Orientation="Horizontal">
     <TextBox Text="{Binding Source}" />
     <Button
         x:Name="pickBtn"
         Click="PickFile"
-        Content="Pick from files" />
+        Content="{x:Static strings:AppResources.pickFromFiles}" />
   </StackPanel>
 </UserControl>

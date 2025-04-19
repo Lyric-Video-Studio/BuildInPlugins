@@ -4,6 +4,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:CroppedImagePlugin"
+    xmlns:strings="clr-namespace:CroppedImagePlugin.Localizations"
     x:DataType="local:TrackPayload">
   <Grid>
     <Grid.RowDefinitions>
@@ -24,7 +25,7 @@
     <TextBlock
         Grid.Row="0"
         Grid.Column="0"
-        Text="Mode (crop/scale)" />
+        Text="{x:Static strings:AppResources.modeCrapScale}" />
     <ToggleSwitch
         Grid.Row="0"
         Grid.Column="1"
@@ -33,7 +34,7 @@
     <TextBlock
         Grid.Row="1"
         Grid.Column="0"
-        Text="Width" />
+        Text="{x:Static strings:AppResources.Width}" />
     <TextBox
         Grid.Row="1"
         Grid.Column="1"
@@ -42,7 +43,7 @@
     <TextBlock
         Grid.Row="1"
         Grid.Column="2"
-        Text="Height" />
+        Text="{x:Static strings:AppResources.Height}" />
     <TextBox
         Grid.Row="1"
         Grid.Column="3"
@@ -52,7 +53,7 @@
         Grid.Row="2"
         Grid.Column="0"
         IsVisible="{Binding !Scale}"
-        Text="X offset" />
+        Text="{x:Static strings:AppResources.Xoffset}" />
     <TextBox
         Grid.Row="2"
         Grid.Column="1"
@@ -63,7 +64,7 @@
         Grid.Row="2"
         Grid.Column="2"
         IsVisible="{Binding !Scale}"
-        Text="Y Offsset" />
+        Text="{x:Static strings:AppResources.Yoffset}" />
     <TextBox
         Grid.Row="2"
         Grid.Column="3"
@@ -74,8 +75,8 @@
         Grid.Row="3"
         Margin="4"
         Click="SyncValuesToCropControl"
-        Content="Refresh cropping"
-        ToolTip.Tip="Click here if you modified values maually and want to ui to sync up" />
+        Content="{x:Static strings:AppResources.Refreshcropping}"
+        ToolTip.Tip="{x:Static strings:AppResources.RefreshcroppingTooltip}" />
     <Image
         x:Name="imageContainer"
         Grid.Row="4"
@@ -97,7 +98,7 @@
         Grid.Row="5"
         Grid.ColumnSpan="4"
         Orientation="Horizontal">
-      <TextBlock Text="Invert crop control colors" />
+      <TextBlock Text="{x:Static strings:AppResources.Invertcropcontrolcolors}" />
       <CheckBox x:Name="invColorsCheckbox" IsCheckedChanged="InvertColorsChanged" />
     </StackPanel>
   </Grid>
