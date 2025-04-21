@@ -1,4 +1,5 @@
-﻿using PluginBase;
+﻿using LumaAiDreamMachinePlugin.VideoUpscale;
+using PluginBase;
 using System.Text.Json.Nodes;
 
 namespace LumaAiDreamMachinePlugin.AddAudio
@@ -54,7 +55,7 @@ namespace LumaAiDreamMachinePlugin.AddAudio
             try
             {
                 if (JsonHelper.DeepCopy<GenerationAddAudioTrackPayload>(GenerationUpscaleTrackPayload) is GenerationAddAudioTrackPayload newTp &&
-                JsonHelper.DeepCopy<GenerationAddAudioItemPayload>(itemsPayload) is GenerationAddAudioItemPayload newIp)
+                    JsonHelper.DeepCopy<GenerationAddAudioItemPayload>(itemsPayload) is GenerationAddAudioItemPayload newIp)
                 {
                     return await client.AddAudioToGeneration(newIp.GenerationId, newIp.Prompt + " " + newTp.Prompt, newIp.NegativePrompt + " " + newTp.NegativePrompt, folderToSaveVideo,
                         _connectionSettings, itemsPayload as GenerationAddAudioItemPayload, saveAndRefreshCallback, textualProgress);
@@ -287,6 +288,16 @@ namespace LumaAiDreamMachinePlugin.AddAudio
         public void SetTextProgressCallback(Action<string> action)
         {
             textualProgress = action;
+        }
+
+        public List<string> FilePathsOnPayloads(object trackPayload, object itemPayload)
+        {
+            return new List<string>();
+        }
+
+        public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
+        {
+            // No need to do anything
         }
     }
 

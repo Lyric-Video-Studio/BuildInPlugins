@@ -422,5 +422,30 @@ namespace A1111ImgToImgPlugin
             }
             return (true, "");
         }
+
+        public List<string> FilePathsOnPayloads(object trackPayload, object itemPayload)
+        {
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
+            {
+                return new List<string>() { ip.PathToImage };
+            }
+
+            return new List<string>();
+        }
+
+        public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
+        {
+            // No need to do anything
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
+            {
+                for (int i = 0; i < originalPath.Count; i++)
+                {
+                    if (originalPath[i] == ip.PathToImage)
+                    {
+                        ip.PathToImage = newPath[i];
+                    }
+                }
+            }
+        }
     }
 }

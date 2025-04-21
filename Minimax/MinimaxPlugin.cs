@@ -550,6 +550,52 @@ namespace MinimaxPlugin
         {
             textualProgressAction = action;
         }
+
+        public List<string> FilePathsOnPayloads(object trackPayload, object itemPayload)
+        {
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
+            {
+                return (new List<string>() { ip.ImagePath, tp.Settings.first_frame_image }.Concat(tp.SubjectReferences.Select(s => s.Path)).Concat(ip.SubjectReferences.Select(s => s.Path))).ToList();
+            }
+
+            return new List<string>();
+        }
+
+        public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
+        {
+            // No need to do anything
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
+            {
+                for (int i = 0; i < originalPath.Count; i++)
+                {
+                    if (originalPath[i] == ip.ImagePath)
+                    {
+                        ip.ImagePath = newPath[i];
+                    }
+
+                    if (originalPath[i] == tp.Settings.first_frame_image)
+                    {
+                        tp.Settings.first_frame_image = newPath[i];
+                    }
+
+                    foreach (var item in tp.SubjectReferences)
+                    {
+                        if (originalPath[i] == item.Path)
+                        {
+                            item.Path = newPath[i];
+                        }
+                    }
+
+                    foreach (var item in ip.SubjectReferences)
+                    {
+                        if (originalPath[i] == item.Path)
+                        {
+                            item.Path = newPath[i];
+                        }
+                    }
+                }
+            }
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

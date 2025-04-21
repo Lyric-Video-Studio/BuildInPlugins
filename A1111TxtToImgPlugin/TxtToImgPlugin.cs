@@ -259,5 +259,14 @@ namespace A1111TxtToImgPlugin
             }
             return (true, "");
         }
+
+        public List<string> FilePathsOnPayloads(object trackPayload, object itemPayload)
+        {
+            return [];
+        }
+
+        public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
+        {
+        }
     }
 }

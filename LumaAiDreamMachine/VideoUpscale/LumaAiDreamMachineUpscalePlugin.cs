@@ -298,6 +298,15 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
         {
             progressAction = action;
         }
+
+        public List<string> FilePathsOnPayloads(object trackPayload, object itemPayload)
+        {
+            return new List<string>();
+        }
+
+        public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
+        {
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

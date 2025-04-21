@@ -596,6 +596,46 @@ namespace KlingAiPlugin
         {
             textualProgressIndication = action;
         }
+
+        public List<string> FilePathsOnPayloads(object trackPayload, object itemPayload)
+        {
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
+            {
+                return new List<string>() { tp.Settings.StartFramePath, tp.Settings.EndFramePath, ip.StartFramePath, ip.EndFramePath };
+            }
+
+            return new List<string>();
+        }
+
+        public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
+        {
+            // No need to do anything
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
+            {
+                for (int i = 0; i < originalPath.Count; i++)
+                {
+                    if (originalPath[i] == ip.StartFramePath)
+                    {
+                        ip.StartFramePath = newPath[i];
+                    }
+
+                    if (originalPath[i] == ip.EndFramePath)
+                    {
+                        ip.EndFramePath = newPath[i];
+                    }
+
+                    if (originalPath[i] == tp.Settings.StartFramePath)
+                    {
+                        tp.Settings.StartFramePath = newPath[i];
+                    }
+
+                    if (originalPath[i] == tp.Settings.EndFramePath)
+                    {
+                        tp.Settings.EndFramePath = newPath[i];
+                    }
+                }
+            }
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

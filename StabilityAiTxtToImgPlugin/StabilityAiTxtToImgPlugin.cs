@@ -253,6 +253,15 @@ namespace StabilityAiTxtToImgPlugin
             }
             return (true, "");
         }
+
+        public List<string> FilePathsOnPayloads(object trackPayload, object itemPayload)
+        {
+            return [];
+        }
+
+        public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
+        {
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
