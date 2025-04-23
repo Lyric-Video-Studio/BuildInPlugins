@@ -639,6 +639,11 @@ namespace KlingAiPlugin
 
                         textualProgressIndication.Invoke(respSerialized?.Data?.TaskStatus);
 
+                        if (respSerialized?.Data?.TaskStatus == "failed")
+                        {
+                            return (videoId, new VideoResponse() { ErrorMsg = $"KlingAi reported that task {respSerialized?.Data?.TaskStatus}, {respSerialized?.Data?.TaskStatusMsg}", Success = false });
+                        }
+
                         if (string.IsNullOrEmpty(videoUrl))
                         {
                             await Task.Delay(pollingDelay);
