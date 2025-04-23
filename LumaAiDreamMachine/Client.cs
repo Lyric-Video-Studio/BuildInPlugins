@@ -389,7 +389,7 @@ namespace LumaAiDreamMachinePlugin
 
                         if (respSerialized.state == "failed")
                         {
-                            return new VideoResponse() { Success = false, ErrorMsg = "Luma Ai backend reported that video generating failed" };
+                            return new VideoResponse() { Success = false, ErrorMsg = $"Luma Ai backend reported that video generating failed: {respSerialized.failure_reason}" };
                         }
 
                         System.Diagnostics.Debug.WriteLine($"State: {respSerialized.state}");
