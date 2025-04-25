@@ -297,7 +297,7 @@ namespace LumaAiDreamMachinePlugin
             return Array.Empty<string>();
         }
 
-        private static List<string> resolutions = ["720p", "1080", "4k", "540p"];
+        private static List<string> resolutions = ["720p", "1080p", "4k", "540p"];
 
         public object CopyPayloadForVideoTrack(object obj)
         {
@@ -365,7 +365,7 @@ namespace LumaAiDreamMachinePlugin
 
             if (payload is TrackPayload tp)
             {
-                if (tp.Settings.model == "ray-2" && resolutions.IndexOf(tp.Settings.resolution) > 0)
+                if (tp.Settings.model == "ray-1-6" && resolutions.IndexOf(tp.Settings.resolution) > 0)
                 {
                     return (false, "Ray-2 model supports only 720p");
                 }
