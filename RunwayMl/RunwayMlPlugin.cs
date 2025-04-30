@@ -126,18 +126,21 @@ namespace RunwayMlPlugin
         {
         }
 
+        private static string[] models = ["gen4_turbo", "gen3a_turbo"];
+        private static string[] ratios = ["1280:720", "720:1280", "1104:832", "832:1104", "960:960", "1584:672", "1280:768", "768:1280"];
+
         public async Task<string[]> SelectionOptionsForProperty(string propertyName)
         {
             switch (propertyName)
             {
                 case nameof(Request.ratio):
-                    return ["1280:720", "720:1280", "1104:832", "832:1104", "960:960", "1584:672", "1280:768"];
+                    return ratios;
 
                 case nameof(Request.duration):
                     return ["-1", "5", "10"];
 
                 case nameof(Request.model):
-                    return ["gen4_turbo", "gen3a_turbo"];
+                    return models;
 
                 default:
                     break;
@@ -208,36 +211,19 @@ namespace RunwayMlPlugin
                 {
                     return (false, "Image source must not be empty");
                 }
-
-                /*if (string.IsNullOrEmpty(ip.PathToImage))
-                {
-                    return (false, "No source");
-                }
-
-                if (!File.Exists(ip.PathToImage))
-                {
-                    return (false, $"Source file {ip.PathToImage} missing");
-                }
-                else
-                {
-                    try
-                    {
-                        var imageInfo = SKBitmap.Decode(ip.PathToImage);
-                        var supportedSizes = new List<string>() { "1024x576", "576x1024", "768x768" };
-
-                        var imageSizeAsString = $"{imageInfo.Width}x{imageInfo.Height}";
-
-                        if (!supportedSizes.Any(s => s == imageSizeAsString))
-                        {
-                            return (false, $"Image is not correct size, supported sizes are: {string.Join(", ", supportedSizes)}, selected image was: {imageSizeAsString}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        return (false, ex.Message);
-                    }
-                }*/
             }
+
+            if (payload is TrackPayload tp)
+            {
+                if (tp.Request.model == models[1])
+                {
+                    if (tp.Request.ratio != ratios[^1] && tp.Request.ratio != ratios[^2])
+                    {
+                        return (false, $"{tp.Request.model} supports only  {ratios[^1]} & {ratios[^2]} ratios");
+                    }
+                }
+            }
+
             return (true, "");
         }
 
