@@ -11,6 +11,7 @@ namespace LumaAiDreamMachinePlugin
         private Request imgToVidPayload = new Request();
 
         [Description("Video settings")]
+        [IgnorePropertyName]
         public Request Settings { get => imgToVidPayload; set => imgToVidPayload = value; }
     }
 }

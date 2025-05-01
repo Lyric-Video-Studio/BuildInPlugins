@@ -11,6 +11,7 @@ namespace LumaAiDreamMachinePlugin
         private ImageRequest txtToImgPayload = new ImageRequest();
 
         [Description("Image settings")]
+        [IgnorePropertyName]
         public ImageRequest Settings { get => txtToImgPayload; set => txtToImgPayload = value; }
     }
 }
