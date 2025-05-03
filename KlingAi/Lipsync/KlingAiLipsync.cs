@@ -1,13 +1,11 @@
 ﻿using PluginBase;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
 using System.Text.Json.Nodes;
 
 namespace KlingAiPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class KlingAiLipSync /*: ITextualProgressIndication IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IRequestContentUploader, IImportContentId*/ // Disabled for a while
+    public class KlingAiLipSync /*: ITextualProgressIndication, IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IRequestContentUploader, IImportContentId*/ // Disabled for a while
     {
         public const string PluginName = "KlingAiImgToVidBuildInLipSync";
         public string UniqueName { get => PluginName; }
@@ -384,6 +382,48 @@ namespace KlingAiPlugin
         public void SetTextProgressCallback(Action<string> action)
         {
             textProgressAction = action;
+        }
+
+        public List<string> FilePathsOnPayloads(object trackPayload, object itemPayload)
+        {
+            var output = new List<string>();
+
+            if (trackPayload is TrackPayloadLipsync ls)
+            {
+                output.Add(ls.Settings.VideoUrl);
+                output.Add(ls.Settings.AudioUrl);
+            }
+
+            if (itemPayload is ItemPayloadLipsync iLs)
+            {
+                output.Add(iLs.AudioFile);
+            }
+
+            return output;
+        }
+
+        public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
+        {
+            if (trackPayload is TrackPayloadLipsync tp && itemPayload is ItemPayloadLipsync ip)
+            {
+                for (int i = 0; i < originalPath.Count; i++)
+                {
+                    if (originalPath[i] == tp.Settings.VideoUrl)
+                    {
+                        tp.Settings.VideoUrl = newPath[i];
+                    }
+
+                    if (originalPath[i] == tp.Settings.AudioUrl)
+                    {
+                        tp.Settings.AudioUrl = newPath[i];
+                    }
+
+                    if (originalPath[i] == ip.AudioFile)
+                    {
+                        ip.AudioFile = newPath[i];
+                    }
+                }
+            }
         }
     }
 
