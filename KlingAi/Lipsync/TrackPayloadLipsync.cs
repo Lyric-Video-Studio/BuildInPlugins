@@ -10,6 +10,7 @@ namespace KlingAiPlugin
         private KlingLipsyncRequest imgToVidPayload = new KlingLipsyncRequest();
 
         [Description("Video settings")]
-        public KlingLipsyncRequest Settings { get => imgToVidPayload; set => imgToVidPayload = value; }
+        [IgnorePropertyName]
+        public KlingLipsyncRequest Settings { get => imgToVidPayload; set => imgToVidPayload = value; }        
     }
 }

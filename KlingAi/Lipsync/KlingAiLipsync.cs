@@ -5,7 +5,7 @@ namespace KlingAiPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class KlingAiLipSync /*: ITextualProgressIndication, IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IRequestContentUploader, IImportContentId*/ // Disabled for a while
+    public class KlingAiLipSync : ITextualProgressIndication, IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IRequestContentUploader, IImportContentId, IImportFromVideo
     {
         public const string PluginName = "KlingAiImgToVidBuildInLipSync";
         public string UniqueName { get => PluginName; }
@@ -23,7 +23,7 @@ namespace KlingAiPlugin
 
         public string[] SettingsLinks => new[] {
             "https://klingai.com/global/dev/model/video#package",
-            "https://klingai.com/global/dev/model/image",
+            "https://docs.qingque.cn/s/home/eZQDvafJ4vXQkP8T9ZPvmye8S?identityId=2E3S0NySBQy",
             "https://console.klingai.com/console/access-control/accesskey-management" };
 
         public IPluginBase.TrackType CurrentTrackType { get; set; }
@@ -85,6 +85,22 @@ namespace KlingAiPlugin
                     }
 
                     newTp.Settings.VideoId = newIp.InputVideoId;
+                    if (!string.IsNullOrEmpty(newIp.InputVideoPath))
+                    {
+                        var newUrl = await _uploader.RequestContentUpload(newIp.InputVideoPath);
+
+                        if (newUrl.responseCode != System.Net.HttpStatusCode.OK)
+                        {
+                            return new VideoResponse { ErrorMsg = $"Failed to upload audio, response code: {newUrl.responseCode}", Success = false };
+                        }
+
+                        newTp.Settings.VideoUrl = newUrl.uploadedUrl;
+                        newTp.Settings.VideoId = "";
+                    }
+                    else
+                    {
+                        newTp.Settings.AudioType = "";
+                    }
 
                     var voiceIndex = KlingLipsyncRequest.GetPrintableVoices().IndexOf(newTp.Settings.VoiceId);
 
@@ -180,8 +196,8 @@ namespace KlingAiPlugin
 
         public IPluginBase CreateNewInstance()
         {
-            throw new NotImplementedException("If you can see this, I'm sorry, something went horribly wrong :) This plugin should not be selectedble...");
-            //return new KlingAiLipSync();
+            //throw new NotImplementedException("If you can see this, I'm sorry, something went horribly wrong :) This plugin should not be selectedble...");
+            return new KlingAiLipSync();
         }
 
         public async Task<string> TestInitialization()
@@ -205,9 +221,9 @@ namespace KlingAiPlugin
                     return (false, "Auth token empty!!!");
                 }
 
-                if (string.IsNullOrEmpty(ip.InputVideoId))
+                if (string.IsNullOrEmpty(ip.InputVideoId) && string.IsNullOrEmpty(ip.InputVideoPath))
                 {
-                    return (false, "Input video missing");
+                    return (false, "Input video missing, use path or video file id of existing klingAi video");
                 }
 
                 if (string.IsNullOrEmpty(ip.Text) && string.IsNullOrEmpty(ip.AudioFile))
@@ -424,6 +440,11 @@ namespace KlingAiPlugin
                     }
                 }
             }
+        }
+
+        public object ItemPayloadFromVideoSource(string videoSource)
+        {
+            return new ItemPayloadLipsync() { InputVideoPath = videoSource };
         }
     }
 

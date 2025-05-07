@@ -11,8 +11,11 @@ namespace KlingAiPlugin
         [EnableFileDrop]
         public string AudioFile { get; set; }
 
-        [Description("Id of your existing Kling video. Use 'Copy content id' of your existiing video to get the id easy")]
+        [Description("Id of your existing Kling video. Use 'Copy content id' of your existiing video to get the id easy. You can't use both video_id and pat")]
         public string InputVideoId { get; set; }
+
+        [Description("Path to your input video. Video files support .mp4/.mov, file size does not exceed 100MB, video length does not exceed 10s and is not shorter than 2s, only 720p and 1080p are supported. Note that using Google Drive may not work. You can't use both video_id and path")]
+        public string InputVideoPath { get; set; }
 
         private string pollingId;
 

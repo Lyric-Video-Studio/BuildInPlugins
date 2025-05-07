@@ -465,6 +465,11 @@ namespace KlingAiPlugin
             }
         }
 
+        public class GotDamnKlingAiDevs
+        {
+            public KlingLipsyncRequest input { get; set; }
+        }
+
         public async Task<VideoResponse> GetImgToVid(KlingLipsyncRequest request, string folderToSave, ConnectionSettings connectionSettings,
             ItemPayloadLipsync refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressIndication)
         {
@@ -492,7 +497,8 @@ namespace KlingAiPlugin
 
                 try
                 {
-                    serialized = JsonHelper.Serialize(request);
+                    serialized = JsonHelper.Serialize(new GotDamnKlingAiDevs() { input = request });
+                    serialized = serialized.Replace("  \"video_url\": \"\",", "");
                 }
                 catch (Exception ex)
                 {
