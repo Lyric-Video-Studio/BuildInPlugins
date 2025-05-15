@@ -20,7 +20,7 @@ namespace KlingAiPlugin
 
         public string SettingsHelpText => "Hosted by KlingAi. You need to have your authorization token";
 
-        public bool AsynchronousGeneration { get; } = true;
+        public bool AsynchronousGeneration { get; } = false;
 
         public string[] SettingsLinks => new[] {
             "https://klingai.com/global/dev/model/video#package",
