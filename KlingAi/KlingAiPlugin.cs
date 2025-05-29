@@ -215,10 +215,10 @@ namespace KlingAiPlugin
                 switch (CurrentTrackType)
                 {
                     case IPluginBase.TrackType.Video:
-                        return [/*"kling-v2", */"kling-v1-6"];
+                        return ["kling-v1-6", "kling-v2-master"];
 
                     case IPluginBase.TrackType.Image:
-                        return ["kling-v1"];
+                        return ["kling-v1", "kling-v1-5", "kling-v2"];
 
                     default:
                         break;
