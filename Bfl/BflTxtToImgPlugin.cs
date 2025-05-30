@@ -179,7 +179,7 @@ namespace BflTxtToImgPlugin
                                 using var client = new HttpClient();
 
                                 var response = await client.GetByteArrayAsync(url);
-                                var fileFormat = Path.GetExtension(url);
+                                var fileFormat = url.Contains(".png") ? "png" : "jpg";
                                 var imageBase64 = Convert.ToBase64String(response);
                                 return new ImageResponse { Success = true, ImageFormat = fileFormat, Image = imageBase64 };
                             }
