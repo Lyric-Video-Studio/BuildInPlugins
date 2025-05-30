@@ -2,6 +2,7 @@
 using PluginBase;
 using System.Linq;
 using System.Text.Json.Nodes;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace BflTxtToImgPlugin
 {
@@ -10,7 +11,7 @@ namespace BflTxtToImgPlugin
     public class BflTxtToImgPlugin : IImagePlugin, IImportFromLyrics, ICancellableGeneration, ISaveAndRefresh, IImportFromImage
     {
         public string UniqueName { get => "BflTxtToImageBuildIn"; }
-        public string DisplayName { get => "Black Forest Labs (FLUX pro)"; }
+        public string DisplayName { get => "Black Forest Labs"; }
 
         public object GeneralDefaultSettings => new ConnectionSettings();
 
@@ -54,6 +55,8 @@ namespace BflTxtToImgPlugin
             }
         }
 
+        Random rnd = new Random();
+
         public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
         {
             if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
@@ -63,7 +66,7 @@ namespace BflTxtToImgPlugin
 
             EnsureClients();
 
-            if (JsonHelper.DeepCopy<TrackPayload>(trackPayload) is TrackPayload newTp && JsonHelper.DeepCopy<ItemPayload>(itemsPayload) is ItemPayload newIp)
+            if (JsonHelper.DeepCopy<TrackPayload>(trackPayload) is TrackPayload newTp && JsonHelper.DeepCopy<ItemPayload>(itemsPayload) is ItemPayload newIp && itemsPayload is ItemPayload oldPl)
             {
                 if (!string.IsNullOrEmpty(newIp.PollingId))
                 {
@@ -76,12 +79,50 @@ namespace BflTxtToImgPlugin
 
                 if (!string.IsNullOrEmpty(newIp.ImageSource) && File.Exists(newIp.ImageSource))
                 {
-                    newTp.Settings.Image_prompt = Convert.ToBase64String(File.ReadAllBytes(newIp.ImageSource));
+                    /*var ext = Path.GetExtension(newIp.ImageSource).Replace(".", "").ToLowerInvariant();
+                    if(ext == "jpg")
+                    {
+                        ext = "jpeg";
+                    }*/
+                    //newTp.Settings.Image_prompt = $"data:image/{ext};base64,{Convert.ToBase64String(File.ReadAllBytes(newIp.ImageSource))}";
+                    newTp.Settings.ImagePrompt = Convert.ToBase64String(File.ReadAllBytes(newIp.ImageSource));
                 }
 
                 try
                 {
-                    var imageRequest = await imgClient.PostAsync(newTp.Settings);
+                    AsyncResponse imageRequest;
+
+                    if(newIp.Seed == 0)
+                    {
+                        newIp.Seed = rnd.Next();
+                        oldPl.Seed = newIp.Seed;
+                    }
+
+                    newTp.Settings.Seed = newIp.Seed;
+
+
+                    if (newIp.EditImage)
+                    {
+                        var newInput = new FluxKontextInputs()
+                        {
+                            InputImage = newTp.Settings.ImagePrompt,
+                            Prompt = newTp.Settings.Prompt, 
+                            Output_format = newTp.Settings.Output_format, 
+                            Prompt_upsampling = newTp.Settings.Prompt_upsampling, 
+                            Safety_tolerance = newTp.Settings.Safety_tolerance, 
+                            Seed = newTp.Settings.Seed
+                        };
+
+                        imageRequest = await imgClient.PostAsync(newInput);
+                    }
+                    else
+                    {
+                        if(newTp.Settings.ImagePrompt == "")
+                        {
+                            newTp.Settings.ImagePrompt = null;
+                        }
+                        imageRequest = await imgClient.PostAsync(newTp.Settings);
+                    }
 
                     if (!string.IsNullOrEmpty(imageRequest.Id))
                     {
@@ -194,6 +235,12 @@ namespace BflTxtToImgPlugin
             {
                 return Array.Empty<string>();
             }
+
+            if (propertyName == nameof(FluxKontextInputs.Output_format))
+            {
+                return ["png", "jpeg"];
+            }
+
             return Array.Empty<string>();
         }
 
@@ -262,6 +309,11 @@ namespace BflTxtToImgPlugin
             if (payload is ItemPayload ip && string.IsNullOrEmpty(ip.Prompt))
             {
                 return (false, "Prompt missing");
+            }
+
+            if (payload is ItemPayload ip2 && ip2.EditImage && string.IsNullOrEmpty(ip2.ImageSource))
+            {
+                return (false, "Image is required for editing");
             }
             return (true, "");
         }
