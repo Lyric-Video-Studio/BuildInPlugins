@@ -1,9 +1,18 @@
 ﻿using System.ComponentModel;
+using System.Text.Json.Serialization;
+using PluginBase;
 
 namespace CroppedImagePlugin
 {
     public class TrackPayload : INotifyPropertyChanged
     {
+        public enum RotateFinalOutput
+        {
+            None,
+            Left,
+            Right
+        }
+
         private int width;
         private int height;
         private int xOffset;
@@ -46,6 +55,14 @@ namespace CroppedImagePlugin
         public bool IsCrop => !Scale;
 
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        [IgnoreDynamicEdit]
+        public int SelectedRotation { get; set; }
+
+        [JsonIgnore]
+        public string[] RotateNames => ["None", "Left", "Right"]; //Localizations.AppResources.RotateNone, Localizations.AppResources.RotateLeft, Localizations.AppResources.RotateRigth];
+
+        public string SelectedItemName => SelectedRotation >= 0 && SelectedRotation < RotateNames.Length ? RotateNames[SelectedRotation] : "";
 
         protected void RaisePropertyChanged(string name)
         {

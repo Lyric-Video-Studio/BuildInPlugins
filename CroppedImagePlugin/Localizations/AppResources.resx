@@ -85,4 +85,16 @@
   <data name="Invertcropcontrolcolors" xml:space="preserve">
     <value>Invert crop control colors</value>
   </data>
+  <data name="Rotate" xml:space="preserve">
+    <value>Rotate</value>
+  </data>
+  <data name="RotateNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="RotateLeft" xml:space="preserve">
+    <value>Left</value>
+  </data>
+  <data name="RotateRight" xml:space="preserve">
+    <value>Right</value>
+  </data>
 </root>
