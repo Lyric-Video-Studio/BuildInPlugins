@@ -77,6 +77,10 @@
         Click="SyncValuesToCropControl"
         Content="{x:Static strings:AppResources.Refreshcropping}"
         ToolTip.Tip="{x:Static strings:AppResources.RefreshcroppingTooltip}" />
+    <TextBlock Text="Rotate" Grid.Row="3" Grid.Column="1"/>
+    <ComboBox Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2" ItemsSource="{Binding RotateNames}"
+        SelectedIndex="{Binding SelectedRotation}"
+        SelectedItem="{Binding SelectedItemName}" />
     <Image
         x:Name="imageContainer"
         Grid.Row="4"

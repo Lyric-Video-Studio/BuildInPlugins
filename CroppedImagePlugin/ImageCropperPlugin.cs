@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using PluginBase;
 using SkiaSharp;
 using System.Text.Json.Nodes;
+using static CroppedImagePlugin.TrackPayload;
 
 namespace CroppedImagePlugin
 {
@@ -109,11 +110,28 @@ namespace CroppedImagePlugin
                             var output = SKImage.Create(info);
                             img.ScalePixels(output.PeekPixels(), SKSamplingOptions.Default);
 
+                            var rot = (RotateFinalOutput)newTp.SelectedRotation;
+                            var rotDeg = 0;
+                            switch (rot)
+                            {
+                                case RotateFinalOutput.Left:
+                                    rotDeg = -90;
+                                    break;
+
+                                case RotateFinalOutput.Right:
+                                    rotDeg = 90;
+                                    break;
+                            }
+
+                            SKImage? rotated = rotDeg != 0 ? Rotate(SKBitmap.FromImage(output), rotDeg) : null;
+
                             using var memStream = new MemoryStream();
                             var codec = SKCodec.Create(newIp.Source);
-                            using var data = output.Encode(codec.EncodedFormat, 100);
+                            using var data = (rotated ?? output).Encode(codec.EncodedFormat, 100);
                             data.SaveTo(memStream);
                             memStream.Position = 0;
+                            output.Dispose();
+                            rotated?.Dispose();
                             return Task.FromResult(new ImageResponse { Image = Convert.ToBase64String(memStream.ToArray()), ImageFormat = Path.GetExtension(newIp.Source).Replace(".", ""), Success = true });
                         }
                         else
@@ -202,6 +220,32 @@ namespace CroppedImagePlugin
             {
                 return Task.FromResult(new ImageResponse { ErrorMsg = "Source was null or empty" });
             }
+        }
+
+        public static SKImage Rotate(SKBitmap bitmap, double angle)
+        {
+            double radians = Math.PI * angle / 180;
+            float sine = (float)Math.Abs(Math.Sin(radians));
+            float cosine = (float)Math.Abs(Math.Cos(radians));
+            int originalWidth = bitmap.Width;
+            int originalHeight = bitmap.Height;
+            int rotatedWidth = (int)(cosine * originalWidth + sine * originalHeight);
+            int rotatedHeight = (int)(cosine * originalHeight + sine * originalWidth);
+
+            var rotatedBitmap = new SKBitmap(rotatedWidth, rotatedHeight);
+
+            using (var surface = new SKCanvas(rotatedBitmap))
+            {
+                surface.Clear();
+                surface.Translate(rotatedWidth / 2, rotatedHeight / 2);
+                surface.RotateDegrees((float)angle);
+                surface.Translate(-originalWidth / 2, -originalHeight / 2);
+                surface.DrawBitmap(bitmap, new SKPoint());
+            }
+            var res = SKImage.FromBitmap(rotatedBitmap);
+            rotatedBitmap.Dispose();
+            bitmap.Dispose();
+            return res;
         }
 
         public Task<string> Initialize(object settings)
