@@ -7,7 +7,7 @@ namespace MusicGptPlugin
     public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
     {
         private static string accessTokenKey = "MusicGptPlugin.accessKey";
-        private string url = "https://api.musicgpt.com/api/public/";
+        private string url = "https://api.musicgpt.com/api/public/v1/";
         private string accessToken;
 
         [Description("Url to MusicGpt")]

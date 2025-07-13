@@ -58,7 +58,7 @@ namespace MusicGptPlugin
                 if (JsonHelper.DeepCopy<MusicGptAudioTrackPayload>(trackPayload) is MusicGptAudioTrackPayload newTp &&
                     JsonHelper.DeepCopy<MusicGptItemPayload>(itemsPayload) is MusicGptItemPayload newIp)
                 {
-                    return await MusicGptClient.GenerateAudio(newIp.GenerationId, newIp.Prompt + " " + newTp.Prompt, newTp.MusicStyle, newIp.Lyrics, newTp.Instumental, newTp.VoiceOnly, newTp.VoiceId, 
+                    return await MusicGptClient.GenerateAudio(newIp.PollingId, newIp.Prompt + " " + newTp.Prompt, newTp.MusicStyle, newIp.Lyrics, newTp.Instumental, newTp.VoiceOnly, newTp.VoiceId, 
                         folderToSaveAudio, _connectionSettings, itemsPayload as MusicGptItemPayload, saveAndRefreshCallback, textualProgress);
                 }
                 else

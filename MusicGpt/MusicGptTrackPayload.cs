@@ -1,6 +1,6 @@
 ﻿namespace MusicGptPlugin
 {
-    internal class MusicGptAudioTrackPayload
+    public class MusicGptAudioTrackPayload
     {
         private string prompt = "";
         public string Prompt { get => prompt; set => prompt = value; }
