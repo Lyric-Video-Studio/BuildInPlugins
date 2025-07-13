@@ -123,6 +123,7 @@ namespace MusicGptPlugin
             var pollingDelay = TimeSpan.FromSeconds(7);
 
             var audioUrl = "";
+            var alternativeAudioUrl = "";
             using var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("Authorization", connectionSettings.AccessToken);
             httpClient.BaseAddress = new Uri(connectionSettings.Url);
@@ -138,7 +139,8 @@ namespace MusicGptPlugin
                     try
                     {
                         respSerialized = JsonHelper.DeserializeString<ConversionResponse>(respString);
-                        audioUrl = respSerialized.conversion?.conversion_path_wav_1; // TODO: What about the second?
+                        audioUrl = respSerialized.conversion?.conversion_path_wav_1;
+                        alternativeAudioUrl = respSerialized.conversion?.conversion_path_wav_2;
 
                         if (!respSerialized.success)
                         {
@@ -170,6 +172,8 @@ namespace MusicGptPlugin
 
             downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "file/*");
 
+            textualProgress.Invoke("Downloading audio 1");
+
             var audioResp = await downloadClient.GetAsync(file);
 
             while (audioResp.StatusCode != HttpStatusCode.OK)
@@ -182,15 +186,45 @@ namespace MusicGptPlugin
             {
                 var respBytes = await audioResp.Content.ReadAsByteArrayAsync();
                 var finalPath = Path.Combine(folderToSaveAudio, file);
+                var audio1 = finalPath;
 
-                if(File.Exists(finalPath))
+                if (!File.Exists(finalPath))
                 {
-                    File.Delete(finalPath);
+                    await File.WriteAllBytesAsync(finalPath, respBytes);
+                }
+                
+                var altFile = "";
+                if (!string.IsNullOrEmpty(alternativeAudioUrl))
+                {
+                    file = Path.GetFileName(alternativeAudioUrl);
+                    using var downloadClient2 = new HttpClient { BaseAddress = new Uri(alternativeAudioUrl.Replace(file, "")) };
+                    downloadClient2.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "file/*");
+
+                    textualProgress.Invoke("Downloading audio 2");
+
+                    audioResp = await downloadClient2.GetAsync(file);
+
+                    while (audioResp.StatusCode != HttpStatusCode.OK)
+                    {
+                        await Task.Delay(pollingDelay);
+                        audioResp = await downloadClient2.GetAsync(file);
+                    }
+
+                    if (audioResp.StatusCode == HttpStatusCode.OK)
+                    {
+                        respBytes = await audioResp.Content.ReadAsByteArrayAsync();
+                        finalPath = Path.Combine(folderToSaveAudio, file);
+
+                        if (!File.Exists(finalPath))
+                        {
+                            await File.WriteAllBytesAsync(finalPath, respBytes);
+                        }
+                        
+                        altFile = finalPath;
+                    }
                 }
 
-                await File.WriteAllBytesAsync(finalPath, respBytes);
-
-                return new AudioResponse() { Success = true, AudioFormat = Path.GetExtension(file), AudioFile = finalPath };
+                return new AudioResponse() { Success = true, AudioFormat = Path.GetExtension(file), AudioFile = audio1, AlternativeAudioFile = altFile };
             }
             else
             {
