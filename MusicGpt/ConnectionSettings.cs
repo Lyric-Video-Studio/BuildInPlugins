@@ -18,6 +18,9 @@ namespace MusicGptPlugin
         [EditorWidth(300)]
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
+        [IgnoreDynamicEdit]
+        public string Voices { get; set; }
+
         public void OnDeserialized()
         {
             try

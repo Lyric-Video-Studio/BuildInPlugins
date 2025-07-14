@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection.PortableExecutable;
+using System.Threading.Tasks;
 
 namespace MusicGptPlugin
 {
@@ -55,6 +56,22 @@ namespace MusicGptPlugin
     {
         public bool success { get; set; }
         public string error { get; set; }
+    }
+
+    public class Voice
+    {
+        public string voice_id { get; set; }
+        public string voice_name { get; set; }
+    }
+
+    public class VoiceResponse
+    {
+        public bool success { get; set; }
+        public List<Voice> voices { get; set; }
+        public int limit { get; set; }
+        public int page { get; set; }
+        public int total { get; set; }
+
     }
 
     public class MusicGptClient
@@ -229,6 +246,25 @@ namespace MusicGptPlugin
             else
             {
                 return new AudioResponse() { ErrorMsg = $"Error: {audioResp.StatusCode}, details: {await audioResp.Content.ReadAsStringAsync()}", Success = false };
+            }
+        }
+
+        public static async Task<VoiceResponse> GetVoices(ConnectionSettings connectionSettings, int offset, int resultsPerPage = 300)
+        {
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("Authorization", connectionSettings.AccessToken);
+            httpClient.BaseAddress = new Uri(connectionSettings.Url);
+            try
+            {
+                var generationResp = await httpClient.GetAsync($"getAllVoices?limit={resultsPerPage}&page={offset}");
+                var respString = await generationResp.Content.ReadAsStringAsync();
+                var respSerialized = JsonHelper.DeserializeString<VoiceResponse>(respString);
+                return respSerialized;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+                return new VoiceResponse() { total = 0 };
             }
         }
     }

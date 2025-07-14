@@ -1,4 +1,6 @@
-﻿namespace MusicGptPlugin
+﻿using PluginBase;
+
+namespace MusicGptPlugin
 {
     public class MusicGptAudioTrackPayload
     {
@@ -15,6 +17,8 @@
         public bool VoiceOnly { get => voiceOnly; set => voiceOnly = value; }
 
         private string voiceId;
+
+        [IgnoreDynamicEdit] // Temporarily disabled
         public string VoiceId { get => voiceId; set => voiceId = value; }
     }
 }

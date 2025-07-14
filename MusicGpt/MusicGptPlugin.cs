@@ -5,7 +5,7 @@ namespace MusicGptPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class MusicGptPlugin : IAudioPlugin, ISaveAndRefresh, IContentId, ITextualProgressIndication
+    public class MusicGptPlugin : IAudioPlugin, ISaveAndRefresh, IContentId, ITextualProgressIndication, ISaveConnectionSettings
     {
         public string UniqueName { get => "MusicGptPlugin"; }
         public string DisplayName { get => "MusicGpt"; }
@@ -58,7 +58,8 @@ namespace MusicGptPlugin
                 if (JsonHelper.DeepCopy<MusicGptAudioTrackPayload>(trackPayload) is MusicGptAudioTrackPayload newTp &&
                     JsonHelper.DeepCopy<MusicGptItemPayload>(itemsPayload) is MusicGptItemPayload newIp)
                 {
-                    return await MusicGptClient.GenerateAudio(newIp.PollingId, newIp.Prompt + " " + newTp.Prompt, newTp.MusicStyle, newIp.Lyrics, newTp.Instumental, newTp.VoiceOnly, newTp.VoiceId, 
+                    _voideNameIdDict.TryGetValue(newTp.VoiceId, out var voiceId);
+                    return await MusicGptClient.GenerateAudio(newIp.PollingId, newIp.Prompt + " " + newTp.Prompt, newTp.MusicStyle, newIp.Lyrics, newTp.Instumental, newTp.VoiceOnly, voiceId, 
                         folderToSaveAudio, _connectionSettings, itemsPayload as MusicGptItemPayload, saveAndRefreshCallback, textualProgress);
                 }
                 else
@@ -75,7 +76,6 @@ namespace MusicGptPlugin
                 _tasks--;
             }
         }
-
         public async Task<string> Initialize(object settings)
         {
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)
@@ -95,6 +95,9 @@ namespace MusicGptPlugin
         }
 
         private static Dictionary<string, string> _voideNameIdDict = new();
+
+        public static bool VoiceListUpdatePending = false;
+
         public async Task<string[]> SelectionOptionsForProperty(string propertyName)
         {
             if (_connectionSettings == null)
@@ -102,15 +105,72 @@ namespace MusicGptPlugin
                 return Array.Empty<string>();
             }
 
-            // TODO: VoiceId's, cache to name/id map
-
-
             if (propertyName == nameof(MusicGptAudioTrackPayload.VoiceId))
             {
-                return _voideNameIdDict.Keys.ToArray();
+                while (VoiceListUpdatePending)
+                {
+                    await Task.Delay(200);
+                }
+
+                VoiceListUpdatePending = true;
+
+                try
+                {
+                    if (_voideNameIdDict.Count == 0)
+                    {
+                        // Try to serialize the voices
+                        var storedVoices = _connectionSettings.Voices;
+
+                        if (!string.IsNullOrEmpty(storedVoices))
+                        {
+                            foreach (var item in storedVoices.Split('\n').Where(s => !string.IsNullOrEmpty(s)))
+                            {
+                                _voideNameIdDict[item.Split(';')[0]] = item.Split(';')[1];
+                            }
+                        }
+                    }
+                    // Still 0, refresh
+                    if (_voideNameIdDict.Count == 0)
+                    {
+                        await RefreshVoiceListAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex);
+                }
+                finally 
+                { 
+                    VoiceListUpdatePending = false; 
+                }                
+
+                return _voideNameIdDict.Keys.Order().ToArray();
             }
 
             return Array.Empty<string>();
+        }
+
+        private async Task RefreshVoiceListAsync()
+        {
+            if (_connectionSettings != null && !string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            {
+                var offset = 0;
+                var voiceResp = await MusicGptClient.GetVoices(_connectionSettings, offset);
+                var newStoredVoices = "";
+                while (voiceResp != null && voiceResp.total > 0 && voiceResp.voices != null && voiceResp.voices.Count > 0)
+                {
+                    voiceResp.voices.ForEach(voice =>
+                    {
+                        newStoredVoices += $"{voice.voice_name};{voice.voice_id}\n";
+                        _voideNameIdDict[voice.voice_name] = voice.voice_id;
+                    });
+                    offset++;
+                    voiceResp = await MusicGptClient.GetVoices(_connectionSettings, offset);
+                }
+
+                _connectionSettings.Voices = newStoredVoices;
+                saveConnectionSettings.Invoke(_connectionSettings);
+            }
         }
 
         public object DeserializePayload(string fileName)
@@ -268,7 +328,13 @@ namespace MusicGptPlugin
         public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
         {
             // No need to do anything
-        }        
+        }
+
+        public Action<object> saveConnectionSettings;
+        public void SetSaveConnectionSettingsCallback(Action<object> saveConnectionSettings)
+        {
+            this.saveConnectionSettings = saveConnectionSettings;
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
