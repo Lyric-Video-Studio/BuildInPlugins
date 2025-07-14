@@ -21,6 +21,19 @@ namespace MusicGptPlugin
         [IgnoreDynamicEdit]
         public string Voices { get; set; }
 
+        private Action refreshAction;
+
+        public void SetVoiceRefreshCallback(Action refresh)
+        {
+            refreshAction = refresh;
+        }
+
+        /*[CustomAction("Refresh voices")]
+        public void RefreshVoices()
+        {
+            refreshAction.Invoke();
+        }*/
+
         public void OnDeserialized()
         {
             try

@@ -81,6 +81,14 @@ namespace MusicGptPlugin
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)
             {
                 _connectionSettings = s;
+                _connectionSettings.SetVoiceRefreshCallback(async () =>
+                {
+                    await RefreshVoiceListAsync();
+                    if(saveAndRefreshCallback != null)
+                    {
+                        saveAndRefreshCallback.Invoke();
+                    }
+                });
                 _isInitialized = true;
                 return "";
             }
