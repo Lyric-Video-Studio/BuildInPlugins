@@ -28,11 +28,11 @@ namespace MusicGptPlugin
             refreshAction = refresh;
         }
 
-        /*[CustomAction("Refresh voices")]
+        [CustomAction("Refresh voices")]
         public void RefreshVoices()
         {
             refreshAction.Invoke();
-        }*/
+        }
 
         public void OnDeserialized()
         {

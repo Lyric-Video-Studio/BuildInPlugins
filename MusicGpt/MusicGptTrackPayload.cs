@@ -1,4 +1,5 @@
 ﻿using PluginBase;
+using System.ComponentModel;
 
 namespace MusicGptPlugin
 {
@@ -18,7 +19,16 @@ namespace MusicGptPlugin
 
         private string voiceId;
 
-        [IgnoreDynamicEdit] // Temporarily disabled
+        private bool speechOnly;
+        [Description("Generate speech/narration from the prompt, no music")]
+        public bool SpeechOnly { get => speechOnly; set => speechOnly = value; }
+
+        private string gender;
+
+        [Description("Gender of the speeker. Used on speech / narration only")]
+        public string Gender { get => gender; set => gender = value; }
+
+        //[IgnoreDynamicEdit] // Temporarily disabled
         public string VoiceId { get => voiceId; set => voiceId = value; }
     }
 }

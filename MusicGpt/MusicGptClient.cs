@@ -18,6 +18,13 @@ namespace MusicGptPlugin
         public string webhook_url { get; set; } = "";
     }
 
+    public class SpeechRequest
+    {
+        public string text { get; set; }
+        public string voice_id { get; set; }
+        public string gender { get; set; }
+    }
+
     public class MusicResponse
     {
         public bool success { get; set; }
@@ -74,6 +81,18 @@ namespace MusicGptPlugin
 
     }
 
+    public class SpeechResponse
+    {
+        public bool success { get; set; }
+        public string task_id { get; set; }
+        public string conversion_id { get; set; }
+        public string audio_url { get; set; }
+        public string audio_url_wav { get; set; }
+        public double conversion_cost { get; set; }
+        public double conversion_duration { get; set; }
+        public string detail { get; set; }
+    }
+
     public class MusicGptClient
     {
         public static async Task<AudioResponse> GenerateAudio(string generationId, string prompt, string musicStyle, string lyrics, bool makeInstrumental, bool vocal_only, string voice_id,
@@ -117,6 +136,60 @@ namespace MusicGptPlugin
                         saveAndRefreshCallback.Invoke();
                         textualProgress.Invoke(actualResp.message);
                         return await GetConversionResponse(musicGptItemPayload.PollingId, connectionSettings, textualProgress, folderToSaveAudio);
+                    }
+                    else
+                    {
+                        return new AudioResponse() { Success = false, ErrorMsg = actualResp.message };
+                    }
+                }
+                else
+                {
+                    var ep = JsonHelper.DeserializeString<ErrorResp>(respString);
+                    return new AudioResponse() { Success = false, ErrorMsg = ep.error ?? resp.StatusCode.ToString() };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new AudioResponse() { Success = false, ErrorMsg = ex.Message };
+            }
+        }
+
+        public static async Task<AudioResponse> GenerateSpeech(string pollingId, string text, string gender, string voiceId, string folderToSaveAudio, 
+            ConnectionSettings connectionSettings, MusicGptItemPayload musicGptItemPayload, Action saveAndRefreshCallback, Action<string> textualProgress)
+        {
+            if (!string.IsNullOrEmpty(musicGptItemPayload.PollingId))
+            {
+                return await GetSpeechResponse(musicGptItemPayload.PollingId, connectionSettings, textualProgress, folderToSaveAudio);
+            }
+
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", connectionSettings.AccessToken);
+            httpClient.BaseAddress = new Uri(connectionSettings.Url);
+
+            var req = new SpeechRequest()
+            {
+                text = text,
+                gender = gender,
+                voice_id = voiceId
+            };
+            var json = JsonHelper.Serialize(req);
+            var content = new StringContent(json);
+            content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+            try
+            {
+                var resp = await httpClient.PostAsync("TextToSpeech", content);
+                var respString = await resp.Content.ReadAsStringAsync();
+
+                if (resp.IsSuccessStatusCode)
+                {
+                    var actualResp = JsonHelper.DeserializeString<MusicResponse>(respString);
+                    if (actualResp.success)
+                    {
+                        musicGptItemPayload.PollingId = actualResp.task_id;
+                        saveAndRefreshCallback.Invoke();
+                        textualProgress.Invoke(actualResp.message);
+                        return await GetSpeechResponse(musicGptItemPayload.PollingId, connectionSettings, textualProgress, folderToSaveAudio);
                     }
                     else
                     {
@@ -249,6 +322,87 @@ namespace MusicGptPlugin
             }
         }
 
+        private static async Task<AudioResponse> GetSpeechResponse(string taskId, ConnectionSettings connectionSettings, Action<string> textualProgress, string folderToSaveAudio)
+        {
+            var pollingDelay = TimeSpan.FromSeconds(7);
+
+            var audioUrl = "";
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("Authorization", connectionSettings.AccessToken);
+            httpClient.BaseAddress = new Uri(connectionSettings.Url);
+            while (string.IsNullOrEmpty(audioUrl))
+            {
+                // Wait for assets to be filled
+                try
+                {
+                    // 'https://api.musicgpt.com/api/public/v1/byId?task_id=aaaaaaa&conversionType=TEXT_TO_SPEECH
+                    var generationResp = await httpClient.GetAsync($"byId?conversionType=TEXT_TO_SPEECH&task_id={taskId}");
+                    var respString = await generationResp.Content.ReadAsStringAsync();
+                    SpeechResponse respSerialized = null;
+
+                    try
+                    {
+                        respSerialized = JsonHelper.DeserializeString<SpeechResponse>(respString);
+                        audioUrl = respSerialized.audio_url_wav;
+
+                        if (!respSerialized.success)
+                        {
+                            return new AudioResponse() { Success = false, ErrorMsg = $"MusicGpt backend reported that audio generating failed: {respSerialized.detail}" };
+                        }
+
+                        textualProgress.Invoke("Generating...");
+
+                        if (string.IsNullOrEmpty(audioUrl))
+                        {
+                            await Task.Delay(pollingDelay);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    }
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+
+            var file = Path.GetFileName(audioUrl);
+
+            using var downloadClient = new HttpClient { BaseAddress = new Uri(audioUrl.Replace(file, "")) };
+
+            downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "file/*");
+
+            textualProgress.Invoke("Downloading audio 1");
+
+            var audioResp = await downloadClient.GetAsync(file);
+
+            while (audioResp.StatusCode != HttpStatusCode.OK)
+            {
+                await Task.Delay(pollingDelay);
+                audioResp = await downloadClient.GetAsync(file);
+            }
+
+            if (audioResp.StatusCode == HttpStatusCode.OK)
+            {
+                var respBytes = await audioResp.Content.ReadAsByteArrayAsync();
+                var finalPath = Path.Combine(folderToSaveAudio, file);
+                var audio1 = finalPath;
+
+                if (!File.Exists(finalPath))
+                {
+                    await File.WriteAllBytesAsync(finalPath, respBytes);
+                }
+
+                return new AudioResponse() { Success = true, AudioFormat = Path.GetExtension(file), AudioFile = audio1 };
+            }
+            else
+            {
+                return new AudioResponse() { ErrorMsg = $"Error: {audioResp.StatusCode}, details: {await audioResp.Content.ReadAsStringAsync()}", Success = false };
+            }
+        }
+
         public static async Task<VoiceResponse> GetVoices(ConnectionSettings connectionSettings, int offset, int resultsPerPage = 300)
         {
             using var httpClient = new HttpClient();
@@ -266,6 +420,6 @@ namespace MusicGptPlugin
                 System.Diagnostics.Debug.WriteLine(ex);
                 return new VoiceResponse() { total = 0 };
             }
-        }
+        }        
     }
 }

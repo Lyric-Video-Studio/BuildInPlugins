@@ -59,8 +59,22 @@ namespace MusicGptPlugin
                     JsonHelper.DeepCopy<MusicGptItemPayload>(itemsPayload) is MusicGptItemPayload newIp)
                 {
                     _voideNameIdDict.TryGetValue(newTp.VoiceId, out var voiceId);
-                    return await MusicGptClient.GenerateAudio(newIp.PollingId, newIp.Prompt + " " + newTp.Prompt, newTp.MusicStyle, newIp.Lyrics, newTp.Instumental, newTp.VoiceOnly, voiceId, 
-                        folderToSaveAudio, _connectionSettings, itemsPayload as MusicGptItemPayload, saveAndRefreshCallback, textualProgress);
+
+                    if(voiceId == Guid.Empty.ToString())
+                    {
+                        voiceId = null;
+                    }
+
+                    if(newTp.SpeechOnly)
+                    {
+                        return await MusicGptClient.GenerateSpeech(newIp.PollingId, newIp.Prompt + " " + newTp.Prompt, newTp.Gender, voiceId,
+                            folderToSaveAudio, _connectionSettings, itemsPayload as MusicGptItemPayload, saveAndRefreshCallback, textualProgress);
+                    }
+                    else
+                    {
+                        return await MusicGptClient.GenerateAudio(newIp.PollingId, newIp.Prompt + " " + newTp.Prompt, newTp.MusicStyle, newIp.Lyrics, newTp.Instumental, newTp.VoiceOnly, voiceId,
+                            folderToSaveAudio, _connectionSettings, itemsPayload as MusicGptItemPayload, saveAndRefreshCallback, textualProgress);
+                    }                        
                 }
                 else
                 {
@@ -113,6 +127,11 @@ namespace MusicGptPlugin
                 return Array.Empty<string>();
             }
 
+            if (propertyName == nameof(MusicGptAudioTrackPayload.Gender))
+            {
+                return ["male", "female"]; 
+            }
+
             if (propertyName == nameof(MusicGptAudioTrackPayload.VoiceId))
             {
                 while (VoiceListUpdatePending)
@@ -150,7 +169,9 @@ namespace MusicGptPlugin
                 finally 
                 { 
                     VoiceListUpdatePending = false; 
-                }                
+                }
+
+                _voideNameIdDict["(none)"] = Guid.Empty.ToString();
 
                 return _voideNameIdDict.Keys.Order().ToArray();
             }
