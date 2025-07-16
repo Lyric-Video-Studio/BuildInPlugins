@@ -18,6 +18,9 @@ namespace MinimaxPlugin
         [EditorWidth(300)]
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
+        [IgnoreDynamicEdit]
+        public List<string> SpeechVoices { get; set; } = new List<string>();
+
         public void OnDeserialized()
         {
             try
@@ -43,6 +46,19 @@ namespace MinimaxPlugin
                 SecureStorageWrapper.Set(accessTokenKey, AccessToken);
                 AccessToken = "";
             }
+        }
+
+        [CustomAction("Refresh text-to-speech voices")]
+        public void RefreshVOices()
+        {
+            voiceRefresh.Invoke();
+        }
+
+        private Action voiceRefresh;
+
+        internal void SetVoiceRefreshCallback(Action voiceRefresh)
+        {
+            this.voiceRefresh = voiceRefresh;
         }
     }
 }

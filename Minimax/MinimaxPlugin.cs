@@ -244,7 +244,7 @@ namespace MinimaxPlugin
                 switch (CurrentTrackType)
                 {
                     case IPluginBase.TrackType.Video:
-                        return ["S2V-01", "T2V-01", "T2V-01-Director", "I2V-01", "I2V-01-Director", "I2V-01-live"];
+                        return ["MiniMax-Hailuo-02", "S2V-01", "T2V-01", "T2V-01-Director", "I2V-01", "I2V-01-Director", "I2V-01-live"];
 
                     default:
                         break;
