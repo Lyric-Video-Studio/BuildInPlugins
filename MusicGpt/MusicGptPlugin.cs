@@ -152,7 +152,7 @@ namespace MusicGptPlugin
                         {
                             foreach (var item in storedVoices.Split('\n').Where(s => !string.IsNullOrEmpty(s)))
                             {
-                                _voideNameIdDict[item.Split(';')[0]] = item.Split(';')[1];
+                                _voideNameIdDict[item.Split(';')[0].Trim()] = item.Split(';')[1];
                             }
                         }
                     }
@@ -190,8 +190,8 @@ namespace MusicGptPlugin
                 {
                     voiceResp.voices.ForEach(voice =>
                     {
-                        newStoredVoices += $"{voice.voice_name};{voice.voice_id}\n";
-                        _voideNameIdDict[voice.voice_name] = voice.voice_id;
+                        newStoredVoices += $"{voice.voice_name.Trim()};{voice.voice_id}\n";
+                        _voideNameIdDict[voice.voice_name.Trim()] = voice.voice_id;
                     });
                     offset++;
                     voiceResp = await MusicGptClient.GetVoices(_connectionSettings, offset);
