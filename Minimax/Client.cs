@@ -8,7 +8,7 @@ namespace MinimaxPlugin
 {
     public class Request
     {
-        public string model { get; set; } = "S2V-01";
+        public string model { get; set; } = "MiniMax-Hailuo-02";
         public string prompt { get; set; } = "";
         public bool prompt_optimizer { get; set; } = true;
 
@@ -19,6 +19,9 @@ namespace MinimaxPlugin
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         [IgnoreDynamicEdit]
         public KeyFrame[] subject_reference { get; set; }
+
+        [IgnoreDynamicEdit]
+        public string resolution { get; set; } = "768P";
     }
 
     public class ImageRequest
@@ -134,6 +137,11 @@ namespace MinimaxPlugin
 
                 var serialized = "";
 
+                if (request.model == "MiniMax-Hailuo-02")
+                {
+                    request.resolution = "1080P";
+                }
+
                 try
                 {
                     serialized = JsonHelper.Serialize(request);
@@ -152,7 +160,7 @@ namespace MinimaxPlugin
                 var resp = await httpClient.PostAsync("v1/video_generation", stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
                 Response respSerialized = null;
-                string? errMsg = null;
+                string? errMsg = nu ll;
                 try
                 {
                     respSerialized = JsonHelper.DeserializeString<Response>(respString);
