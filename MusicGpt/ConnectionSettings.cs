@@ -21,7 +21,7 @@ namespace MusicGptPlugin
         [IgnoreDynamicEdit]
         public string Voices { get; set; }
 
-        private Action refreshAction;
+        private static Action refreshAction;
 
         public void SetVoiceRefreshCallback(Action refresh)
         {
