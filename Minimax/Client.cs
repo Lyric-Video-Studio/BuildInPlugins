@@ -160,7 +160,7 @@ namespace MinimaxPlugin
                 var resp = await httpClient.PostAsync("v1/video_generation", stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
                 Response respSerialized = null;
-                string? errMsg = nu ll;
+                string? errMsg = null;
                 try
                 {
                     respSerialized = JsonHelper.DeserializeString<Response>(respString);
