@@ -5,7 +5,7 @@ namespace MusicGptPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class MusicGptPlugin : IAudioPlugin, ISaveAndRefresh, IContentId, ITextualProgressIndication, ISaveConnectionSettings
+    public class MusicGptPlugin : IAudioPlugin, ISaveAndRefresh, IContentId, ITextualProgressIndication, ISaveConnectionSettings, IImportFromLyrics, ICancellableGeneration
     {
         public string UniqueName { get => "MusicGptPlugin"; }
         public string DisplayName { get => "MusicGpt"; }
@@ -38,7 +38,6 @@ namespace MusicGptPlugin
 
         private static int _tasks = 0;
 
-
         public async Task<AudioResponse> GetAudio(object trackPayload, object itemsPayload, string folderToSaveAudio)
         {
             if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
@@ -60,21 +59,21 @@ namespace MusicGptPlugin
                 {
                     _voideNameIdDict.TryGetValue(newTp.VoiceId, out var voiceId);
 
-                    if(voiceId == Guid.Empty.ToString())
+                    if (voiceId == Guid.Empty.ToString())
                     {
                         voiceId = null;
                     }
 
-                    if(newTp.SpeechOnly)
+                    if (newTp.SpeechOnly)
                     {
-                        return await MusicGptClient.GenerateSpeech(newIp.PollingId, newIp.Prompt + " " + newTp.Prompt, newTp.Gender, voiceId,
-                            folderToSaveAudio, _connectionSettings, itemsPayload as MusicGptItemPayload, saveAndRefreshCallback, textualProgress);
+                        return await MusicGptClient.GenerateSpeech(newIp.PollingId, newIp.Lyrics + " " + newTp.Prompt, newTp.Gender, voiceId,
+                            folderToSaveAudio, _connectionSettings, itemsPayload as MusicGptItemPayload, saveAndRefreshCallback, textualProgress, cancellationToken);
                     }
                     else
                     {
                         return await MusicGptClient.GenerateAudio(newIp.PollingId, newIp.Prompt + " " + newTp.Prompt, newTp.MusicStyle, newIp.Lyrics, newTp.Instumental, newTp.VoiceOnly, voiceId,
-                            folderToSaveAudio, _connectionSettings, itemsPayload as MusicGptItemPayload, saveAndRefreshCallback, textualProgress);
-                    }                        
+                            folderToSaveAudio, _connectionSettings, itemsPayload as MusicGptItemPayload, saveAndRefreshCallback, textualProgress, cancellationToken);
+                    }
                 }
                 else
                 {
@@ -90,6 +89,7 @@ namespace MusicGptPlugin
                 _tasks--;
             }
         }
+
         public async Task<string> Initialize(object settings)
         {
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)
@@ -98,7 +98,7 @@ namespace MusicGptPlugin
                 _connectionSettings.SetVoiceRefreshCallback(async () =>
                 {
                     await RefreshVoiceListAsync();
-                    if(saveAndRefreshCallback != null)
+                    if (saveAndRefreshCallback != null)
                     {
                         saveAndRefreshCallback.Invoke();
                     }
@@ -129,7 +129,7 @@ namespace MusicGptPlugin
 
             if (propertyName == nameof(MusicGptAudioTrackPayload.Gender))
             {
-                return ["male", "female"]; 
+                return ["male", "female"];
             }
 
             if (propertyName == nameof(MusicGptAudioTrackPayload.VoiceId))
@@ -166,9 +166,9 @@ namespace MusicGptPlugin
                 {
                     System.Diagnostics.Debug.WriteLine(ex);
                 }
-                finally 
-                { 
-                    VoiceListUpdatePending = false; 
+                finally
+                {
+                    VoiceListUpdatePending = false;
                 }
 
                 _voideNameIdDict["(none)"] = Guid.Empty.ToString();
@@ -260,7 +260,7 @@ namespace MusicGptPlugin
         {
             if (GenerationUpscaleItemPayload is MusicGptItemPayload ip)
             {
-                return ip.Prompt;
+                return ip.Lyrics;
             }
 
             return "";
@@ -329,16 +329,16 @@ namespace MusicGptPlugin
 
         public (bool payloadOk, string reasonIfNot) ValidatePayload(object payload)
         {
-            if(_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
             {
                 return (false, "Access token is empty");
             }
 
-            if(payload is MusicGptItemPayload itemPl)
+            if (payload is MusicGptItemPayload itemPl)
             {
                 return (!string.IsNullOrEmpty(itemPl.Prompt), "Prompt is empty");
             }
-            
+
             return (true, "");
         }
 
@@ -360,9 +360,22 @@ namespace MusicGptPlugin
         }
 
         public Action<object> saveConnectionSettings;
+
         public void SetSaveConnectionSettingsCallback(Action<object> saveConnectionSettings)
         {
             this.saveConnectionSettings = saveConnectionSettings;
+        }
+
+        public object ItemPayloadFromLyrics(string text)
+        {
+            return new MusicGptItemPayload() { Lyrics = text };
+        }
+
+        private CancellationToken cancellationToken;
+
+        public void SetCancallationToken(CancellationToken cancellationToken)
+        {
+            this.cancellationToken = cancellationToken;
         }
     }
 

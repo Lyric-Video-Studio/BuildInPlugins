@@ -20,8 +20,9 @@ namespace MusicGptPlugin
         private string voiceId;
 
         private bool speechOnly;
+
         [Description("Generate speech/narration from the prompt, no music")]
-        [IgnoreDynamicEdit] // Temporarily disabled
+        [IgnoreDynamicEdit]
         public bool SpeechOnly { get => speechOnly; set => speechOnly = value; }
 
         private string gender;
@@ -29,7 +30,8 @@ namespace MusicGptPlugin
         [Description("Gender of the speeker. Used on speech / narration only")]
         public string Gender { get => gender; set => gender = value; }
 
-        [IgnoreDynamicEdit] // Temporarily disabled
+        [Description("For speech/narration voice, does not have effect in music generation")]
+        [IgnoreDynamicEdit]
         public string VoiceId { get => voiceId; set => voiceId = value; }
     }
 }
