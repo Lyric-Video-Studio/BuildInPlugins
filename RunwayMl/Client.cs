@@ -30,6 +30,12 @@ namespace RunwayMlPlugin
         public string model { get => modelToUse; set => modelToUse = value; }
     }
 
+    public class VideoUpscaleRequest
+    {
+        public string videoUri { get; set; }
+        public string model { get; set; } = "upscale_v1";
+    }
+
     public class Response
     {
         public Guid id { get; set; }
@@ -84,14 +90,76 @@ namespace RunwayMlPlugin
                     return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
                 }
 
-                var tempFile = Path.Combine(folderToSave, "tempReq.txt");
+                Response respSerialized = null;
 
-                if (File.Exists(tempFile))
+                try
                 {
-                    File.Delete(tempFile);
+                    respSerialized = JsonHelper.DeserializeString<Response>(respString);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new VideoResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
                 }
 
-                File.WriteAllText(tempFile, respString);
+                if (respSerialized != null && resp.IsSuccessStatusCode)
+                {
+                    return await PollVideoResults(httpClient, respSerialized.output, respSerialized.id, refItemPlayload, folderToSave, saveAndRefreshCallback, textualProgressAction);
+                }
+                else
+                {
+                    return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
+                return new VideoResponse() { ErrorMsg = ex.Message, Success = false };
+            }
+        }
+
+        public async Task<VideoResponse> GetUpscale(VideoUpscaleRequest request, string folderToSave, ConnectionSettings connectionSettings,
+            ItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Remove("accept");
+
+                // It's best to keep these here: use can change these from item settings
+                httpClient.BaseAddress = new Uri(connectionSettings.Url);
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Bearer {connectionSettings.AccessToken}");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-Runway-Version", "2024-09-13");
+
+                if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
+                {
+                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), refItemPlayload, folderToSave, saveAndRefreshCallback, textualProgressAction);
+                }
+
+                var serialized = "";
+
+                try
+                {
+                    serialized = JsonHelper.Serialize(request);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new VideoResponse() { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
+                }
+
+                var stringContent = new StringContent(serialized);
+                stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+                var resp = await httpClient.PostAsync("v1/video_upscale ", stringContent);
+                var respString = await resp.Content.ReadAsStringAsync();
+
+                if (resp.StatusCode != HttpStatusCode.OK)
+                {
+                    return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+                }
 
                 Response respSerialized = null;
 

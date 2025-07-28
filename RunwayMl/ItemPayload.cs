@@ -11,12 +11,16 @@ namespace RunwayMlPlugin
             "If you need to create new variation, clear this id, otherwise the same result will be fetched from the server")]
         public string PollingId { get => pollingId; set => pollingId = value; }
 
-        private Request request = new Request();
-        public Request Request { get => request; set => request = value; }
+        public string Prompt { get; set; }
+
+        public int Seed { get; set; } = 0;
 
         [EnableFileDrop]
         public string ImageSource { get => imageSource; set => imageSource = value; }
 
         private string imageSource;
+
+        [EnableFileDrop]
+        public string VideoSource { get; set; }
     }
 }

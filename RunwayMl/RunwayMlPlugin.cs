@@ -5,10 +5,10 @@ namespace RunwayMlPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class RunwayMlImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, ITextualProgressIndication
+    public class RunwayMlImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, ITextualProgressIndication, IImportFromVideo
     {
         public string UniqueName { get => "RunwayMlImgToVidBuildIn"; }
-        public string DisplayName { get => "Runway ML "; }
+        public string DisplayName { get => "Runway ML"; }
 
         public object GeneralDefaultSettings => new ConnectionSettings();
 
@@ -16,7 +16,7 @@ namespace RunwayMlPlugin
 
         public bool IsInitialized => _isInitialized;
 
-        public string SettingsHelpText => "Powered by runway ML. You need to have your authorization token";
+        public string SettingsHelpText => "Powered by Runway ML. You need to have your authorization token";
 
         public bool AsynchronousGeneration { get; } = true;
 
@@ -50,43 +50,35 @@ namespace RunwayMlPlugin
 
                 // Also, when img2Vid
 
-                newTp.Request.promptText = newIp.Request.promptText + " " + newTp.Request.promptText;
+                newTp.Request.promptText = newIp.Prompt + " " + newTp.Request.promptText;
 
-                if (newIp.Request.seed.HasValue && newIp.Request.seed != 0)
+                if (newIp.Seed != 0)
                 {
-                    newTp.Request.seed = newIp.Request.seed.Value;
+                    newTp.Request.seed = newIp.Seed;
                 }
                 else if (itemsPayload is ItemPayload ipOld)
                 {
-                    ipOld.Request.seed = new Random().Next(1, int.MaxValue);
+                    ipOld.Seed = new Random().Next(1, int.MaxValue);
                     saveAndRefreshCallback.Invoke();
-                    newTp.Request.seed = ipOld.Request.seed;
+                    newTp.Request.seed = ipOld.Seed;
                 }
 
-                if (string.IsNullOrEmpty(newIp.Request.ratio))
+                if (!string.IsNullOrEmpty(newIp.ImageSource))
                 {
-                    newTp.Request.ratio = newIp.Request.ratio;
-                }
+                    var fileUpload = await _contentUploader.RequestContentUpload(newIp.ImageSource);
 
-                if (newIp.Request.duration != -1)
-                {
-                    newTp.Request.duration = newIp.Request.duration;
-                }
-
-                var fileUpload = await _contentUploader.RequestContentUpload(newIp.ImageSource);
-
-                if (fileUpload.isLocalFile)
-                {
-                    return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
-                }
-                else if (fileUpload.responseCode != System.Net.HttpStatusCode.OK)
-                {
-                    return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {fileUpload.responseCode}" };
-                }
-                else
-                {
-                    newTp.Request.promptImage = fileUpload.uploadedUrl;
-                    saveAndRefreshCallback.Invoke();
+                    if (fileUpload.isLocalFile)
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
+                    }
+                    else if (fileUpload.responseCode != System.Net.HttpStatusCode.OK)
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {fileUpload.responseCode}" };
+                    }
+                    else
+                    {
+                        newTp.Request.promptImage = fileUpload.uploadedUrl;
+                    }
                 }
 
                 if (string.IsNullOrEmpty(newTp.Request.ratio))
@@ -99,8 +91,38 @@ namespace RunwayMlPlugin
                     newTp.Request.duration = 5;
                 }
 
-                var videoResp = await new Client().GetImgToVid(newTp.Request, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
-                return videoResp;
+                if (newTp.Request.model == models[1])
+                {
+                    if (string.IsNullOrEmpty(newIp.VideoSource))
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = "Video file not defined" };
+                    }
+
+                    var videoUileUpload = await _contentUploader.RequestContentUpload(newIp.VideoSource);
+                    var uploadedVideo = "";
+                    if (videoUileUpload.isLocalFile)
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
+                    }
+                    else if (videoUileUpload.responseCode != System.Net.HttpStatusCode.OK)
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {videoUileUpload.responseCode}" };
+                    }
+                    else
+                    {
+                        uploadedVideo = videoUileUpload.uploadedUrl;
+                    }
+
+                    // Video upscale
+                    var videoResp = await new Client().GetUpscale(new VideoUpscaleRequest() { videoUri = uploadedVideo }, folderToSaveVideo,
+                        _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
+                    return videoResp;
+                }
+                else
+                {
+                    var videoResp = await new Client().GetImgToVid(newTp.Request, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
+                    return videoResp;
+                }
             }
             else
             {
@@ -126,7 +148,7 @@ namespace RunwayMlPlugin
         {
         }
 
-        private static string[] models = ["gen4_turbo", "gen3a_turbo"];
+        private static string[] models = ["act_two", "upscale_v1", "gen4_turbo", "gen3a_turbo"];
         private static string[] ratios = ["1280:720", "720:1280", "1104:832", "832:1104", "960:960", "1584:672", "1280:768", "768:1280"];
 
         public async Task<string[]> SelectionOptionsForProperty(string propertyName)
@@ -209,13 +231,18 @@ namespace RunwayMlPlugin
 
                 if (string.IsNullOrEmpty(ip.ImageSource))
                 {
-                    return (false, "Image source must not be empty");
+                    return (false, $"Image source must not be empty (for models {string.Join(", ", models.Skip(2))})");
+                }
+
+                if (string.IsNullOrEmpty(ip.VideoSource))
+                {
+                    return (false, $"Image source must not be empty (for model {models[1]})");
                 }
             }
 
             if (payload is TrackPayload tp)
             {
-                if (tp.Request.model == models[1])
+                if (tp.Request.model == models[3])
                 {
                     if (tp.Request.ratio != ratios[^1] && tp.Request.ratio != ratios[^2])
                     {
@@ -237,7 +264,7 @@ namespace RunwayMlPlugin
         public object ItemPayloadFromLyrics(string text)
         {
             var output = new ItemPayload();
-            output.Request.promptText = text;
+            output.Prompt = text;
             return output;
         }
 
@@ -272,7 +299,7 @@ namespace RunwayMlPlugin
         {
             if (itemPayload is ItemPayload ip)
             {
-                return ip.Request?.promptText;
+                return ip.Prompt;
             }
             return "";
         }
@@ -375,6 +402,11 @@ namespace RunwayMlPlugin
                     }
                 }
             }
+        }
+
+        public object ItemPayloadFromVideoSource(string videoSource)
+        {
+            return new ItemPayload() { VideoSource = videoSource };
         }
     }
 
