@@ -70,6 +70,22 @@ namespace RunwayMlPlugin
         public string failure { get; set; }
     }
 
+    public class ImageRequest
+    {
+        public string promptText { get; set; }
+        public string ratio { get; set; }
+        public int seed;
+        public string model { get; set; } = "gen4_image";
+        public List<ImageReference> referenceImages { get; set; } = new List<ImageReference>();
+        public ContentMod contentModeration { get; set; } = new ContentMod();
+    }
+
+    public class ImageReference
+    {
+        public string uri { get; set; }
+        public string tag { get; set; }
+    }
+
     internal class Client
     {
         public async Task<VideoResponse> GetVideo(object request, string folderToSave, ConnectionSettings connectionSettings,
@@ -89,7 +105,7 @@ namespace RunwayMlPlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), refItemPlayload, folderToSave, saveAndRefreshCallback, textualProgressAction);
+                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave, textualProgressAction);
                 }
 
                 var serialized = "";
@@ -143,7 +159,9 @@ namespace RunwayMlPlugin
 
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
-                    return await PollVideoResults(httpClient, respSerialized.output, respSerialized.id, refItemPlayload, folderToSave, saveAndRefreshCallback, textualProgressAction);
+                    refItemPlayload.PollingId = respSerialized.id.ToString();
+                    saveAndRefreshCallback.Invoke();
+                    return await PollVideoResults(httpClient, respSerialized.output, respSerialized.id, folderToSave, textualProgressAction);
                 }
                 else
                 {
@@ -157,13 +175,91 @@ namespace RunwayMlPlugin
             }
         }
 
-        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string[] assets, Guid id, ItemPayload refItemPlayload, string folderToSave, Action saveAndRefreshCallback,
+        public async Task<ImageResponse> GetImage(ImageRequest request, string folderToSave, ConnectionSettings connectionSettings,
+            ImageItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Remove("accept");
+
+                // It's best to keep these here: use can change these from item settings
+                httpClient.BaseAddress = new Uri(connectionSettings.Url);
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Bearer {connectionSettings.AccessToken}");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-Runway-Version", "2024-09-13");
+
+                if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
+                {
+                    return await PollImageResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave, textualProgressAction);
+                }
+
+                var serialized = "";
+
+                try
+                {
+                    serialized = JsonHelper.Serialize(request);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new ImageResponse() { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
+                }
+
+                var stringContent = new StringContent(serialized);
+                stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+                var resp = await httpClient.PostAsync($"v1/text_to_image", stringContent);
+                var respString = await resp.Content.ReadAsStringAsync();
+
+                if (resp.StatusCode != HttpStatusCode.OK)
+                {
+                    return new ImageResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+                }
+
+                Response respSerialized = null;
+
+                try
+                {
+                    respSerialized = JsonHelper.DeserializeString<Response>(respString);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new ImageResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
+                }
+
+                if (respSerialized != null && resp.IsSuccessStatusCode)
+                {
+                    refItemPlayload.PollingId = respSerialized.id.ToString();
+                    saveAndRefreshCallback.Invoke();
+
+                    return await PollImageResults(httpClient, respSerialized.output, respSerialized.id, folderToSave, textualProgressAction);
+                }
+                else
+                {
+                    return new ImageResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
+                return new ImageResponse() { ErrorMsg = ex.Message, Success = false };
+            }
+        }
+
+        private static async Task<ImageResponse> PollImageResults(HttpClient httpClient, string[] assets, Guid id, string folderToSave,
             Action<string> textualProgressAction)
         {
-            var pollingDelay = TimeSpan.FromSeconds(20);
+            var resp = await PollVideoResults(httpClient, assets, id, folderToSave, textualProgressAction, true);
+            return new ImageResponse() { Success = resp.Success, ErrorMsg = resp.ErrorMsg, Image = resp.VideoFile, ImageFormat = "jpg" }; // TODO VAi onko
+        }
 
-            refItemPlayload.PollingId = id.ToString();
-            saveAndRefreshCallback?.Invoke();
+        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string[] assets, Guid id, string folderToSave,
+            Action<string> textualProgressAction, bool isActuallyImage = false)
+        {
+            var pollingDelay = TimeSpan.FromSeconds(20);
 
             var videoUrl = assets != null && assets.Length > 0 ? assets[0] : "";
 
@@ -210,7 +306,14 @@ namespace RunwayMlPlugin
 
             var downloadClient = new HttpClient { BaseAddress = new Uri(videoUrl.Replace(file, "")) };
 
-            downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
+            if (isActuallyImage)
+            {
+                downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "image/*");
+            }
+            else
+            {
+                downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
+            }
 
             // Store video request token to disk, in case connection is broken or something
 
@@ -227,13 +330,19 @@ namespace RunwayMlPlugin
             if (videoResp.StatusCode == HttpStatusCode.OK)
             {
                 var respBytes = await videoResp.Content.ReadAsByteArrayAsync();
-                var pathToVideo = Path.Combine(folderToSave, $"{id}.mp4");
-                await File.WriteAllBytesAsync(pathToVideo, respBytes);
-                return new VideoResponse() { Success = true, VideoFile = pathToVideo };
+                if (isActuallyImage)
+                {
+                    return new VideoResponse() { Success = true, VideoFile = Convert.ToBase64String(respBytes) };
+                }
+                else
+                {
+                    var pathToVideo = Path.Combine(folderToSave, $"{id}.mp4");
+                    await File.WriteAllBytesAsync(pathToVideo, respBytes);
+                    return new VideoResponse() { Success = true, VideoFile = pathToVideo };
+                }
             }
             else
             {
-                refItemPlayload.PollingId = "";
                 return new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
             }
         }

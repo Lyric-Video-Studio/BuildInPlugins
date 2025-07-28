@@ -27,4 +27,10 @@
       <ExcludeAssets>runtime</ExcludeAssets>
     </ProjectReference>
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Reactive">
+      <HintPath>..\..\..\..\nuget\system.reactive\6.0.1\lib\net6.0\System.Reactive.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>

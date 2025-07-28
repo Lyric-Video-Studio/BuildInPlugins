@@ -1,11 +1,13 @@
 ﻿using PluginBase;
+using System.Reactive.Disposables;
 using System.Text.Json.Nodes;
 
 namespace RunwayMlPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class RunwayMlImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, ITextualProgressIndication, IImportFromVideo
+    public class RunwayMlImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
+        IImportFromVideo, IImagePlugin, IDisposable
     {
         public string UniqueName { get => "RunwayMlImgToVidBuildIn"; }
         public string DisplayName { get => "Runway ML"; }
@@ -26,16 +28,6 @@ namespace RunwayMlPlugin
         private IContentUploader _contentUploader;
 
         public IPluginBase.TrackType CurrentTrackType { get; set; }
-
-        public object DefaultPayloadForVideoItem()
-        {
-            return new ItemPayload();
-        }
-
-        public object DefaultPayloadForVideoTrack()
-        {
-            return new TrackPayload();
-        }
 
         public async Task<VideoResponse> GetVideo(object trackPayload, object itemsPayload, string folderToSaveVideo)
         {
@@ -225,6 +217,14 @@ namespace RunwayMlPlugin
             }
         }
 
+        public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
+        {
+            if (JsonHelper.DeepCopy<ImageTrackPayload>(trackPayload) is ImageTrackPayload newTp && JsonHelper.DeepCopy<ImageItemPayload>(itemsPayload) is ImageItemPayload newIp)
+            {
+            }
+            return new ImageResponse { Success = false, ErrorMsg = "Unknown error" };
+        }
+
         public async Task<string> Initialize(object settings)
         {
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)
@@ -248,39 +248,25 @@ namespace RunwayMlPlugin
 
         public async Task<string[]> SelectionOptionsForProperty(string propertyName)
         {
-            switch (propertyName)
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
-                case nameof(Request.ratio):
-                    return ratios;
+                switch (propertyName)
+                {
+                    case nameof(Request.ratio):
+                        return ratios;
 
-                case nameof(Request.duration):
-                    return ["-1", "5", "10"];
+                    case nameof(Request.duration):
+                        return ["-1", "5", "10"];
 
-                case nameof(Request.model):
-                    return models;
+                    case nameof(Request.model):
+                        return models;
 
-                default:
-                    break;
+                    default:
+                        break;
+                }
             }
+
             return Array.Empty<string>();
-        }
-
-        public object CopyPayloadForVideoTrack(object obj)
-        {
-            if (JsonHelper.DeepCopy<TrackPayload>(obj) is TrackPayload set)
-            {
-                return set;
-            }
-            return DefaultPayloadForVideoTrack();
-        }
-
-        public object CopyPayloadForVideoItem(object obj)
-        {
-            if (JsonHelper.DeepCopy<ItemPayload>(obj) is ItemPayload set)
-            {
-                return set;
-            }
-            return DefaultPayloadForVideoItem();
         }
 
         public object DeserializePayload(string fileName)
@@ -288,9 +274,21 @@ namespace RunwayMlPlugin
             return JsonHelper.Deserialize<TrackPayload>(fileName);
         }
 
+        private CompositeDisposable _disposable = new CompositeDisposable();
+
         public IPluginBase CreateNewInstance()
         {
-            return new RunwayMlImgToVidPlugin();
+            var plug = new RunwayMlImgToVidPlugin();
+            _disposable.Add(ImageTrackPayload.Refresh.Subscribe(_ =>
+            {
+                saveAndRefreshCallback?.Invoke();
+            }));
+
+            _disposable.Add(ImageItemPayload.Refresh.Subscribe(_ =>
+            {
+                saveAndRefreshCallback?.Invoke();
+            }));
+            return plug;
         }
 
         public async Task<string> TestInitialization()
@@ -349,6 +347,17 @@ namespace RunwayMlPlugin
             return (true, "");
         }
 
+        private (bool payloadOk, string reasonIfNot) ValidateImagePayload(object payload)
+        {
+            // TODO: Se tuplavalidointi kun saadaan kumpaankin kahva
+            if (payload is ImageItemPayload tp)
+            {
+                return (!string.IsNullOrEmpty(tp.Prompt), "Image prmpt empty");
+            }
+
+            return (true, "");
+        }
+
         private Action saveAndRefreshCallback;
 
         public void SetSaveAndRefreshCallback(Action saveAndRefreshCallback)
@@ -358,16 +367,24 @@ namespace RunwayMlPlugin
 
         public object ItemPayloadFromLyrics(string text)
         {
-            var output = new ItemPayload();
-            output.Prompt = text;
-            return output;
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            {
+                return new ItemPayload() { Prompt = text };
+            }
+
+            return new ImageItemPayload() { Prompt = text };
         }
 
         public object ItemPayloadFromImageSource(string imgSource)
         {
-            var output = new ItemPayload();
-            output.ImageSource = imgSource;
-            return output;
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            {
+                return new ItemPayload() { ImageSource = imgSource };
+            }
+
+            var imagePl = new ImageItemPayload();
+            imagePl.ReferenceImages.Add(new ImagePayloadReference() { FilePath = imgSource });
+            return imagePl;
         }
 
         public void ContentUploaderProvided(IContentUploader uploader)
@@ -377,12 +394,20 @@ namespace RunwayMlPlugin
 
         public object ObjectToItemPayload(JsonObject obj)
         {
-            return JsonHelper.ToExactType<ItemPayload>(obj);
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            {
+                return JsonHelper.ToExactType<ItemPayload>(obj);
+            }
+            return JsonHelper.ToExactType<ImageItemPayload>(obj);
         }
 
         public object ObjectToTrackPayload(JsonObject obj)
         {
-            return JsonHelper.ToExactType<TrackPayload>(obj);
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            {
+                return JsonHelper.ToExactType<TrackPayload>(obj);
+            }
+            return JsonHelper.ToExactType<ImageTrackPayload>(obj);
         }
 
         public object ObjectToGeneralSettings(JsonObject obj)
@@ -396,6 +421,11 @@ namespace RunwayMlPlugin
             {
                 return ip.Prompt;
             }
+
+            if (itemPayload is ImageItemPayload ipi)
+            {
+                return ipi.Prompt;
+            }
             return "";
         }
 
@@ -404,7 +434,10 @@ namespace RunwayMlPlugin
             switch (CurrentTrackType)
             {
                 case IPluginBase.TrackType.Video:
-                    return DefaultPayloadForVideoTrack();
+                    return new TrackPayload();
+
+                case IPluginBase.TrackType.Image:
+                    return new ImageTrackPayload();
 
                 default:
                     break;
@@ -417,7 +450,10 @@ namespace RunwayMlPlugin
             switch (CurrentTrackType)
             {
                 case IPluginBase.TrackType.Video:
-                    return DefaultPayloadForVideoItem();
+                    return new ItemPayload();
+
+                case IPluginBase.TrackType.Image:
+                    return new ImageItemPayload();
 
                 default:
                     break;
@@ -430,7 +466,10 @@ namespace RunwayMlPlugin
             switch (CurrentTrackType)
             {
                 case IPluginBase.TrackType.Video:
-                    return CopyPayloadForVideoTrack(obj);
+                    return JsonHelper.DeepCopy<TrackPayload>(obj);
+
+                case IPluginBase.TrackType.Image:
+                    return JsonHelper.DeepCopy<ImageTrackPayload>(obj);
 
                 default:
                     break;
@@ -443,7 +482,10 @@ namespace RunwayMlPlugin
             switch (CurrentTrackType)
             {
                 case IPluginBase.TrackType.Video:
-                    return CopyPayloadForVideoItem(obj);
+                    return JsonHelper.DeepCopy<ItemPayload>(obj);
+
+                case IPluginBase.TrackType.Image:
+                    return JsonHelper.DeepCopy<ImageItemPayload>(obj);
 
                 default:
                     break;
@@ -458,8 +500,8 @@ namespace RunwayMlPlugin
                 case IPluginBase.TrackType.Video:
                     return ValidateVideoPayload(payload);
 
-                case IPluginBase.TrackType.Audio:
-                    return (true, "");
+                case IPluginBase.TrackType.Image:
+                    return ValidateImagePayload(payload);
 
                 default:
                     break;
@@ -478,7 +520,12 @@ namespace RunwayMlPlugin
         {
             if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
-                return new List<string>() { ip.ImageSource };
+                return new List<string>() { ip.ImageSource, ip.VideoSource, tp.ReferenceImage, tp.ReferenceVideo };
+            }
+
+            if (trackPayload is ImageTrackPayload tpi && itemPayload is ImageItemPayload ipi)
+            {
+                return tpi.ReferenceImages.Select(s => s.FilePath).Concat(ipi.ReferenceImages.Select(s => s.FilePath)).ToList();
             }
 
             return new List<string>();
@@ -495,13 +542,59 @@ namespace RunwayMlPlugin
                     {
                         ip.ImageSource = newPath[i];
                     }
+
+                    if (originalPath[i] == ip.VideoSource)
+                    {
+                        ip.VideoSource = newPath[i];
+                    }
+
+                    if (originalPath[i] == tp.ReferenceImage)
+                    {
+                        tp.ReferenceImage = newPath[i];
+                    }
+
+                    if (originalPath[i] == tp.ReferenceVideo)
+                    {
+                        tp.ReferenceVideo = newPath[i];
+                    }
+                }
+            }
+
+            if (trackPayload is ImageTrackPayload tpi && itemPayload is ImageItemPayload ipi)
+            {
+                for (int i = 0; i < originalPath.Count; i++)
+                {
+                    tpi.ReferenceImages.ForEach(s =>
+                    {
+                        if (s.FilePath == originalPath[i])
+                        {
+                            s.FilePath = newPath[i];
+                        }
+                    });
+
+                    ipi.ReferenceImages.ForEach(s =>
+                    {
+                        if (s.FilePath == originalPath[i])
+                        {
+                            s.FilePath = newPath[i];
+                        }
+                    });
                 }
             }
         }
 
         public object ItemPayloadFromVideoSource(string videoSource)
         {
-            return new ItemPayload() { VideoSource = videoSource };
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            {
+                return new ItemPayload() { VideoSource = videoSource };
+            }
+            return new ImageItemPayload();
+        }
+
+        public void Dispose()
+        {
+            _disposable.Dispose();
         }
     }
 
