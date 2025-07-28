@@ -23,7 +23,7 @@ namespace RunwayMlPlugin
         [Description("Set to zero to get new random seed")]
         public int? seed { get => videoSeed; set => videoSeed = value; }
 
-        [Description("Duration in seconds")]
+        [Description("Duration in seconds, not used in Act2")]
         public int duration { get => videoDuration; set => videoDuration = value; }
 
         private string modelToUse = "gen4_turbo";
@@ -34,6 +34,31 @@ namespace RunwayMlPlugin
     {
         public string videoUri { get; set; }
         public string model { get; set; } = "upscale_v1";
+    }
+
+    public class Act2Request
+    {
+        public Reference character { get; set; } = new Reference();
+        public Reference reference { get; set; } = new Reference();
+        public bool body_control { get; set; }
+        public int expressionIntensity { get; set; } = 3;
+        public string model { get; set; } = "act_two";
+        public string ratio { get; set; } = "1280:720";
+        public ContentMod contentModeration { get; set; } = new ContentMod();
+
+        [Description("Set to zero to get new random seed")]
+        public int seed { get; set; }
+    }
+
+    public class Reference
+    {
+        public string type { get; set; } = "video";
+        public string uri { get; set; }
+    }
+
+    public class ContentMod
+    {
+        public string publicFigureThreshold { get; set; } = "low";
     }
 
     public class Response
@@ -47,7 +72,7 @@ namespace RunwayMlPlugin
 
     internal class Client
     {
-        public async Task<VideoResponse> GetImgToVid(Request request, string folderToSave, ConnectionSettings connectionSettings,
+        public async Task<VideoResponse> GetVideo(object request, string folderToSave, ConnectionSettings connectionSettings,
             ItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
         {
             try
@@ -81,79 +106,22 @@ namespace RunwayMlPlugin
 
                 var stringContent = new StringContent(serialized);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
-
-                var resp = await httpClient.PostAsync("v1/image_to_video", stringContent);
-                var respString = await resp.Content.ReadAsStringAsync();
-
-                if (resp.StatusCode != HttpStatusCode.OK)
+                var apiPath = "image_to_video";
+                switch (request)
                 {
-                    return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+                    case VideoUpscaleRequest:
+                        apiPath = "video_upscale";
+                        break;
+
+                    case Act2Request:
+                        apiPath = "character_performance";
+                        break;
+
+                    default:
+                        break;
                 }
 
-                Response respSerialized = null;
-
-                try
-                {
-                    respSerialized = JsonHelper.DeserializeString<Response>(respString);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex.ToString());
-                    return new VideoResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
-                }
-
-                if (respSerialized != null && resp.IsSuccessStatusCode)
-                {
-                    return await PollVideoResults(httpClient, respSerialized.output, respSerialized.id, refItemPlayload, folderToSave, saveAndRefreshCallback, textualProgressAction);
-                }
-                else
-                {
-                    return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine(ex.ToString());
-                return new VideoResponse() { ErrorMsg = ex.Message, Success = false };
-            }
-        }
-
-        public async Task<VideoResponse> GetUpscale(VideoUpscaleRequest request, string folderToSave, ConnectionSettings connectionSettings,
-            ItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
-        {
-            try
-            {
-                using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Remove("accept");
-
-                // It's best to keep these here: use can change these from item settings
-                httpClient.BaseAddress = new Uri(connectionSettings.Url);
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Bearer {connectionSettings.AccessToken}");
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-Runway-Version", "2024-09-13");
-
-                if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
-                {
-                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), refItemPlayload, folderToSave, saveAndRefreshCallback, textualProgressAction);
-                }
-
-                var serialized = "";
-
-                try
-                {
-                    serialized = JsonHelper.Serialize(request);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex.ToString());
-                    return new VideoResponse() { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
-                }
-
-                var stringContent = new StringContent(serialized);
-                stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
-
-                var resp = await httpClient.PostAsync("v1/video_upscale ", stringContent);
+                var resp = await httpClient.PostAsync($"v1/{apiPath}", stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
 
                 if (resp.StatusCode != HttpStatusCode.OK)

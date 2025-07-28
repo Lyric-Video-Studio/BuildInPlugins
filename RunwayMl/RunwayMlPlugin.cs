@@ -90,37 +90,132 @@ namespace RunwayMlPlugin
                 {
                     newTp.Request.duration = 5;
                 }
+                if (newTp.Request.model == models[0])
+                {
+                    var req = new Act2Request();
+                    if (string.IsNullOrEmpty(newIp.VideoSource))
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = "Video file not defined" };
+                    }
 
-                if (newTp.Request.model == models[1])
+                    var videoFileUpload = await _contentUploader.RequestContentUpload(newIp.VideoSource);
+                    var uploadedVideo = "";
+                    var uploadedCharacterVideo = "";
+                    var uploadedCharacterImage = "";
+                    if (videoFileUpload.isLocalFile)
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
+                    }
+                    else if (videoFileUpload.responseCode != System.Net.HttpStatusCode.OK)
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {videoFileUpload.responseCode}" };
+                    }
+                    else
+                    {
+                        uploadedVideo = videoFileUpload.uploadedUrl;
+                    }
+
+                    if (!string.IsNullOrEmpty(newTp.ReferenceVideo))
+                    {
+                        var characterVideoUpload = await _contentUploader.RequestContentUpload(newTp.ReferenceVideo);
+                        if (characterVideoUpload.isLocalFile)
+                        {
+                            return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
+                        }
+                        else if (characterVideoUpload.responseCode != System.Net.HttpStatusCode.OK)
+                        {
+                            return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {characterVideoUpload.responseCode}" };
+                        }
+                        else
+                        {
+                            uploadedCharacterVideo = characterVideoUpload.uploadedUrl;
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(newTp.ReferenceImage))
+                    {
+                        var characterImageUpload = await _contentUploader.RequestContentUpload(newTp.ReferenceImage);
+                        if (characterImageUpload.isLocalFile)
+                        {
+                            return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
+                        }
+                        else if (characterImageUpload.responseCode != System.Net.HttpStatusCode.OK)
+                        {
+                            return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {characterImageUpload.responseCode}" };
+                        }
+                        else
+                        {
+                            uploadedCharacterImage = characterImageUpload.uploadedUrl;
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(uploadedCharacterImage))
+                    {
+                        req.character.uri = uploadedCharacterImage;
+                        req.character.type = "image";
+                    }
+                    else if (!string.IsNullOrEmpty(uploadedCharacterVideo))
+                    {
+                        req.character.uri = uploadedCharacterVideo;
+                        req.character.type = "video";
+                    }
+                    else
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = "Character video or image is needed" };
+                    }
+
+                    req.reference.uri = uploadedVideo;
+                    req.ratio = newTp.Request.ratio;
+                    req.body_control = newIp.BodyControl;
+                    req.expressionIntensity = newIp.ExpressionIntensity;
+
+                    if (newIp.Seed != 0)
+                    {
+                        newTp.Request.seed = newIp.Seed;
+                    }
+                    else if (itemsPayload is ItemPayload ipOld)
+                    {
+                        ipOld.Seed = new Random().Next(1, int.MaxValue);
+                        saveAndRefreshCallback.Invoke();
+                        newTp.Request.seed = newTp.Request.seed;
+                    }
+
+                    req.seed = newTp.Request.seed.Value;
+
+                    // Video upscale
+                    var videoResp = await new Client().GetVideo(req, folderToSaveVideo,
+                        _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
+                    return videoResp;
+                }
+                else if (newTp.Request.model == models[1])
                 {
                     if (string.IsNullOrEmpty(newIp.VideoSource))
                     {
                         return new VideoResponse() { Success = false, ErrorMsg = "Video file not defined" };
                     }
 
-                    var videoUileUpload = await _contentUploader.RequestContentUpload(newIp.VideoSource);
+                    var videoFileUpload = await _contentUploader.RequestContentUpload(newIp.VideoSource);
                     var uploadedVideo = "";
-                    if (videoUileUpload.isLocalFile)
+                    if (videoFileUpload.isLocalFile)
                     {
                         return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
                     }
-                    else if (videoUileUpload.responseCode != System.Net.HttpStatusCode.OK)
+                    else if (videoFileUpload.responseCode != System.Net.HttpStatusCode.OK)
                     {
-                        return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {videoUileUpload.responseCode}" };
+                        return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {videoFileUpload.responseCode}" };
                     }
                     else
                     {
-                        uploadedVideo = videoUileUpload.uploadedUrl;
+                        uploadedVideo = videoFileUpload.uploadedUrl;
                     }
 
                     // Video upscale
-                    var videoResp = await new Client().GetUpscale(new VideoUpscaleRequest() { videoUri = uploadedVideo }, folderToSaveVideo,
+                    var videoResp = await new Client().GetVideo(new VideoUpscaleRequest() { videoUri = uploadedVideo }, folderToSaveVideo,
                         _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
                     return videoResp;
                 }
                 else
                 {
-                    var videoResp = await new Client().GetImgToVid(newTp.Request, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
+                    var videoResp = await new Client().GetVideo(newTp.Request, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
                     return videoResp;
                 }
             }

@@ -1,5 +1,6 @@
 ﻿using PluginBase;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace RunwayMlPlugin
 {
@@ -21,6 +22,14 @@ namespace RunwayMlPlugin
         private string imageSource;
 
         [EnableFileDrop]
+        [Description("Used for upscaling and as facial expression / movement reference with Act2")]
         public string VideoSource { get; set; }
+
+        [Description("Used with Act2. When enabled, non-facial movements and gestures will be applied to the character in addition to facial expressions")]
+        public bool BodyControl { get; set; }
+
+        [Range(1, 5)]
+        [Description("Used with Act2. A larger value increases the intensity of the character's expression.")]
+        public int ExpressionIntensity { get; set; } = 3;
     }
 }
