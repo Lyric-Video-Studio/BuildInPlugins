@@ -1,6 +1,5 @@
 ﻿using PluginBase;
 using System.Collections.ObjectModel;
-using System.Reactive.Subjects;
 
 namespace RunwayMlPlugin
 {

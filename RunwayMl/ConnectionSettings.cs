@@ -10,7 +10,7 @@ namespace RunwayMlPlugin
         private string url = "https://api.dev.runwayml.com/";
         private string accessToken;
 
-        [Description("Url to Runwal ML api, do not chnage this if unsure")]
+        [Description("Url to Runway ML api, do not change this if unsure")]
         public string Url { get => url; set => url = value; }
 
         [Description("Access token. Each video creation uses credits. Access token is found from https://dev.runwayml.com " +

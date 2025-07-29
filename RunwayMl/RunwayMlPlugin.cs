@@ -6,7 +6,7 @@ namespace RunwayMlPlugin
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
     public class RunwayMlImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
-        IImportFromVideo, IImagePlugin
+        IImportFromVideo, IImagePlugin, IValidateBothPayloads
     {
         public string UniqueName { get => "RunwayMlImgToVidBuildIn"; }
         public string DisplayName { get => "Runway ML"; }
@@ -357,16 +357,6 @@ namespace RunwayMlPlugin
                 {
                     return (false, "Auth token empty!!!");
                 }
-
-                if (string.IsNullOrEmpty(ip.ImageSource))
-                {
-                    return (false, $"Image source must not be empty (for models {string.Join(", ", models.Skip(2))})");
-                }
-
-                if (string.IsNullOrEmpty(ip.VideoSource))
-                {
-                    return (false, $"Image source must not be empty (for model {models[1]})");
-                }
             }
 
             if (payload is TrackPayload tp)
@@ -626,6 +616,39 @@ namespace RunwayMlPlugin
                 return new ItemPayload() { VideoSource = videoSource };
             }
             return new ImageItemPayload();
+        }
+
+        public (bool payloadOk, string reasonIfNot) ValidatePayloads(object trackPaylod, object itemPayload)
+        {
+            if (trackPaylod is ImageTrackPayload ipt && itemPayload is ImageItemPayload ipi && ipt.ReferenceImages.Count + ipi.ReferenceImages.Count > 3)
+            {
+                return (false, "Too many references, three is maximum");
+            }
+
+            if (trackPaylod is TrackPayload tpv && itemPayload is ItemPayload ipv)
+            {
+                if (string.IsNullOrEmpty(ipv.ImageSource) && models.Skip(2).Contains(tpv.Request.model))
+                {
+                    return (false, $"Image source must not be empty (for models {string.Join(", ", models.Skip(2))})");
+                }
+
+                if (string.IsNullOrEmpty(ipv.VideoSource) && tpv.Request.model == models[1])
+                {
+                    return (false, $"Image source must not be empty (for model {models[1]})");
+                }
+
+                if (tpv.Request.model == models[0] && string.IsNullOrEmpty(tpv.ReferenceVideo) && string.IsNullOrEmpty(tpv.ReferenceImage))
+                {
+                    return (false, $"Either reference video or image must be set (for model {models[0]})");
+                }
+
+                if (tpv.Request.model == models[0] && string.IsNullOrEmpty(ipv.VideoSource))
+                {
+                    return (false, $"Item payload is missing movement / reference video (for model {models[0]})");
+                }
+            }
+
+            return (true, "");
         }
     }
 
