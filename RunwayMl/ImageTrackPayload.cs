@@ -1,36 +1,32 @@
 ﻿using PluginBase;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+using System.Collections.ObjectModel;
 using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RunwayMlPlugin
 {
     public class ImageTrackPayload
     {
-        public static Subject<bool> Refresh { get; } = new Subject<bool>();
-
         public string Prompt { get; set; }
         public int Seed { get; set; }
-        public List<ImagePayloadReference> ReferenceImages { get; set; } = new List<ImagePayloadReference>();
+        public ObservableCollection<ImagePayloadReference> ReferenceImages { get; set; } = new();
 
-        public string Ratio { get; set; }
+        public string Ratio { get; set; } = "1920:1080";
 
-        [CustomAction("Remove last reference")]
-        public void RemoveLastReference()
+        public ImageTrackPayload()
         {
-            ReferenceImages.RemoveAt(ReferenceImages.Count - 1);
-            Refresh.OnNext(true);
+            ImagePayloadReference.RemoveReference += (s, e) =>
+            {
+                if (s is ImagePayloadReference r)
+                {
+                    ReferenceImages.Remove(r);
+                }
+            };
         }
 
         [CustomAction("Add reference")]
         public void AddReference()
         {
             ReferenceImages.Add(new ImagePayloadReference() { });
-            Refresh.OnNext(true);
         }
     }
 }

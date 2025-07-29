@@ -175,7 +175,7 @@ namespace RunwayMlPlugin
             }
         }
 
-        public async Task<ImageResponse> GetImage(ImageRequest request, string folderToSave, ConnectionSettings connectionSettings,
+        public async Task<ImageResponse> GetImage(ImageRequest request, ConnectionSettings connectionSettings,
             ImageItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
         {
             try
@@ -192,7 +192,7 @@ namespace RunwayMlPlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollImageResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave, textualProgressAction);
+                    return await PollImageResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), "", textualProgressAction);
                 }
 
                 var serialized = "";
@@ -235,7 +235,7 @@ namespace RunwayMlPlugin
                     refItemPlayload.PollingId = respSerialized.id.ToString();
                     saveAndRefreshCallback.Invoke();
 
-                    return await PollImageResults(httpClient, respSerialized.output, respSerialized.id, folderToSave, textualProgressAction);
+                    return await PollImageResults(httpClient, respSerialized.output, respSerialized.id, "", textualProgressAction);
                 }
                 else
                 {
@@ -253,7 +253,7 @@ namespace RunwayMlPlugin
             Action<string> textualProgressAction)
         {
             var resp = await PollVideoResults(httpClient, assets, id, folderToSave, textualProgressAction, true);
-            return new ImageResponse() { Success = resp.Success, ErrorMsg = resp.ErrorMsg, Image = resp.VideoFile, ImageFormat = "jpg" }; // TODO VAi onko
+            return new ImageResponse() { Success = resp.Success, ErrorMsg = resp.ErrorMsg, Image = resp.VideoFile, ImageFormat = "png" };
         }
 
         private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string[] assets, Guid id, string folderToSave,

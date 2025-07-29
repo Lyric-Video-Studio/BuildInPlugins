@@ -1,39 +1,49 @@
 ﻿using PluginBase;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Reactive.Subjects;
 
 namespace RunwayMlPlugin
 {
     public class ImageItemPayload
     {
-        public static Subject<bool> Refresh { get; } = new Subject<bool>();
-
         public string PollingId { get; set; }
 
         public string Prompt { get; set; }
         public int Seed { get; set; }
-        public List<ImagePayloadReference> ReferenceImages { get; set; } = new List<ImagePayloadReference>();
+        public ObservableCollection<ImagePayloadReference> ReferenceImages { get; set; } = new();
 
-        [CustomAction("Remove last reference")]
-        public void RemoveLastReference()
+        public ImageItemPayload()
         {
-            ReferenceImages.RemoveAt(ReferenceImages.Count - 1);
-            Refresh.OnNext(true);
+            ImagePayloadReference.RemoveReference += (s, e) =>
+            {
+                if (s is ImagePayloadReference r)
+                {
+                    ReferenceImages.Remove(r);
+                }
+            };
         }
 
         [CustomAction("Add reference")]
         public void AddReference()
         {
             ReferenceImages.Add(new ImagePayloadReference() { });
-            Refresh.OnNext(true);
         }
     }
 
     public class ImagePayloadReference
     {
+        public static event EventHandler RemoveReference;
+
+        [EnableFileDrop]
         public string FilePath { get; set; }
 
         [Description("Use tags in prompt, like @tag")]
         public string Tag { get; set; }
+
+        [CustomAction("Remove")]
+        public void Remove()
+        {
+            RemoveReference.Invoke(this, null);
+        }
     }
 }

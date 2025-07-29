@@ -1,5 +1,4 @@
 ﻿using PluginBase;
-using System.Reactive.Disposables;
 using System.Text.Json.Nodes;
 
 namespace RunwayMlPlugin
@@ -7,7 +6,7 @@ namespace RunwayMlPlugin
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
     public class RunwayMlImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
-        IImportFromVideo, IImagePlugin, IDisposable
+        IImportFromVideo, IImagePlugin
     {
         public string UniqueName { get => "RunwayMlImgToVidBuildIn"; }
         public string DisplayName { get => "Runway ML"; }
@@ -221,6 +220,46 @@ namespace RunwayMlPlugin
         {
             if (JsonHelper.DeepCopy<ImageTrackPayload>(trackPayload) is ImageTrackPayload newTp && JsonHelper.DeepCopy<ImageItemPayload>(itemsPayload) is ImageItemPayload newIp)
             {
+                var imageReg = new ImageRequest();
+
+                if (newIp.Seed != 0)
+                {
+                    imageReg.seed = newIp.Seed;
+                }
+                else if (itemsPayload is ImageItemPayload ipOld)
+                {
+                    ipOld.Seed = new Random().Next(1, int.MaxValue);
+                    saveAndRefreshCallback.Invoke();
+                    imageReg.seed = ipOld.Seed;
+                }
+
+                imageReg.promptText = newTp.Prompt + " " + newIp.Prompt;
+                imageReg.ratio = newTp.Ratio;
+
+                foreach (var refe in newTp.ReferenceImages.Concat(newIp.ReferenceImages))
+                {
+                    var nRef = new ImageReference();
+                    nRef.tag = refe.Tag;
+
+                    var upload = await _contentUploader.RequestContentUpload(refe.FilePath);
+                    var uploadedReference = "";
+                    if (upload.isLocalFile)
+                    {
+                        return new ImageResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
+                    }
+                    else if (upload.responseCode != System.Net.HttpStatusCode.OK)
+                    {
+                        return new ImageResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {upload.responseCode}" };
+                    }
+                    else
+                    {
+                        uploadedReference = upload.uploadedUrl;
+                    }
+                    nRef.uri = uploadedReference;
+                    imageReg.referenceImages.Add(nRef);
+                }
+
+                return await new Client().GetImage(imageReg, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback, textualProgressAction);
             }
             return new ImageResponse { Success = false, ErrorMsg = "Unknown error" };
         }
@@ -265,6 +304,14 @@ namespace RunwayMlPlugin
                         break;
                 }
             }
+            else
+            {
+                if (propertyName == nameof(ImageTrackPayload.Ratio))
+                {
+                    return ["1920:1080", "1080:1920", "1024:1024", "1360:768", "1080:1080", "1168:880", "1440:1080", "1080:1440",
+                        "1808:768", "2112:912", "1280:720", "720:1280", "720:720", "960:720", "720:960", "1680:720"];
+                }
+            }
 
             return Array.Empty<string>();
         }
@@ -274,20 +321,9 @@ namespace RunwayMlPlugin
             return JsonHelper.Deserialize<TrackPayload>(fileName);
         }
 
-        private CompositeDisposable _disposable = new CompositeDisposable();
-
         public IPluginBase CreateNewInstance()
         {
             var plug = new RunwayMlImgToVidPlugin();
-            _disposable.Add(ImageTrackPayload.Refresh.Subscribe(_ =>
-            {
-                saveAndRefreshCallback?.Invoke();
-            }));
-
-            _disposable.Add(ImageItemPayload.Refresh.Subscribe(_ =>
-            {
-                saveAndRefreshCallback?.Invoke();
-            }));
             return plug;
         }
 
@@ -352,7 +388,7 @@ namespace RunwayMlPlugin
             // TODO: Se tuplavalidointi kun saadaan kumpaankin kahva
             if (payload is ImageItemPayload tp)
             {
-                return (!string.IsNullOrEmpty(tp.Prompt), "Image prmpt empty");
+                return (!string.IsNullOrEmpty(tp.Prompt), "Image prompt empty");
             }
 
             return (true, "");
@@ -564,7 +600,7 @@ namespace RunwayMlPlugin
             {
                 for (int i = 0; i < originalPath.Count; i++)
                 {
-                    tpi.ReferenceImages.ForEach(s =>
+                    tpi.ReferenceImages.ToList().ForEach(s =>
                     {
                         if (s.FilePath == originalPath[i])
                         {
@@ -572,7 +608,7 @@ namespace RunwayMlPlugin
                         }
                     });
 
-                    ipi.ReferenceImages.ForEach(s =>
+                    ipi.ReferenceImages.ToList().ForEach(s =>
                     {
                         if (s.FilePath == originalPath[i])
                         {
@@ -590,11 +626,6 @@ namespace RunwayMlPlugin
                 return new ItemPayload() { VideoSource = videoSource };
             }
             return new ImageItemPayload();
-        }
-
-        public void Dispose()
-        {
-            _disposable.Dispose();
         }
     }
 
