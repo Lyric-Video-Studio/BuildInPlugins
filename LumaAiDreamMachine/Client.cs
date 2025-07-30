@@ -2,10 +2,8 @@
 using LumaAiDreamMachinePlugin.VideoUpscale;
 using PluginBase;
 using System.ComponentModel;
-using System.IO;
 using System.Net;
 using System.Net.Http.Headers;
-using System.Reflection.PortableExecutable;
 
 namespace LumaAiDreamMachinePlugin
 {
@@ -92,6 +90,21 @@ namespace LumaAiDreamMachinePlugin
         public string id { get; set; }
     }
 
+    public class ModifyRequest
+    {
+        public string model { get; set; } = "ray-2";
+        public string prompt { get; set; } = "";
+        public string mode { get; set; } = "";
+
+        public MediaDelivery media { get; set; } = new MediaDelivery();
+        public MediaDelivery first_frame { get; set; } = new MediaDelivery();
+    }
+
+    public class MediaDelivery
+    {
+        public string url { get; set; }
+    }
+
     public class Response
     {
         public Guid id { get; set; }
@@ -110,7 +123,7 @@ namespace LumaAiDreamMachinePlugin
 
     internal class Client
     {
-        public async Task<VideoResponse> GetImgToVid(Request request, string folderToSave, ConnectionSettings connectionSettings,
+        public async Task<VideoResponse> GetImgToVid(object request, string folderToSave, ConnectionSettings connectionSettings,
             ItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
         {
             try
@@ -129,22 +142,25 @@ namespace LumaAiDreamMachinePlugin
                     return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave, textualProgressAction);
                 }
 
-                request.keyframes.frame0.type = string.IsNullOrEmpty(request.keyframes.frame0.url) ? "generation" : "image";
-                request.keyframes.frame1.type = string.IsNullOrEmpty(request.keyframes.frame1.url) ? "generation" : "image";
-
-                if (string.IsNullOrEmpty(request.keyframes.frame0.url) && string.IsNullOrEmpty(request.keyframes.frame0.id))
+                if (request is Request req)
                 {
-                    request.keyframes.frame0 = null;
-                }
+                    req.keyframes.frame0.type = string.IsNullOrEmpty(req.keyframes.frame0.url) ? "generation" : "image";
+                    req.keyframes.frame1.type = string.IsNullOrEmpty(req.keyframes.frame1.url) ? "generation" : "image";
 
-                if (string.IsNullOrEmpty(request.keyframes.frame1.url) && string.IsNullOrEmpty(request.keyframes.frame1.id))
-                {
-                    request.keyframes.frame1 = null;
-                }
+                    if (string.IsNullOrEmpty(req.keyframes.frame0.url) && string.IsNullOrEmpty(req.keyframes.frame0.id))
+                    {
+                        req.keyframes.frame0 = null;
+                    }
 
-                if (request.keyframes.frame0 == null && request.keyframes.frame1 == null)
-                {
-                    request.keyframes = null;
+                    if (string.IsNullOrEmpty(req.keyframes.frame1.url) && string.IsNullOrEmpty(req.keyframes.frame1.id))
+                    {
+                        req.keyframes.frame1 = null;
+                    }
+
+                    if (req.keyframes.frame0 == null && req.keyframes.frame1 == null)
+                    {
+                        req.keyframes = null;
+                    }
                 }
 
                 var serialized = "";
@@ -162,7 +178,9 @@ namespace LumaAiDreamMachinePlugin
                 var stringContent = new StringContent(serialized);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
-                var resp = await httpClient.PostAsync("dream-machine/v1/generations", stringContent);
+                var extraPath = request is Request ? "" : "/modify";
+
+                var resp = await httpClient.PostAsync($"dream-machine/v1/generations/video{extraPath}", stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
                 Response respSerialized = null;
 

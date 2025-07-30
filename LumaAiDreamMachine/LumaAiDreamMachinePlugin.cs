@@ -5,7 +5,8 @@ namespace LumaAiDreamMachinePlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class LumaAiDreamMachineImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin, IContentId, ITextualProgressIndication
+    public class LumaAiDreamMachineImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader,
+        IImagePlugin, IContentId, ITextualProgressIndication, IValidateBothPayloads
     {
         public const string PluginName = "LumaAiDreamMachineImgToVidBuildIn";
         public string UniqueName { get => PluginName; }
@@ -59,6 +60,11 @@ namespace LumaAiDreamMachinePlugin
                 if (JsonHelper.DeepCopy<TrackPayload>(trackPayload) is TrackPayload newTp && JsonHelper.DeepCopy<ItemPayload>(itemsPayload) is ItemPayload newIp)
                 {
                     // combine prompts
+
+                    if (!string.IsNullOrEmpty(newIp.VideoFile))
+                    {
+                        return await ModifyVideo(newTp, newIp, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
+                    }
 
                     // Also, when img2Vid
 
@@ -116,6 +122,39 @@ namespace LumaAiDreamMachinePlugin
             {
                 CurrentTasks--;
             }
+        }
+
+        private async Task<VideoResponse> ModifyVideo(TrackPayload newTp, ItemPayload newIp, string folderToSaveVideo, ConnectionSettings connectionSettings,
+            ItemPayload itemPayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
+        {
+            var modifyRequest = new ModifyRequest() { mode = newTp.VideoEditMode, model = newTp.Settings.model };
+            modifyRequest.prompt = (newTp.Settings.prompt + " " + newIp.Prompt).Trim();
+
+            async Task<string> UploadedPathAsync(string input)
+            {
+                var resp = await _uploader.RequestContentUpload(input);
+
+                if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                {
+                    return resp.uploadedUrl;
+                }
+                else
+                {
+                    throw new Exception($"Failed to upload image to cloud, {resp.responseCode}");
+                }
+            }
+            modifyRequest.media.url = await UploadedPathAsync(newIp.VideoFile);
+
+            if (!string.IsNullOrEmpty(newIp.FirstFrame))
+            {
+                modifyRequest.first_frame.url = await UploadedPathAsync(newIp.FirstFrame);
+            }
+            else
+            {
+                modifyRequest.first_frame = null;
+            }
+
+            return await _wrapper.GetImgToVid(modifyRequest, folderToSaveVideo, connectionSettings, itemPayload, saveAndRefreshCallback, textualProgressAction);
         }
 
         public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
@@ -278,6 +317,11 @@ namespace LumaAiDreamMachinePlugin
             if (propertyName == nameof(Request.duration))
             {
                 return ["5s", "9s"];
+            }
+
+            if (propertyName == nameof(TrackPayload.VideoEditMode))
+            {
+                return ["adhere_1", "adhere_2", "adhere_3", "flex_1", "flex_2", "flex_3", "reimagine_1", "reimagine_2", "reimagine_3"];
             }
 
             if (propertyName == nameof(Request.model))
@@ -633,6 +677,19 @@ namespace LumaAiDreamMachinePlugin
                     }
                 }
             }
+        }
+
+        public (bool payloadOk, string reasonIfNot) ValidatePayloads(object trackPaylod, object itemPayload)
+        {
+            if (trackPaylod is TrackPayload tp && itemPayload is ItemPayload ip)
+            {
+                if (!string.IsNullOrEmpty(ip.VideoFile) && tp.Settings.model == "ray-1-6")
+                {
+                    return (false, "ray-1-6 is not supported for video modify");
+                }
+            }
+
+            return (true, "");
         }
     }
 
