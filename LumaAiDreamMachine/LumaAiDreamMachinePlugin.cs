@@ -149,6 +149,10 @@ namespace LumaAiDreamMachinePlugin
             {
                 modifyRequest.first_frame.url = await UploadedPathAsync(newIp.FirstFrame);
             }
+            else if (!string.IsNullOrEmpty(newTp.FirstFrame))
+            {
+                modifyRequest.first_frame.url = await UploadedPathAsync(newIp.FirstFrame);
+            }
             else
             {
                 modifyRequest.first_frame = null;

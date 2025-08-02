@@ -45,6 +45,11 @@ namespace RunwayMlPlugin
                 {
                     return tp.Request.model == "act_two";
                 }
+
+                if (propertyName == nameof(ImageSource) || propertyName == nameof(Prompt))
+                {
+                    return tp.Request.model != "act_two" && tp.Request.model != "upscale_v1";
+                }
             }
 
             return true;

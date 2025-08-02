@@ -24,6 +24,11 @@ namespace RunwayMlPlugin
                 {
                     return tp.Request.model == "act_two";
                 }
+
+                if (propertyName == nameof(Request.duration) || propertyName == nameof(Request.promptText))
+                {
+                    return tp.Request.model != "act_two" && tp.Request.model != "upscale_v1";
+                }
             }
 
             return true;
