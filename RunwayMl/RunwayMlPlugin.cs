@@ -639,7 +639,7 @@ namespace RunwayMlPlugin
                     return (false, $"Image source must not be empty (for model {models[1]})");
                 }
 
-                if (tpv.Request.model == models[0] && string.IsNullOrEmpty(tpv.ReferenceVideo) && string.IsNullOrEmpty(tpv.ReferenceImage))
+                if (tpv.Request.model == models[0] && string.IsNullOrEmpty(tpv.ReferenceVideo) && string.IsNullOrEmpty(tpv.ReferenceImage) && string.IsNullOrEmpty(ipv.ReferenceImage))
                 {
                     return (false, $"Either reference video or image must be set (for model {models[0]})");
                 }
