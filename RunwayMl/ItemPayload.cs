@@ -32,6 +32,9 @@ namespace RunwayMlPlugin
         [Description("Used with Act2. A larger value increases the intensity of the character's expression.")]
         public int ExpressionIntensity { get; set; } = 3;
 
+        [Description("Used with Act2. Image or video required. If video is selected, it will be used, not image")]
+        public string ReferenceImage { get; set; }
+
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             if (trackPayload is TrackPayload tp)
@@ -49,6 +52,11 @@ namespace RunwayMlPlugin
                 if (propertyName == nameof(ImageSource) || propertyName == nameof(Prompt))
                 {
                     return tp.Request.model != "act_two" && tp.Request.model != "upscale_v1";
+                }
+
+                if (propertyName == nameof(ReferenceImage))
+                {
+                    return tp.Request.model == "act_two";
                 }
             }
 

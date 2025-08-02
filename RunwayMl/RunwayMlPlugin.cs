@@ -106,6 +106,8 @@ namespace RunwayMlPlugin
                         uploadedVideo = videoFileUpload.uploadedUrl;
                     }
 
+                    var actualReferenceImage = string.IsNullOrEmpty(newIp.ReferenceImage) ? newTp.ReferenceImage : newIp.ReferenceImage;
+
                     if (!string.IsNullOrEmpty(newTp.ReferenceVideo))
                     {
                         var characterVideoUpload = await _contentUploader.RequestContentUpload(newTp.ReferenceVideo);
@@ -122,9 +124,9 @@ namespace RunwayMlPlugin
                             uploadedCharacterVideo = characterVideoUpload.uploadedUrl;
                         }
                     }
-                    else if (!string.IsNullOrEmpty(newTp.ReferenceImage))
+                    else if (!string.IsNullOrEmpty(actualReferenceImage))
                     {
-                        var characterImageUpload = await _contentUploader.RequestContentUpload(newTp.ReferenceImage);
+                        var characterImageUpload = await _contentUploader.RequestContentUpload(actualReferenceImage);
                         if (characterImageUpload.isLocalFile)
                         {
                             return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
