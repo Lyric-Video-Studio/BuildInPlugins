@@ -29,7 +29,7 @@ namespace WanPlugin
 
         [Description("Specifies whether to enable prompt rewriting. When enabled, an LLM is used to intelligently rewrite the input prompt. " +
             "This significantly improves the generation results for shorter prompts but increases the processing time.")]
-        public bool promp_extend { get; set; } = true;
+        public bool prompt_extend { get; set; } = true;
     }
 
     public class Response
