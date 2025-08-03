@@ -40,7 +40,8 @@ namespace WanPlugin
 
                 // Also, when img2Vid
 
-                newTp.Request.input.prompt = newIp.Prompt + " " + newTp.Request.input.prompt;
+                newTp.Request.input.prompt = (newIp.Prompt + " " + newTp.Request.input.prompt).Trim();
+                newTp.Request.input.negative_prompt = (newIp.NegativePrompt + " " + newTp.Request.input.negative_prompt).Trim();
 
                 if (newIp.Seed != 0)
                 {
@@ -53,9 +54,28 @@ namespace WanPlugin
                     newTp.Request.parameters.seed = ipOld.Seed;
                 }
 
-                /*if (!string.IsNullOrEmpty(newIp.ImageSource))
+                if (!string.IsNullOrEmpty(newIp.FirstFrame))
                 {
-                    var fileUpload = await _contentUploader.RequestContentUpload(newIp.ImageSource);
+                    newTp.Request.model = "wan2.2-i2v-plus";
+                    switch (newTp.Request.parameters.size) // "1920*1080", "1080*1920", "1440*1440", "1632*1248", "1248*1632", "832*480", "480*832", "624*624"
+                    {
+                        case "1920*1080":
+                        case "1080*1920":
+                        case "1440*1440":
+                        case "1632*1248":
+                        case "1248*1632":
+                            newTp.Request.parameters.size = "1080P";
+                            break;
+
+                        default:
+                            newTp.Request.parameters.size = "480P";
+                            break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(newIp.FirstFrame) && string.IsNullOrEmpty(newIp.LastFrame))
+                {
+                    var fileUpload = await _contentUploader.RequestContentUpload(newIp.FirstFrame);
 
                     if (fileUpload.isLocalFile)
                     {
@@ -67,9 +87,41 @@ namespace WanPlugin
                     }
                     else
                     {
-                        newTp.Request.promptImage = fileUpload.uploadedUrl;
+                        newTp.Request.input.img_url = fileUpload.uploadedUrl;
                     }
-                }*/
+                }
+                else if (!string.IsNullOrEmpty(newIp.FirstFrame) && !string.IsNullOrEmpty(newIp.LastFrame))
+                {
+                    var fileUpload = await _contentUploader.RequestContentUpload(newIp.FirstFrame);
+
+                    if (fileUpload.isLocalFile)
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
+                    }
+                    else if (fileUpload.responseCode != System.Net.HttpStatusCode.OK)
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {fileUpload.responseCode}" };
+                    }
+                    else
+                    {
+                        newTp.Request.input.first_frame = fileUpload.uploadedUrl;
+                    }
+
+                    fileUpload = await _contentUploader.RequestContentUpload(newIp.LastFrame);
+
+                    if (fileUpload.isLocalFile)
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
+                    }
+                    else if (fileUpload.responseCode != System.Net.HttpStatusCode.OK)
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {fileUpload.responseCode}" };
+                    }
+                    else
+                    {
+                        newTp.Request.input.last_frame = fileUpload.uploadedUrl;
+                    }
+                }
 
                 var videoResp = await new Client().GetVideo(newTp.Request, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
                 return videoResp;
@@ -186,7 +238,7 @@ namespace WanPlugin
         {
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
-                return new ItemPayload() { ImageSource = imgSource };
+                return new ItemPayload() { FirstFrame = imgSource };
             }
 
             throw new NotImplementedException();
@@ -321,7 +373,7 @@ namespace WanPlugin
         {
             if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
-                return new List<string>() { ip.ImageSource };
+                return new List<string>() { ip.FirstFrame, ip.LastFrame };
             }
 
             return new List<string>();
@@ -334,9 +386,13 @@ namespace WanPlugin
             {
                 for (int i = 0; i < originalPath.Count; i++)
                 {
-                    if (originalPath[i] == ip.ImageSource)
+                    if (originalPath[i] == ip.FirstFrame)
                     {
-                        ip.ImageSource = newPath[i];
+                        ip.FirstFrame = newPath[i];
+                    }
+                    if (originalPath[i] == ip.LastFrame)
+                    {
+                        ip.LastFrame = newPath[i];
                     }
                 }
             }

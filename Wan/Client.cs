@@ -2,16 +2,17 @@
 using System.ComponentModel;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text.Json.Serialization;
 
 namespace WanPlugin
 {
     public class Request
     {
-        [Description("Set to zero to get new random seed")]
         private string modelToUse = "wan2.2-t2v-plus";
 
         public Input input { get; set; } = new Input();
 
+        [IgnoreDynamicEdit]
         public string model { get => modelToUse; set => modelToUse = value; }
 
         public Parameters parameters { get; set; } = new Parameters();
@@ -20,6 +21,16 @@ namespace WanPlugin
     public class Input
     {
         public string prompt { get; set; }
+        public string negative_prompt { get; set; }
+
+        [IgnoreDynamicEdit]
+        public string img_url { get; set; }
+
+        [IgnoreDynamicEdit]
+        public string first_frame { get; set; }
+
+        [IgnoreDynamicEdit]
+        public string last_frame { get; set; }
     }
 
     public class Parameters
@@ -52,7 +63,7 @@ namespace WanPlugin
 
     internal class Client
     {
-        public async Task<VideoResponse> GetVideo(object request, string folderToSave, ConnectionSettings connectionSettings,
+        public async Task<VideoResponse> GetVideo(Request request, string folderToSave, ConnectionSettings connectionSettings,
             ItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
         {
             try
@@ -73,6 +84,7 @@ namespace WanPlugin
                 }
 
                 var serialized = "";
+                request.input.img_url = "https://cdn.translate.alibaba.com/r/wanx-demo-1.png";
 
                 try
                 {
@@ -84,10 +96,20 @@ namespace WanPlugin
                     return new VideoResponse() { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
                 }
 
+                var endpoint = "video-generation/video-synthesis";
+
+                if (!string.IsNullOrEmpty(request.input.first_frame))
+                {
+                    endpoint = "image2video/video-synthesis";
+                    serialized = serialized.Replace("\"size\"", "\"resolution\"");
+                }
+
                 var stringContent = new StringContent(serialized);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
-                var resp = await httpClient.PostAsync($"services/aigc/video-generation/video-synthesis", stringContent);
+                var finalEndPoint = $"services/aigc/{endpoint}";
+
+                var resp = await httpClient.PostAsync(finalEndPoint, stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
 
                 if (resp.StatusCode != HttpStatusCode.OK)
