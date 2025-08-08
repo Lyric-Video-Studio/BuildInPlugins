@@ -57,20 +57,6 @@ namespace WanPlugin
                 if (!string.IsNullOrEmpty(newIp.FirstFrame))
                 {
                     newTp.Request.model = "wan2.2-i2v-plus";
-                    switch (newTp.Request.parameters.size) // "1920*1080", "1080*1920", "1440*1440", "1632*1248", "1248*1632", "832*480", "480*832", "624*624"
-                    {
-                        case "1920*1080":
-                        case "1080*1920":
-                        case "1440*1440":
-                        case "1632*1248":
-                        case "1248*1632":
-                            newTp.Request.parameters.size = "1080P";
-                            break;
-
-                        default:
-                            newTp.Request.parameters.size = "480P";
-                            break;
-                    }
                 }
 
                 if (!string.IsNullOrEmpty(newIp.FirstFrame) && string.IsNullOrEmpty(newIp.LastFrame))
@@ -184,17 +170,7 @@ namespace WanPlugin
         {
             try
             {
-                return ""; // TODO: jaa. oisko joku ping
-                /*var res = await _wrapper.PingConnection(_connectionSettings);
-
-                if(res)
-                {
-                    return "";
-                }
-                else
-                {
-                    return "Initialization failed";
-                }*/
+                return "";
             }
             catch (Exception ex)
             {

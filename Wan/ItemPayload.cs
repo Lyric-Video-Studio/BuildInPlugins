@@ -17,13 +17,10 @@ namespace WanPlugin
         public int Seed { get; set; } = 0;
 
         [EnableFileDrop]
-        [Description("NOTE!!! DropBox content delivery does not work with Alibaba, use Google drive instead")]
-        [IgnoreDynamicEdit] // TODO: Backend is not working
         public string FirstFrame { get; set; }
 
         [EnableFileDrop]
-        [Description("NOTE!!! DropBox content delivery does not work with Alibaba, use Google drive instead")]
-        [IgnoreDynamicEdit]  // TODO: Backend is not working
+        [IgnoreDynamicEdit] // Nvm, this was not yet possible
         public string LastFrame { get; set; }
     }
 }

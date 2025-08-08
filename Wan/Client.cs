@@ -35,7 +35,7 @@ namespace WanPlugin
 
     public class Parameters
     {
-        public string size { get; set; } = "1920×1080"; // 1920×1080, 1080×1920, 1440×1440, 1632×1248, 1248×1632, 832×480, 480×832, 624×624
+        public string size { get; set; } = "1920×1080";
         public int seed { get; set; }
 
         [Description("Specifies whether to enable prompt rewriting. When enabled, an LLM is used to intelligently rewrite the input prompt. " +
@@ -47,6 +47,10 @@ namespace WanPlugin
     {
         public string request_id { get; set; }
         public Output output { get; set; }
+
+        public string code { get; set; }
+
+        public string message { get; set; }
     }
 
     public class Output
@@ -84,7 +88,6 @@ namespace WanPlugin
                 }
 
                 var serialized = "";
-                request.input.img_url = "https://cdn.translate.alibaba.com/r/wanx-demo-1.png";
 
                 try
                 {
@@ -104,6 +107,7 @@ namespace WanPlugin
                     serialized = serialized.Replace("\"size\"", "\"resolution\"");
                 }
 
+                //System.Diagnostics.Debug.WriteLine(serialized);
                 var stringContent = new StringContent(serialized);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
@@ -167,6 +171,16 @@ namespace WanPlugin
                     try
                     {
                         respSerialized = JsonHelper.DeserializeString<Response>(respString);
+
+                        if (!string.IsNullOrEmpty(respSerialized.code))
+                        {
+                            // Yet another different type pr response, sigh
+                            return new VideoResponse()
+                            {
+                                Success = false,
+                                ErrorMsg = "Wan API backend reported that video generating failed: " + respSerialized.code + ", " + respSerialized.message
+                            };
+                        }
 
                         if (respSerialized.output.task_status == "FAILED" || respSerialized.output.task_status == "CANCELED" || respSerialized.output.task_status == "UNKNOWN")
                         {
