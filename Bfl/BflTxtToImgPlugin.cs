@@ -55,7 +55,7 @@ namespace BflTxtToImgPlugin
             }
         }
 
-        Random rnd = new Random();
+        private Random rnd = new Random();
 
         public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
         {
@@ -92,7 +92,7 @@ namespace BflTxtToImgPlugin
                 {
                     AsyncResponse imageRequest;
 
-                    if(newIp.Seed == 0)
+                    if (newIp.Seed == 0)
                     {
                         newIp.Seed = rnd.Next();
                         oldPl.Seed = newIp.Seed;
@@ -100,16 +100,15 @@ namespace BflTxtToImgPlugin
 
                     newTp.Settings.Seed = newIp.Seed;
 
-
                     if (newIp.EditImage)
                     {
                         var newInput = new FluxKontextInputs()
                         {
                             InputImage = newTp.Settings.ImagePrompt,
-                            Prompt = newTp.Settings.Prompt, 
-                            Output_format = newTp.Settings.Output_format, 
-                            Prompt_upsampling = newTp.Settings.Prompt_upsampling, 
-                            Safety_tolerance = newTp.Settings.Safety_tolerance, 
+                            Prompt = newTp.Settings.Prompt,
+                            Output_format = newTp.Settings.Output_format,
+                            Prompt_upsampling = newTp.Settings.Prompt_upsampling,
+                            Safety_tolerance = newTp.Settings.Safety_tolerance,
                             Seed = newTp.Settings.Seed
                         };
 
@@ -117,7 +116,7 @@ namespace BflTxtToImgPlugin
                     }
                     else
                     {
-                        if(newTp.Settings.ImagePrompt == "")
+                        if (newTp.Settings.ImagePrompt == "")
                         {
                             newTp.Settings.ImagePrompt = null;
                         }
@@ -216,7 +215,7 @@ namespace BflTxtToImgPlugin
                 client = null;
                 httpClient = null;
                 _connectionSettings = s;
-                _isInitialized = string.IsNullOrEmpty(s.AccessToken);
+                _isInitialized = !string.IsNullOrEmpty(s.AccessToken);
                 return "";
             }
             else
