@@ -6,7 +6,7 @@ namespace MinimaxPlugin.Audio
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class MinimaxAudioPlugin : IAudioPlugin, IImportFromLyrics, ISaveConnectionSettings, ISaveAndRefresh
+    public class MinimaxAudioPlugin : IAudioPlugin, IImportFromLyrics, ISaveConnectionSettings, ISaveAndRefresh, IValidateBothPayloads
     {
         public const string PluginName = "MinimaxAudioBuildIn";
         public string UniqueName { get => PluginName; }
@@ -42,7 +42,6 @@ namespace MinimaxPlugin.Audio
 
         public async Task<AudioResponse> GetAudio(object trackPayload, object itemsPayload, string folderToSaveAudio)
         {
-
             using var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Remove("accept");
 
@@ -62,7 +61,20 @@ namespace MinimaxPlugin.Audio
 
                 try
                 {
-                    serialized = JsonHelper.Serialize(tp);
+                    if (tp.Model == "music-1.5")
+                    {
+                        var musicRequest = new MusicRequest()
+                        {
+                            AudioSetting = tp.AudioSetting,
+                            Lyrics = ip.Lyrics,
+                            Prompt = ip.Prompt
+                        };
+                        serialized = JsonHelper.Serialize(musicRequest);
+                    }
+                    else
+                    {
+                        serialized = JsonHelper.Serialize(tp);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -73,7 +85,14 @@ namespace MinimaxPlugin.Audio
                 var stringContent = new StringContent(serialized);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
-                var resp = await httpClient.PostAsync("v1/t2a_v2", stringContent);
+                var endpoint = "v1/t2a_v2";
+
+                if (tp.Model == "music-1.5")
+                {
+                    endpoint = "v1/music_generation";
+                }
+
+                var resp = await httpClient.PostAsync(endpoint, stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
                 T2AResponse respSerialized = null;
                 try
@@ -81,7 +100,7 @@ namespace MinimaxPlugin.Audio
                     respSerialized = JsonHelper.DeserializeString<T2AResponse>(respString);
                     if (respSerialized != null)
                     {
-                        if(respSerialized.BaseResp.StatusCode != 0)
+                        if (respSerialized.BaseResp.StatusCode != 0)
                         {
                             return new AudioResponse() { ErrorMsg = $"Minimax api returned an error: {respSerialized.BaseResp.StatusMsg}", Success = false };
                         }
@@ -90,7 +109,7 @@ namespace MinimaxPlugin.Audio
                             var b = Convert.FromHexString(respSerialized.Data.Audio);
                             var fileName = Path.Combine(folderToSaveAudio, $"{respSerialized.TraceId}.{respSerialized.ExtraInfo.AudioFormat}");
 
-                            if(File.Exists(fileName))
+                            if (File.Exists(fileName))
                             {
                                 File.Delete(fileName);
                             }
@@ -103,17 +122,16 @@ namespace MinimaxPlugin.Audio
                     {
                         return new AudioResponse() { ErrorMsg = $"Error generating response", Success = false };
                     }
-
                 }
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine(ex.ToString());
-                    return new AudioResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
+                    return new AudioResponse() { ErrorMsg = $"Error parsing response, {ex.Message}: {respString}", Success = false };
                 }
             }
 
             return new AudioResponse() { Success = false, ErrorMsg = "Unknown error" };
-        }        
+        }
 
         public async Task<string> Initialize(object settings)
         {
@@ -139,7 +157,7 @@ namespace MinimaxPlugin.Audio
 
         private async Task RefreshVoiceListAsync()
         {
-            if(_connectionSettings != null && !string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            if (_connectionSettings != null && !string.IsNullOrEmpty(_connectionSettings.AccessToken))
             {
                 using var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.Remove("accept");
@@ -163,7 +181,6 @@ namespace MinimaxPlugin.Audio
                     _connectionSettings.SpeechVoices = [.. respSerialized.SystemVoice.Where(s => !s.VoiceId
                         .Contains("russia", StringComparison.InvariantCultureIgnoreCase)).Select(s => s.VoiceId).Order()];
                     saveConnectionSettings.Invoke(_connectionSettings);
-
                 }
                 catch (Exception ex)
                 {
@@ -177,6 +194,7 @@ namespace MinimaxPlugin.Audio
         }
 
         private static bool _voiceListUpdating = false;
+
         public async Task<string[]> SelectionOptionsForProperty(string propertyName)
         {
             if (_connectionSettings == null)
@@ -186,7 +204,7 @@ namespace MinimaxPlugin.Audio
 
             if (propertyName == nameof(T2ARequest.Model))
             {
-                return ["speech-02-hd", "speech-01-turbo", "speech-01-hd", "speech-01-turbo"];
+                return ["speech-2.5-hd-preview", "speech-2.5-turbo-preview", "speech-02-hd", "speech-01-turbo", "speech-01-hd", "speech-01-turbo", "music-1.5"];
             }
 
             if (propertyName == nameof(VoiceSetting.VoiceId))
@@ -198,7 +216,7 @@ namespace MinimaxPlugin.Audio
                     await Task.Delay(200);
                 }
 
-                if(_connectionSettings.SpeechVoices.Count > 0)
+                if (_connectionSettings.SpeechVoices.Count > 0)
                 {
                     return _connectionSettings.SpeechVoices.ToArray();
                 }
@@ -207,7 +225,6 @@ namespace MinimaxPlugin.Audio
                 {
                     _voiceListUpdating = true;
                     await RefreshVoiceListAsync();
-
                 }
                 catch (Exception)
                 {
@@ -247,7 +264,7 @@ namespace MinimaxPlugin.Audio
 
             if (propertyName == nameof(T2ARequest.LanguageBoost))
             {
-                return ["auto", "English", "Chinese", "Chinese,Yue", "Arabic", "Spanish", "French", "Portuguese", "German", "Turkish", "Dutch", "Ukrainian", "Vietnamese", 
+                return ["auto", "English", "Chinese", "Chinese,Yue", "Arabic", "Spanish", "French", "Portuguese", "German", "Turkish", "Dutch", "Ukrainian", "Vietnamese",
                     "Indonesian", "Japanese", "Italian", "Korean", "Thai", "Polish", "Romanian", "Greek", "Czech", "Finnish", "Hindi"];
             }
 
@@ -317,7 +334,6 @@ namespace MinimaxPlugin.Audio
             return JsonHelper.ToExactType<ConnectionSettings>(obj);
         }
 
-
         public string TextualRepresentation(object itemPayload)
         {
             if (itemPayload is ItemPayload ip)
@@ -355,10 +371,6 @@ namespace MinimaxPlugin.Audio
                 {
                     return (false, "Auth token empty!!!");
                 }
-                if (string.IsNullOrEmpty(ip.Text))
-                {
-                    return (false, "Text empty");
-                }
             }
 
             return (true, "");
@@ -371,19 +383,47 @@ namespace MinimaxPlugin.Audio
 
         public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object T2ARequest, object itemPayload)
         {
-            // No need to do anything            
+            // No need to do anything
         }
 
         private Action<object> saveConnectionSettings;
+
         public void SetSaveConnectionSettingsCallback(Action<object> saveConnectionSettings)
         {
             this.saveConnectionSettings = saveConnectionSettings;
         }
 
-        Action saveAndRefreshCallback;
+        private Action saveAndRefreshCallback;
+
         public void SetSaveAndRefreshCallback(Action saveAndRefreshCallback)
         {
             this.saveAndRefreshCallback = saveAndRefreshCallback;
+        }
+
+        public (bool payloadOk, string reasonIfNot) ValidatePayloads(object trackPaylod, object itemPayload)
+        {
+            if (trackPaylod is T2ARequest tp && itemPayload is ItemPayload ip)
+            {
+                if (tp.Model == "music-1.5")
+                {
+                    if (!string.IsNullOrEmpty(ip.Lyrics) && ip.Lyrics.Replace("[intro]", "").Replace("[verse]", "").Replace("[chorus]", "").Replace("[bridge]", "").Replace("[outro]", "").Length > 600)
+                    {
+                        return (false, "Lyrics too long, max 600 characters");
+                    }
+
+                    if (!string.IsNullOrEmpty(ip.Prompt) && ip.Prompt.Length > 300)
+                    {
+                        return (false, "Lyrics too long, max 600 characters");
+                    }
+                    return (!string.IsNullOrEmpty(ip.Prompt) && !string.IsNullOrEmpty(ip.Lyrics), "Lyrics and prompt must be defined");
+                }
+                else
+                {
+                    return (!string.IsNullOrEmpty(ip.Text), "Text empty");
+                }
+            }
+
+            return (true, "");
         }
     }
 

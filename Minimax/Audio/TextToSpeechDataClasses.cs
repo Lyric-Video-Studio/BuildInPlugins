@@ -1,19 +1,38 @@
 ﻿using PluginBase;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace MinimaxPlugin.Audio
 {
+    public class MusicRequest
+    {
+        [JsonPropertyName("model")]
+        public string Model { get; set; } = "music-1.5";
+
+        [JsonPropertyName("lyrics")]
+        public string Lyrics { get; set; } = "";
+
+        [JsonPropertyName("prompt")]
+        public string Prompt { get; set; } = "";
+
+        /// <summary>
+        /// Audio setting for the output audio file.
+        /// </summary>
+        [JsonPropertyName("audio_setting")]
+        public AudioSetting AudioSetting { get; set; } = new AudioSetting();
+
+        /// <summary>
+        /// This parameter controls the format of the output content.
+        /// </summary>
+        [JsonPropertyName("output_format")]
+        [IgnoreDynamicEdit]
+        public string OutputFormat { get; set; } = "hex";
+    }
 
     /// <summary>
     /// Represents the request payload for the Text-to-Speech API.
     /// </summary>
-    public class T2ARequest
+    public class T2ARequest : IPayloadPropertyVisibility
     {
         /// <summary>
         /// Desired model. Includes: speech-02-hd, speech-01-turbo, speech-01-hd, speech-01-turbo.
@@ -73,6 +92,23 @@ namespace MinimaxPlugin.Audio
         [JsonPropertyName("output_format")]
         [IgnoreDynamicEdit]
         public string OutputFormat { get; set; } = "hex";
+
+        public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
+        {
+            if (trackPayload is T2ARequest tp)
+            {
+                if (propertyName == nameof(VoiceSetting.VoiceId) ||
+                    propertyName == nameof(VoiceSetting.Speed) ||
+                    propertyName == nameof(VoiceSetting.Volume) ||
+                    propertyName == nameof(VoiceSetting.Pitch) ||
+                    propertyName == nameof(VoiceSetting.Emotion) || propertyName == nameof(T2ARequest.LanguageBoost))
+                {
+                    return tp.Model != "music-1.5";
+                }
+            }
+
+            return true;
+        }
     }
 
     /// <summary>
@@ -384,4 +420,3 @@ namespace MinimaxPlugin.Audio
         public string CreatedTime { get; set; }
     }
 }
-

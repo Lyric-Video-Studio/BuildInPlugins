@@ -1,4 +1,5 @@
-﻿using PluginBase;
+﻿using MinimaxPlugin.Audio;
+using PluginBase;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
