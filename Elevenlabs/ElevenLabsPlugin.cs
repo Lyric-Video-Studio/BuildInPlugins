@@ -5,7 +5,7 @@ namespace ElevenLabsPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class ElevenLabsPlugin : IAudioPlugin, ISaveAndRefresh, IContentId, ITextualProgressIndication, ISaveConnectionSettings, IImportFromLyrics, ICancellableGeneration
+    public class ElevenLabsPlugin : IAudioPlugin, ISaveAndRefresh, ITextualProgressIndication, ISaveConnectionSettings, IImportFromLyrics, ICancellableGeneration
     {
         public string UniqueName { get => "ElevenLabsPlugin"; }
         public string DisplayName { get => "ElevenLabs"; }
@@ -54,7 +54,7 @@ namespace ElevenLabsPlugin
                         voiceId = null;
                     }
 
-                    return await ElevenLabsClient.GenerateSpeech(newIp.PollingId, newIp.Prompt, voiceId,
+                    return await ElevenLabsClient.GenerateSpeech(newIp.Prompt, voiceId,
                             folderToSaveAudio, _connectionSettings, itemsPayload as ElevenLabsItemPayload, saveAndRefreshCallback, textualProgress, cancellationToken);
                 }
                 else
@@ -249,15 +249,6 @@ namespace ElevenLabsPlugin
                 return ip.Prompt;
             }
 
-            return "";
-        }
-
-        public string GetContentFromPayloadId(object payload)
-        {
-            if (payload is ElevenLabsItemPayload ip)
-            {
-                return ip.PollingId;
-            }
             return "";
         }
 

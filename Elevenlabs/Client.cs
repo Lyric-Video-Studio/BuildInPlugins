@@ -39,7 +39,7 @@ namespace ElevenLabsPlugin
 
     public class ElevenLabsClient
     {
-        public static async Task<AudioResponse> GenerateSpeech(string pollingId, string text, string voiceId, string folderToSaveAudio,
+        public static async Task<AudioResponse> GenerateSpeech(string text, string voiceId, string folderToSaveAudio,
             ConnectionSettings connectionSettings, ElevenLabsItemPayload ElevenLabsItemPayload, Action saveAndRefreshCallback, Action<string> textualProgress, CancellationToken cancellationToken)
         {
             using var httpClient = new HttpClient();

@@ -5,9 +5,6 @@ namespace ElevenLabsPlugin
 {
     public class ElevenLabsItemPayload
     {
-        private string pollingId;
-        public string PollingId { get => pollingId; set => pollingId = value; }
-
         private string prompt = "";
 
         [Description("Use for defining the music")]
