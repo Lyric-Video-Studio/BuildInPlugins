@@ -266,7 +266,7 @@ namespace ElevenLabsPlugin
             switch (CurrentTrackType)
             {
                 case IPluginBase.TrackType.Audio:
-                    return new ElevenLabsItemPayload();
+                    return new ElevenLabsAudioTrackPayload();
 
                 default:
                     break;
@@ -279,7 +279,7 @@ namespace ElevenLabsPlugin
             switch (CurrentTrackType)
             {
                 case IPluginBase.TrackType.Audio:
-                    return new ElevenLabsAudioTrackPayload();
+                    return new ElevenLabsItemPayload();
 
                 default:
                     break;
