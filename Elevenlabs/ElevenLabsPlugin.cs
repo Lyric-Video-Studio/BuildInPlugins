@@ -47,7 +47,12 @@ namespace ElevenLabsPlugin
                 if (JsonHelper.DeepCopy<ElevenLabsAudioTrackPayload>(trackPayload) is ElevenLabsAudioTrackPayload newTp &&
                     JsonHelper.DeepCopy<ElevenLabsItemPayload>(itemsPayload) is ElevenLabsItemPayload newIp)
                 {
-                    _voideNameIdDict.TryGetValue(newTp.VoiceId, out var voiceId);
+                    var voiceId = "";
+
+                    if (!string.IsNullOrEmpty(newTp.VoiceId))
+                    {
+                        _voideNameIdDict.TryGetValue(newTp.VoiceId, out voiceId);
+                    }
 
                     if (voiceId == Guid.Empty.ToString())
                     {
