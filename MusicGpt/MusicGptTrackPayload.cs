@@ -5,14 +5,11 @@ namespace MusicGptPlugin
 {
     public class MusicGptAudioTrackPayload
     {
-        private string prompt = "";
-        public string Prompt { get => prompt; set => prompt = value; }
+        public string Prompt { get; set; }
 
-        private string musicStyle = "";
-        public string MusicStyle { get => musicStyle; set => musicStyle = value; }
+        public string MusicStyle { get; set; }
 
-        private bool instumental;
-        public bool Instumental { get => instumental; set => instumental = value; }
+        public bool Instrumental { get; set; }
 
         private bool voiceOnly;
         public bool VoiceOnly { get => voiceOnly; set => voiceOnly = value; }
