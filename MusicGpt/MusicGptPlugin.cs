@@ -57,7 +57,11 @@ namespace MusicGptPlugin
                 if (JsonHelper.DeepCopy<MusicGptAudioTrackPayload>(trackPayload) is MusicGptAudioTrackPayload newTp &&
                     JsonHelper.DeepCopy<MusicGptItemPayload>(itemsPayload) is MusicGptItemPayload newIp)
                 {
-                    _voideNameIdDict.TryGetValue(newTp.VoiceId, out var voiceId);
+                    var voiceId = "";
+                    if (!string.IsNullOrEmpty(newTp.VoiceId))
+                    {
+                        _voideNameIdDict.TryGetValue(newTp.VoiceId, out voiceId);
+                    }
 
                     if (voiceId == Guid.Empty.ToString())
                     {
