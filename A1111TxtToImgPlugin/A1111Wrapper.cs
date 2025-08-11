@@ -134,7 +134,7 @@ namespace A1111TxtToImgPlugin
 
             try
             {
-                if (payload.Seed == -1)
+                if (payload.Seed == 0)
                 {
                     payload.Seed = new Random().Next(int.MinValue, int.MaxValue);
                 }

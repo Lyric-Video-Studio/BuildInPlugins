@@ -136,7 +136,7 @@ namespace A1111ImgToImgPlugin
 
             try
             {
-                if (payload.Seed == -1)
+                if (payload.Seed == 0)
                 {
                     payload.Seed = new Random().Next(int.MinValue, int.MaxValue);
                 }
