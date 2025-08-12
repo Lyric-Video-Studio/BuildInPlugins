@@ -6,7 +6,7 @@ namespace RunwayMlPlugin
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
     public class RunwayMlImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
-        IImportFromVideo, IImagePlugin, IValidateBothPayloads
+        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAppendLyrics
     {
         public string UniqueName { get => "RunwayMlImgToVidBuildIn"; }
         public string DisplayName { get => "Runway ML"; }
@@ -413,6 +413,17 @@ namespace RunwayMlPlugin
             var imagePl = new ImageItemPayload();
             imagePl.ReferenceImages.Add(new ImagePayloadReference() { FilePath = imgSource });
             return imagePl;
+        }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            {
+                if (payload is ItemPayload ip)
+                {
+                    ip.Prompt += text;
+                }
+            }
         }
 
         public void ContentUploaderProvided(IContentUploader uploader)

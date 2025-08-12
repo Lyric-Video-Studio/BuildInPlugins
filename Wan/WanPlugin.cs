@@ -5,7 +5,7 @@ namespace WanPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class WanVideoPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, ITextualProgressIndication
+    public class WanVideoPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, ITextualProgressIndication, IAppendLyrics
     {
         public string UniqueName { get => "WanVideoBuildIn"; }
         public string DisplayName { get => "WAN API"; }
@@ -218,6 +218,17 @@ namespace WanPlugin
             }
 
             throw new NotImplementedException();
+        }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            {
+                if (payload is ItemPayload ip)
+                {
+                    ip.Prompt += text;
+                }
+            }
         }
 
         public void ContentUploaderProvided(IContentUploader uploader)
