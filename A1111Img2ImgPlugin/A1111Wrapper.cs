@@ -24,7 +24,7 @@ namespace A1111ImgToImgPlugin
 
             if (path.EndsWith(".bat"))
             {
-                var content = File.ReadAllText(path);
+                var content = JsonHelper.ReadAllText(path);
                 path = path.Replace(".bat", "modified.bat");
 
                 var split = content.Split('\n');
