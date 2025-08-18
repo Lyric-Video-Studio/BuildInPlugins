@@ -248,7 +248,7 @@ namespace RunwayMlPlugin
                         }
                         else
                         {
-                            request.references.Add(new Reference() { type = "image", uri = refUpload.uploadedUrl }6);
+                            request.references.Add(new Reference() { type = "image", uri = refUpload.uploadedUrl });
                         }
                     }
 
