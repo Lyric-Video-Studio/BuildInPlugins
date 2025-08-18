@@ -74,13 +74,15 @@ namespace RunwayMlPlugin
 
                 if (string.IsNullOrEmpty(newTp.Request.ratio))
                 {
-                    newTp.Request.ratio = "16:9";
+                    newTp.Request.ratio = "1280:720";
                 }
 
                 if (newTp.Request.duration == -1)
                 {
                     newTp.Request.duration = 5;
                 }
+
+                // Act2
                 if (newTp.Request.model == models[0])
                 {
                     var req = new Act2Request();
@@ -206,6 +208,69 @@ namespace RunwayMlPlugin
                         _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
                     return videoResp;
                 }
+                else if (newTp.Request.model == models[2]) // Aleph
+                {
+                    var actualVideoSource = string.IsNullOrEmpty(newIp.VideoSource) ? newTp.ReferenceVideo : newIp.VideoSource;
+                    if (string.IsNullOrEmpty(actualVideoSource))
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = "Video file not defined" };
+                    }
+
+                    var videoFileUpload = await _contentUploader.RequestContentUpload(actualVideoSource);
+                    var uploadedVideo = "";
+                    if (videoFileUpload.isLocalFile)
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
+                    }
+                    else if (videoFileUpload.responseCode != System.Net.HttpStatusCode.OK)
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {videoFileUpload.responseCode}" };
+                    }
+                    else
+                    {
+                        uploadedVideo = videoFileUpload.uploadedUrl;
+                    }
+
+                    var request = new AlephRequest();
+                    request.videoUri = uploadedVideo;
+                    request.model = newTp.Request.model;
+
+                    foreach (var item in newIp.References)
+                    {
+                        var refUpload = await _contentUploader.RequestContentUpload(item.Path);
+                        if (videoFileUpload.isLocalFile)
+                        {
+                            return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
+                        }
+                        else if (videoFileUpload.responseCode != System.Net.HttpStatusCode.OK)
+                        {
+                            return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {videoFileUpload.responseCode}" };
+                        }
+                        else
+                        {
+                            request.references.Add(new Reference() { type = "image", uri = refUpload.uploadedUrl }6);
+                        }
+                    }
+
+                    if (newIp.Seed != 0)
+                    {
+                        request.seed = newIp.Seed;
+                    }
+                    else if (itemsPayload is ItemPayload ipOld)
+                    {
+                        ipOld.Seed = new Random().Next(1, int.MaxValue);
+                        saveAndRefreshCallback.Invoke();
+                        request.seed = ipOld.Seed;
+                    }
+
+                    request.promptText = newIp.Prompt;
+                    request.ratio = newTp.Request.ratio;
+
+                    // Aleph
+                    var videoResp = await new Client().GetVideo(request, folderToSaveVideo,
+                        _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
+                    return videoResp;
+                }
                 else
                 {
                     var videoResp = await new Client().GetVideo(newTp.Request, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
@@ -284,8 +349,8 @@ namespace RunwayMlPlugin
         {
         }
 
-        private static string[] models = ["act_two", "upscale_v1", "gen4_turbo", "gen3a_turbo"];
-        private static string[] ratios = ["1280:720", "720:1280", "1104:832", "832:1104", "960:960", "1584:672", "1280:768", "768:1280"];
+        private static string[] models = ["act_two", "upscale_v1", "gen4_aleph", "gen4_turbo", "gen3a_turbo"]; // Remember, these are referenced by indexes!!!
+        private static string[] ratios = ["1280:720", "720:1280", "1104:832", "832:1104", "960:960", "1584:672"];
 
         public async Task<string[]> SelectionOptionsForProperty(string propertyName)
         {
@@ -559,7 +624,8 @@ namespace RunwayMlPlugin
         {
             if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
-                return new List<string>() { ip.ImageSource, ip.VideoSource, tp.ReferenceImage, tp.ReferenceVideo };
+                return new List<string>() { ip.ImageSource, ip.VideoSource, tp.ReferenceImage, tp.ReferenceVideo }
+                    .Concat(ip.References.Where(v => !string.IsNullOrEmpty(v.Path)).Select(s => s.Path)).ToList();
             }
 
             if (trackPayload is ImageTrackPayload tpi && itemPayload is ImageItemPayload ipi)
@@ -595,6 +661,14 @@ namespace RunwayMlPlugin
                     if (originalPath[i] == tp.ReferenceVideo)
                     {
                         tp.ReferenceVideo = newPath[i];
+                    }
+
+                    foreach (var r in ip.References)
+                    {
+                        if (originalPath[i] == r.Path)
+                        {
+                            r.Path = newPath[i];
+                        }
                     }
                 }
             }
@@ -640,14 +714,24 @@ namespace RunwayMlPlugin
 
             if (trackPaylod is TrackPayload tpv && itemPayload is ItemPayload ipv)
             {
-                if (string.IsNullOrEmpty(ipv.ImageSource) && models.Skip(2).Contains(tpv.Request.model))
+                if (string.IsNullOrEmpty(ipv.ImageSource) && models.Skip(3).Contains(tpv.Request.model))
                 {
-                    return (false, $"Image source must not be empty (for models {string.Join(", ", models.Skip(2))})");
+                    return (false, $"Image source must not be empty (for models {string.Join(", ", models.Skip(3))})");
                 }
 
                 if (string.IsNullOrEmpty(ipv.VideoSource) && tpv.Request.model == models[1])
                 {
                     return (false, $"Image source must not be empty (for model {models[1]})");
+                }
+
+                if (string.IsNullOrEmpty(ipv.Prompt) && string.IsNullOrEmpty(tpv.Request.promptText) && tpv.Request.model == models[2])
+                {
+                    return (false, $"Prompt must not be empty (for model {models[2]})");
+                }
+
+                if ((string.IsNullOrEmpty(ipv.VideoSource) && string.IsNullOrEmpty(tpv.ReferenceVideo)) && tpv.Request.model == models[2])
+                {
+                    return (false, $"Video source must not be empty (for model {models[2]})");
                 }
 
                 if (tpv.Request.model == models[0] && string.IsNullOrEmpty(tpv.ReferenceVideo) && string.IsNullOrEmpty(tpv.ReferenceImage) && string.IsNullOrEmpty(ipv.ReferenceImage))

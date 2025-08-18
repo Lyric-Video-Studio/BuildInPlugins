@@ -20,14 +20,24 @@ namespace RunwayMlPlugin
         {
             if (trackPayload is TrackPayload tp)
             {
-                if (propertyName == nameof(ReferenceImage) || propertyName == nameof(ReferenceVideo))
+                if (propertyName == nameof(ReferenceVideo))
+                {
+                    return tp.Request.model == "act_two" || tp.Request.model == "gen4_aleph";
+                }
+
+                if (propertyName == nameof(ReferenceImage))
                 {
                     return tp.Request.model == "act_two";
                 }
 
-                if (propertyName == nameof(Request.duration) || propertyName == nameof(Request.promptText))
+                if (propertyName == nameof(Request.promptText))
                 {
                     return tp.Request.model != "act_two" && tp.Request.model != "upscale_v1";
+                }
+
+                if (propertyName == nameof(Request.duration))
+                {
+                    return tp.Request.model != "act_two" && tp.Request.model != "upscale_v1" && tp.Request.model != "gen4_aleph";
                 }
             }
 

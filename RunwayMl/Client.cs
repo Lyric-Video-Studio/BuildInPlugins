@@ -50,6 +50,19 @@ namespace RunwayMlPlugin
         public int seed { get; set; }
     }
 
+    public class AlephRequest
+    {
+        public string videoUri { get; set; }
+        public string promptText { get; set; }
+        public List<Reference> references { get; set; } = new();
+        public string model { get; set; } = "act_two";
+        public string ratio { get; set; } = "1280:720";
+        public ContentMod contentModeration { get; set; } = new ContentMod();
+
+        [Description("Set to zero to get new random seed")]
+        public int seed { get; set; }
+    }
+
     public class Reference
     {
         public string type { get; set; } = "video";
@@ -125,6 +138,10 @@ namespace RunwayMlPlugin
                 var apiPath = "image_to_video";
                 switch (request)
                 {
+                    case AlephRequest:
+                        apiPath = "video_to_video";
+                        break;
+
                     case VideoUpscaleRequest:
                         apiPath = "video_upscale";
                         break;
