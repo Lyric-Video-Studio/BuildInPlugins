@@ -20,7 +20,7 @@ namespace ElevenLabsPlugin
 
         public bool AsynchronousGeneration { get; } = true;
 
-        public string[] SettingsLinks => new[] { "https://elevenlabs.io/app/settings/api-keys" };
+        public string[] SettingsLinks => new[] { "https://try.elevenlabs.io/lvs" };
 
         public IPluginBase.TrackType CurrentTrackType { get; set; }
 
@@ -59,8 +59,10 @@ namespace ElevenLabsPlugin
                         voiceId = null;
                     }
 
+                    var length = newTp.Music ? newTp.Length * 1000 : 0;
+
                     return await ElevenLabsClient.GenerateSpeech(newIp.Prompt, voiceId,
-                            folderToSaveAudio, _connectionSettings, itemsPayload as ElevenLabsItemPayload, saveAndRefreshCallback, textualProgress, cancellationToken);
+                            folderToSaveAudio, _connectionSettings, itemsPayload as ElevenLabsItemPayload, saveAndRefreshCallback, textualProgress, cancellationToken, length);
                 }
                 else
                 {

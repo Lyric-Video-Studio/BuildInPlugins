@@ -4,6 +4,13 @@ using System.Net.Http.Headers;
 
 namespace ElevenLabsPlugin
 {
+    public class MusicRequest
+    {
+        public string prompt { get; set; }
+        public int music_length_ms { get; set; }
+        public string model_id { get; set; } = "music_v1";
+    }
+
     public class SpeechRequest
     {
         public string text { get; set; }
@@ -40,23 +47,40 @@ namespace ElevenLabsPlugin
     public class ElevenLabsClient
     {
         public static async Task<AudioResponse> GenerateSpeech(string text, string voiceId, string folderToSaveAudio,
-            ConnectionSettings connectionSettings, ElevenLabsItemPayload ElevenLabsItemPayload, Action saveAndRefreshCallback, Action<string> textualProgress, CancellationToken cancellationToken)
+            ConnectionSettings connectionSettings, ElevenLabsItemPayload ElevenLabsItemPayload, Action saveAndRefreshCallback, Action<string> textualProgress,
+            CancellationToken cancellationToken, int length)
         {
             using var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("xi-api-key", connectionSettings.AccessToken);
             httpClient.BaseAddress = new Uri(connectionSettings.Url);
 
-            var req = new SpeechRequest()
+            var json = "";
+            // Speech
+
+            if (length == 0)
             {
-                text = text
-            };
-            var json = JsonHelper.Serialize(req);
+                var req = new SpeechRequest()
+                {
+                    text = text
+                };
+                json = JsonHelper.Serialize(req);
+            }
+            else
+            {
+                var req = new MusicRequest()
+                {
+                    prompt = text,
+                    music_length_ms = length
+                };
+                json = JsonHelper.Serialize(req);
+            }
+
             var content = new StringContent(json);
             content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
             try
             {
-                var resp = await httpClient.PostAsync($"/v1/text-to-speech/{voiceId}", content);
+                var resp = length == 0 ? await httpClient.PostAsync($"/v1/text-to-speech/{voiceId}", content) : await httpClient.PostAsync($"/v1/music", content);
 
                 if (resp.IsSuccessStatusCode)
                 {

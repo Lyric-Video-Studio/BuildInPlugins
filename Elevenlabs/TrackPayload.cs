@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace ElevenLabsPlugin
 {
-    public class ElevenLabsAudioTrackPayload
+    public class ElevenLabsAudioTrackPayload : IPayloadPropertyVisibility
     {
         /*private string prompt = "";
         public string Prompt { get => prompt; set => prompt = value; }
@@ -29,5 +29,29 @@ namespace ElevenLabsPlugin
         public string Gender { get => gender; set => gender = value; }*/
 
         public string VoiceId { get => voiceId; set => voiceId = value; }
+
+        [Description("NOTE: Only available for paid users. ")]
+        public bool Music { get; set; }
+
+        [Description("Music lenght in seconds, between 10 and 180")]
+        public int Length { get; set; }
+
+        public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
+        {
+            if (trackPayload is ElevenLabsAudioTrackPayload tp)
+            {
+                if (propertyName == nameof(VoiceId))
+                {
+                    return !tp.Music;
+                }
+
+                if (propertyName == nameof(Length))
+                {
+                    return tp.Music;
+                }
+            }
+
+            return true;
+        }
     }
 }

@@ -7,7 +7,6 @@ namespace ElevenLabsPlugin
     {
         private string prompt = "";
 
-        [Description("Use for defining the music")]
         public string Prompt { get => prompt; set => prompt = value; }
 
         /*private string lyrics = "";
