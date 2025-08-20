@@ -1,8 +1,8 @@
-﻿using Newtonsoft.Json;
-using PluginBase;
+﻿using PluginBase;
 using System.ComponentModel;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text.Json.Serialization;
 
 namespace MinimaxPlugin
 {
@@ -12,11 +12,10 @@ namespace MinimaxPlugin
         public string prompt { get; set; } = "";
         public bool prompt_optimizer { get; set; } = true;
 
-        [DefaultValue("")]
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string first_frame_image { get; set; }
 
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [IgnoreDynamicEdit]
         public KeyFrame[] subject_reference { get; set; }
 
@@ -32,7 +31,7 @@ namespace MinimaxPlugin
         public string prompt { get; set; } = "";
         public bool prompt_optimizer { get; set; } = true;
 
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [IgnoreDynamicEdit]
         public KeyFrameImage[] subject_reference { get; set; }
 

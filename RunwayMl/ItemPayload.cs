@@ -23,7 +23,7 @@ namespace RunwayMlPlugin
         private string imageSource;
 
         [EnableFileDrop]
-        [Description("Used for video-to-models")]
+        [Description("Used for video-to-video models")]
         public string VideoSource { get; set; }
 
         [Description("Used with Act2. When enabled, non-facial movements and gestures will be applied to the character in addition to facial expressions")]
