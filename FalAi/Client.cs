@@ -256,12 +256,14 @@ namespace FalAiPlugin
 
                     if (respString.Contains("still in progress"))
                     {
+                        textualProgressAction.Invoke("Processing...");
                         await Task.Delay(pollingDelay);
                         continue;
                     }
 
                     if (!generationResp.IsSuccessStatusCode)
                     {
+                        System.Diagnostics.Debug.WriteLine(respString);
                         return new VideoResponse() { Success = false, ErrorMsg = respString };
                     }
 

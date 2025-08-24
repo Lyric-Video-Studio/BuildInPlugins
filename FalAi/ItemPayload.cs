@@ -16,7 +16,6 @@ namespace FalAiPlugin
         public string NegativePrompt { get; set; }
 
         public int Seed { get; set; } = 0;
-        public bool GenerateAudio { get; set; }
 
         [Description("Duration of the video in seconds")]
         public string Duration { get; set; } = "5";
@@ -39,17 +38,28 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(Duration))
                 {
-                    return !tp.Model.StartsWith("veo3");
+                    return !tp.Model.StartsWith("veo3") && !tp.Model.StartsWith("minimax") && !tp.Model.StartsWith("wan") && !tp.Model.StartsWith("ltx");
                 }
 
                 if (propertyName == nameof(DurationMinimax))
                 {
-                    return tp.Model.StartsWith("minimax");
+                    return tp.Model.StartsWith("minimax") && !tp.Model.Contains("pro");
                 }
 
-                if (tp.Model.StartsWith("minimax") && propertyName == nameof(Duration))
+                if (tp.Model.StartsWith("minimax"))
                 {
-                    return false;
+                    switch (propertyName)
+                    {
+                        case nameof(Duration):
+                            return false;
+
+                        case nameof(Seed):
+                        case nameof(NegativePrompt):
+                            return !tp.Model.Contains("text-to-video");
+
+                        default:
+                            break;
+                    }
                 }
             }
 

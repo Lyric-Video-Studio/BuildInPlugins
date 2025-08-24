@@ -18,6 +18,9 @@ namespace FalAiPlugin
         [CustomName("Resolution")]
         public string ResolutionWan { get; set; } = "720p";
 
+        [CustomName("Resolution")]
+        public string ResolutionLtx { get; set; } = "720p";
+
         public string Resolution { get; set; } = "1080p";
 
         [Description("Number of frames to generate. Must be between 81 to 121 (inclusive)")]
@@ -55,6 +58,38 @@ namespace FalAiPlugin
                     }
                 }
 
+                if (tp.Model.StartsWith("kling"))
+                {
+                    switch (propertyName)
+                    {
+                        case nameof(Resolution):
+                        case nameof(ResolutionMinimax):
+                        case nameof(ResolutionWan):
+                            return false;
+
+                        case nameof(AspectRatio):
+                            return tp.Model.Contains("text-to-video");
+
+                        default:
+                            break;
+                    }
+                }
+
+                if (propertyName == nameof(ResolutionLtx))
+                {
+                    return tp.Model.StartsWith("ltx");
+                }
+
+                if (tp.Model.StartsWith("ltx"))
+                {
+                    switch (propertyName)
+                    {
+                        case nameof(ResolutionMinimax):
+                        case nameof(Resolution):
+                            return false;
+                    }
+                }
+
                 if (tp.Model.StartsWith("minimax"))
                 {
                     switch (propertyName)
@@ -63,8 +98,24 @@ namespace FalAiPlugin
                         case nameof(Resolution):
                             return false;
 
+                        case nameof(ResolutionMinimax):
+                            return tp.Model.Contains("standard") && !Model.Contains("text-to-video");
+
                         default:
                             break;
+                    }
+
+                    if (Model.Contains("text-to-video"))
+                    {
+                        switch (propertyName)
+                        {
+                            case nameof(Seed):
+                            case nameof(NegativePrompt):
+                                return false;
+
+                            default:
+                                break;
+                        }
                     }
                 }
                 else

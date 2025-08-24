@@ -86,6 +86,21 @@ namespace FalAiPlugin
                     }
                 }
 
+                if (newTp.Model.StartsWith("minimax") && newTp.Model.Contains("standard"))
+                {
+                    reg.resolution = newTp.ResolutionMinimax;
+                }
+
+                if (newTp.Model.StartsWith("wan"))
+                {
+                    reg.resolution = newTp.ResolutionWan;
+                }
+
+                if (newTp.Model.StartsWith("ltx"))
+                {
+                    reg.resolution = newTp.ResolutionLtx;
+                }
+
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
                     textualProgressAction, newTp.Model);
                 return videoResp;
@@ -164,7 +179,7 @@ namespace FalAiPlugin
                         return ["veo3", "veo3/fast",
                             "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
                                 "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video",
-                            "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video",
+                            /*"wan/v2.2-a14b/image-to-video",*/ "wan/v2.2-a14b/text-to-video", // wan image to video not working...
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
                             "ltxv-13b-098-distilled/image-to-video"];
 
@@ -175,8 +190,10 @@ namespace FalAiPlugin
                         return ["1080p", "720p"];
 
                     case nameof(TrackPayload.ResolutionMinimax):
-
                         return ["768P", "512P"];
+
+                    case nameof(TrackPayload.ResolutionLtx):
+                        return ["720p", "480p"];
 
                     case nameof(TrackPayload.ResolutionWan):
                         return ["720p", "580p", "480p"];
