@@ -10,6 +10,9 @@ namespace FalAiPlugin
         public string prompt { get; set; }
         public List<ImageItem> images { get; set; }
         public VideoResp video { get; set; }
+
+        // Sigh, would be nice if all responses would be the same type...
+        public VideoResp image { get; set; }
     }
 
     public class VideoResp
@@ -31,9 +34,16 @@ namespace FalAiPlugin
         public bool generate_audio { get; set; } = true;
 
         public string resolution { get; set; }
+        public string aspect_ratio { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string image_url { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? num_frames { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? frames_per_second { get; set; }
     }
 
     public class Request
@@ -244,6 +254,12 @@ namespace FalAiPlugin
                     var generationResp = await httpClient.GetAsync($"{model}/requests/{id}");
                     var respString = await generationResp.Content.ReadAsStringAsync();
 
+                    if (respString.Contains("still in progress"))
+                    {
+                        await Task.Delay(pollingDelay);
+                        continue;
+                    }
+
                     if (!generationResp.IsSuccessStatusCode)
                     {
                         return new VideoResponse() { Success = false, ErrorMsg = respString };
@@ -264,6 +280,11 @@ namespace FalAiPlugin
                         //textualProgressAction.Invoke(respSerialized.status);
 
                         videoUrl = respSerialized.images != null && respSerialized.images.Count > 0 ? respSerialized.images[0].url : respSerialized.video?.url;
+
+                        if (string.IsNullOrEmpty(videoUrl))
+                        {
+                            videoUrl = respSerialized?.image.url;
+                        }
 
                         if (string.IsNullOrEmpty(videoUrl))
                         {
@@ -311,17 +332,20 @@ namespace FalAiPlugin
                 var respBytes = await videoResp.Content.ReadAsByteArrayAsync();
                 if (isActuallyImage)
                 {
+                    textualProgressAction.Invoke("");
                     return new VideoResponse() { Success = true, VideoFile = Convert.ToBase64String(respBytes) };
                 }
                 else
                 {
                     var pathToVideo = Path.Combine(folderToSave, $"{id}.mp4");
                     await File.WriteAllBytesAsync(pathToVideo, respBytes);
+                    textualProgressAction.Invoke("");
                     return new VideoResponse() { Success = true, VideoFile = pathToVideo };
                 }
             }
             else
             {
+                textualProgressAction.Invoke("");
                 return new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
             }
         }

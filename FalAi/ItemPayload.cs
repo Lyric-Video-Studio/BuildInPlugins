@@ -18,6 +18,13 @@ namespace FalAiPlugin
         public int Seed { get; set; } = 0;
         public bool GenerateAudio { get; set; }
 
+        [Description("Duration of the video in seconds")]
+        public string Duration { get; set; } = "5";
+
+        [Description("Duration of the video in seconds")]
+        [CustomName("Duration")]
+        public string DurationMinimax { get; set; } = "5";
+
         [EnableFileDrop]
         public string ImageSource { get; set; }
 
@@ -28,6 +35,21 @@ namespace FalAiPlugin
                 if (propertyName == nameof(ImageSource))
                 {
                     return tp.Model.EndsWith("image-to-video");
+                }
+
+                if (propertyName == nameof(Duration))
+                {
+                    return !tp.Model.StartsWith("veo3");
+                }
+
+                if (propertyName == nameof(DurationMinimax))
+                {
+                    return tp.Model.StartsWith("minimax");
+                }
+
+                if (tp.Model.StartsWith("minimax") && propertyName == nameof(Duration))
+                {
+                    return false;
                 }
             }
 

@@ -46,6 +46,17 @@ namespace FalAiPlugin
                 reg.aspect_ratio = newTp.AspectRatio;
                 reg.resolution = newTp.Resolution;
 
+                if (newTp.Model.StartsWith("wan"))
+                {
+                    reg.num_frames = newTp.NumberOfFrames;
+                    reg.frames_per_second = newTp.FramesPerSecond;
+                }
+
+                if (newTp.Model.StartsWith("veo") || newTp.Model.StartsWith("wan") || newTp.Model.StartsWith("kling"))
+                {
+                    reg.aspect_ratio = newTp.AspectRatio;
+                }
+
                 if (newIp.Seed != 0)
                 {
                     reg.seed = newIp.Seed;
@@ -75,7 +86,8 @@ namespace FalAiPlugin
                     }
                 }
 
-                var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction, newTp.Model);
+                var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
+                    textualProgressAction, newTp.Model);
                 return videoResp;
             }
             else
@@ -106,6 +118,8 @@ namespace FalAiPlugin
                 switch (newTp.Model)
                 {
                     case "qwen-image":
+                    case "wan/v2.2-a14b/text-to-image":
+                    case "hidream-i1-full":
                         imageReg.image_size = newTp.SizeQwen;
                         break;
 
@@ -147,17 +161,31 @@ namespace FalAiPlugin
                 switch (propertyName)
                 {
                     case nameof(TrackPayload.Model):
-                        return ["veo3/fast",
+                        return ["veo3", "veo3/fast",
                             "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
                                 "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video",
                             "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video",
-                            "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video"];
+                            "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
+                            "ltxv-13b-098-distilled/image-to-video"];
 
                     case nameof(TrackPayload.AspectRatio):
                         return ["16:9", "9:16", "1:1"];
 
                     case nameof(TrackPayload.Resolution):
                         return ["1080p", "720p"];
+
+                    case nameof(TrackPayload.ResolutionMinimax):
+
+                        return ["768P", "512P"];
+
+                    case nameof(TrackPayload.ResolutionWan):
+                        return ["720p", "580p", "480p"];
+
+                    case nameof(ItemPayload.Duration):
+                        return ["10", "5"];
+
+                    case nameof(ItemPayload.DurationMinimax):
+                        return ["10", "6"];
 
                     default:
                         break;
@@ -266,9 +294,7 @@ namespace FalAiPlugin
                 return new ItemPayload() { /*ImageSource = imgSource*/ };
             }
 
-            //var imagePl = new ImageItemPayload();
-            //imagePl.ReferenceImages.Add(new ImagePayloadReference() { FilePath = imgSource });
-            throw new NotImplementedException();
+            return null;
         }
 
         public void AppendToPayloadFromLyrics(string text, object payload)

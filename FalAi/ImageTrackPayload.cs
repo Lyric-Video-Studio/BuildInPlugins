@@ -34,7 +34,7 @@ namespace FalAiPlugin
             {
                 if (propertyName == nameof(SizeQwen))
                 {
-                    return Model == "qwen-image";
+                    return Model == "qwen-image" || Model == "wan/v2.2-a14b/text-to-image" || Model == "hidream-i1-full";
                 }
 
                 if (propertyName == nameof(SizeImagen4))
