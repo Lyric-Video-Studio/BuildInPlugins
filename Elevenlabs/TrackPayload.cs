@@ -30,7 +30,7 @@ namespace ElevenLabsPlugin
 
         public string VoiceId { get => voiceId; set => voiceId = value; }
 
-        [Description("NOTE: Only available for paid users. ")]
+        [Description("NOTE: Only available for subscribed users. HIGHLY EXPERIMENTAL, SINCE I'M UNABLE TO GET HOLD OF THEIR SUPPORT XD")]
         public bool Music { get; set; }
 
         [Description("Music lenght in seconds, between 10 and 180")]
