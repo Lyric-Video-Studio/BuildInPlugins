@@ -71,18 +71,6 @@ namespace FalAiPlugin
         public string request_id { get; set; }
     }
 
-    /*
-         *
-         * {"status": "IN_QUEUE",
-         * "request_id": "9c51c99e-33e0-4490-8e85-709fe0535f70",
-         * "response_url": "https://queue.fal.run/fal-ai/qwen-image/requests/9c51c99e-33e0-4490-8e85-709fe0535f70",
-         * "status_url": "https://queue.fal.run/fal-ai/qwen-image/requests/9c51c99e-33e0-4490-8e85-709fe0535f70/status",
-         * "cancel_url": "https://queue.fal.run/fal-ai/qwen-image/requests/9c51c99e-33e0-4490-8e85-709fe0535f70/cancel",
-         * "logs": null,
-         * "metrics": {}, "
-         * queue_position": 0}
-         */
-
     internal class Client
     {
         public async Task<VideoResponse> GetVideo(VideoRequest request, string folderToSave, ConnectionSettings connectionSettings,

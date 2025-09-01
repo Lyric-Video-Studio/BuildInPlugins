@@ -205,7 +205,7 @@ namespace FalAiPlugin
                         return ["veo3", "veo3/fast",
                             "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
                                 "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video",
-                            /*"wan/v2.2-a14b/image-to-video",*/ "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video", // wan image to video not working...
+                            "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
                             "ltxv-13b-098-distilled/image-to-video"];
 
