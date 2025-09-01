@@ -6,7 +6,7 @@ namespace FalAiPlugin
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
     public class FalAiImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
-        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAppendLyrics
+        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAppendLyrics, IAudioPlugin
     {
         public string UniqueName { get => "FalAiBuildIn"; }
         public string DisplayName { get => "Fal AI (multi-model)"; }
@@ -68,7 +68,7 @@ namespace FalAiPlugin
                     reg.seed = ipOld.Seed;
                 }
 
-                var tempRes1 = await UploadSource(reg, newIp.ImageSource);
+                var tempRes1 = await UploadSource(newIp.ImageSource);
 
                 if (!tempRes1.Success)
                 {
@@ -100,7 +100,7 @@ namespace FalAiPlugin
                     reg.resolution = newTp.ResolutionLtx;
                 }
 
-                tempRes1 = await UploadSource(reg, newIp.AudioSource);
+                tempRes1 = await UploadSource(newIp.AudioSource);
 
                 if (!tempRes1.Success)
                 {
@@ -128,11 +128,11 @@ namespace FalAiPlugin
             }
         }
 
-        private async Task<VideoResponse> UploadSource(VideoRequest reg, string imageSource)
+        private async Task<VideoResponse> UploadSource(string source)
         {
-            if (!string.IsNullOrEmpty(imageSource))
+            if (!string.IsNullOrEmpty(source))
             {
-                var fileUpload = await _contentUploader.RequestContentUpload(imageSource);
+                var fileUpload = await _contentUploader.RequestContentUpload(source);
 
                 if (fileUpload.isLocalFile)
                 {
@@ -259,7 +259,7 @@ namespace FalAiPlugin
                         break;
                 }
             }
-            else
+            else if (CurrentTrackType == IPluginBase.TrackType.Image)
             {
                 if (propertyName == nameof(ImageTrackPayload.SizeQwen))
                 {
@@ -274,6 +274,13 @@ namespace FalAiPlugin
                 if (propertyName == nameof(ImageTrackPayload.Model))
                 {
                     return ["qwen-image", "imagen4/preview", "wan/v2.2-a14b/text-to-image", "hidream-i1-full"];
+                }
+            }
+            else
+            {
+                if (propertyName == nameof(Speaker.Preset))
+                {
+                    return ["Alice [EN]", "Alice [EN] (Background Music)", "Carter [EN]", "Frank [EN]", "Maya [EN]", "Anchen [ZH] (Background Music)", "Bowen [ZH]", "Xinran [ZH]"];
                 }
             }
 
@@ -352,6 +359,11 @@ namespace FalAiPlugin
                 return new ItemPayload() { Prompt = text };
             }
 
+            if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                return new AudioItemPayload() { Prompt = text };
+            }
+
             return new ImageItemPayload() { Prompt = text };
         }
 
@@ -374,6 +386,14 @@ namespace FalAiPlugin
                     ip.Prompt += text;
                 }
             }
+
+            if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                if (payload is AudioItemPayload ip)
+                {
+                    ip.Prompt += text;
+                }
+            }
         }
 
         public void ContentUploaderProvided(IContentUploader uploader)
@@ -387,6 +407,10 @@ namespace FalAiPlugin
             {
                 return JsonHelper.ToExactType<ItemPayload>(obj);
             }
+            else if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                return JsonHelper.ToExactType<AudioItemPayload>(obj);
+            }
             return JsonHelper.ToExactType<ImageItemPayload>(obj);
         }
 
@@ -395,6 +419,10 @@ namespace FalAiPlugin
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 return JsonHelper.ToExactType<TrackPayload>(obj);
+            }
+            else if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                return JsonHelper.ToExactType<AudioTrackPayload>(obj);
             }
             return JsonHelper.ToExactType<ImageTrackPayload>(obj);
         }
@@ -415,6 +443,11 @@ namespace FalAiPlugin
             {
                 return ipi.Prompt;
             }
+
+            if (itemPayload is AudioItemPayload ipa)
+            {
+                return ipa.Prompt;
+            }
             return "";
         }
 
@@ -427,6 +460,9 @@ namespace FalAiPlugin
 
                 case IPluginBase.TrackType.Image:
                     return new ImageTrackPayload();
+
+                case IPluginBase.TrackType.Audio:
+                    return new AudioTrackPayload();
 
                 default:
                     break;
@@ -444,6 +480,9 @@ namespace FalAiPlugin
                 case IPluginBase.TrackType.Image:
                     return new ImageItemPayload();
 
+                case IPluginBase.TrackType.Audio:
+                    return new AudioItemPayload();
+
                 default:
                     break;
             }
@@ -459,6 +498,9 @@ namespace FalAiPlugin
 
                 case IPluginBase.TrackType.Image:
                     return JsonHelper.DeepCopy<ImageTrackPayload>(obj);
+
+                case IPluginBase.TrackType.Audio:
+                    return JsonHelper.DeepCopy<AudioTrackPayload>(obj);
 
                 default:
                     break;
@@ -476,6 +518,9 @@ namespace FalAiPlugin
                 case IPluginBase.TrackType.Image:
                     return JsonHelper.DeepCopy<ImageItemPayload>(obj);
 
+                case IPluginBase.TrackType.Audio:
+                    return JsonHelper.DeepCopy<AudioItemPayload>(obj);
+
                 default:
                     break;
             }
@@ -491,6 +536,31 @@ namespace FalAiPlugin
 
                 case IPluginBase.TrackType.Image:
                     return ValidateImagePayload(payload);
+
+                case IPluginBase.TrackType.Audio:
+                    {
+                        if (payload is AudioItemPayload ip)
+                        {
+                            if (string.IsNullOrEmpty(ip.Prompt))
+                            {
+                                return (false, "Promp empty");
+                            }
+
+                            var speakerIndex = ip.Prompt.IndexOf("speaker", StringComparison.CurrentCultureIgnoreCase);
+                            while (speakerIndex >= 0)
+                            {
+                                if (speakerIndex >= 0)
+                                {
+                                    if (speakerIndex > 0 && ip.Prompt[speakerIndex - 1] != '\n')
+                                    {
+                                        return (false, "Speaker must be also separated by new line");
+                                    }
+                                    speakerIndex = ip.Prompt.IndexOf("speaker", speakerIndex + 1, StringComparison.CurrentCultureIgnoreCase);
+                                }
+                            }
+                        }
+                        break;
+                    }
 
                 default:
                     break;
@@ -583,30 +653,31 @@ namespace FalAiPlugin
 
         public (bool payloadOk, string reasonIfNot) ValidatePayloads(object trackPaylod, object itemPayload)
         {
-            /*if (trackPaylod is TrackPayload tpv && itemPayload is ItemPayload ipv)
-            {
-                if (string.IsNullOrEmpty(ipv.ImageSource) && models.Skip(2).Contains(tpv.Request.model))
-                {
-                    return (false, $"Image source must not be empty (for models {string.Join(", ", models.Skip(2))})");
-                }
-
-                if (string.IsNullOrEmpty(ipv.VideoSource) && tpv.Request.model == models[1])
-                {
-                    return (false, $"Image source must not be empty (for model {models[1]})");
-                }
-
-                if (tpv.Request.model == models[0] && string.IsNullOrEmpty(tpv.ReferenceVideo) && string.IsNullOrEmpty(tpv.ReferenceImage) && string.IsNullOrEmpty(ipv.ReferenceImage))
-                {
-                    return (false, $"Either reference video or image must be set (for model {models[0]})");
-                }
-
-                if (tpv.Request.model == models[0] && string.IsNullOrEmpty(ipv.VideoSource))
-                {
-                    return (false, $"Item payload is missing movement / reference video (for model {models[0]})");
-                }
-            }*/
-
             return (true, "");
+        }
+
+        public async Task<AudioResponse> GetAudio(object trackPayload, object itemsPayload, string folderToSaveAudio)
+        {
+            if (trackPayload is AudioTrackPayload ap && itemsPayload is AudioItemPayload ip)
+            {
+                var audioReg = new AudioRequest() { cfg_scale = ap.Cfg, script = $"{ap.Prompt} {ip.Prompt}".Trim(), speakers = new() };
+                foreach (var item in ap.Speakers)
+                {
+                    var speaker = new SpeakerRequest() { preset = item.Preset };
+                    var uploaded = await UploadSource(item.AudioFile);
+
+                    if (!string.IsNullOrEmpty(uploaded.VideoFile))
+                    {
+                        speaker.url = uploaded.VideoFile;
+                    }
+
+                    audioReg.speakers.Add(speaker);
+                }
+
+                return await Client.GetAudio(audioReg, folderToSaveAudio, ip, _connectionSettings, "vibevoice", saveAndRefreshCallback, textualProgressAction);
+            }
+
+            throw new Exception("Internal error");
         }
     }
 

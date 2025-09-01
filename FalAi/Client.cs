@@ -13,6 +13,8 @@ namespace FalAiPlugin
 
         // Sigh, would be nice if all responses would be the same type...
         public VideoResp image { get; set; }
+
+        public VideoResp audio { get; set; }
     }
 
     public class VideoResp
@@ -56,6 +58,21 @@ namespace FalAiPlugin
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string duration { get; set; }
+    }
+
+    public class AudioRequest
+    {
+        public string script { get; set; }
+        public float cfg_scale { get; set; }
+        public List<SpeakerRequest> speakers { get; set; }
+    }
+
+    public class SpeakerRequest
+    {
+        public string preset { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string url { get; set; }
     }
 
     public class Request
@@ -285,7 +302,12 @@ namespace FalAiPlugin
 
                         if (string.IsNullOrEmpty(videoUrl))
                         {
-                            videoUrl = respSerialized?.image.url;
+                            videoUrl = respSerialized?.image?.url ?? "";
+                        }
+
+                        if (string.IsNullOrEmpty(videoUrl))
+                        {
+                            videoUrl = respSerialized?.audio?.url ?? "";
                         }
 
                         if (string.IsNullOrEmpty(videoUrl))
@@ -349,6 +371,81 @@ namespace FalAiPlugin
             {
                 textualProgressAction.Invoke("");
                 return new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
+            }
+        }
+
+        internal static async Task<AudioResponse> GetAudio(AudioRequest request, string folderToSaveAudio, AudioItemPayload refItemPlayload, ConnectionSettings connectionSettings, string model,
+            Action saveAndRefreshCallback, Action<string> textualProgress)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Remove("accept");
+
+                // It's best to keep these here: use can change these from item settings
+                httpClient.BaseAddress = new Uri(connectionSettings.Url);
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Key {connectionSettings.AccessToken}");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+
+                if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
+                {
+                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model);
+                    return new AudioResponse() { Success = res.Success, ErrorMsg = res.ErrorMsg, AudioFile = res.VideoFile, AudioFormat = "wav" };
+                }
+
+                var serialized = "";
+
+                try
+                {
+                    serialized = JsonHelper.Serialize(request);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new AudioResponse() { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
+                }
+
+                var stringContent = new StringContent(serialized);
+                stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+                var resp = await httpClient.PostAsync(model, stringContent);
+                var respString = await resp.Content.ReadAsStringAsync();
+
+                if (resp.StatusCode != HttpStatusCode.OK)
+                {
+                    return new AudioResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+                }
+
+                RequestResponse respSerialized = null;
+
+                try
+                {
+                    respSerialized = JsonHelper.DeserializeString<RequestResponse>(respString);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new AudioResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
+                }
+
+                if (respSerialized != null && resp.IsSuccessStatusCode)
+                {
+                    refItemPlayload.PollingId = respSerialized.request_id.ToString();
+                    saveAndRefreshCallback.Invoke();
+
+                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model);
+                    return new AudioResponse() { Success = res.Success, ErrorMsg = res.ErrorMsg, AudioFile = res.VideoFile, AudioFormat = "wav" };
+                }
+                else
+                {
+                    return new AudioResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
+                return new AudioResponse() { ErrorMsg = ex.Message, Success = false };
             }
         }
     }
