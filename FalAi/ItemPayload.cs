@@ -24,6 +24,10 @@ namespace FalAiPlugin
         [CustomName("Duration")]
         public string DurationMinimax { get; set; } = "5";
 
+        [Description("Duration of the video in seconds")]
+        [CustomName("Duration")]
+        public string DurationPixverse { get; set; } = "5";
+
         [EnableFileDrop]
         public string ImageSource { get; set; }
 
@@ -34,6 +38,11 @@ namespace FalAiPlugin
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (propertyName == nameof(DurationPixverse))
+                {
+                    tp.Model.StartsWith("pixverse");
+                }
+
                 if (propertyName == nameof(ImageSource))
                 {
                     return tp.Model.EndsWith("image-to-video") || tp.Model.EndsWith("speech-to-video");
@@ -41,7 +50,7 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(Duration))
                 {
-                    return !tp.Model.StartsWith("veo3") && !tp.Model.StartsWith("minimax") && !tp.Model.StartsWith("wan") && !tp.Model.StartsWith("ltx");
+                    return !tp.Model.StartsWith("veo3") && !tp.Model.StartsWith("minimax") && !tp.Model.StartsWith("wan") && !tp.Model.StartsWith("ltx") && !tp.Model.StartsWith("pixverse");
                 }
 
                 if (propertyName == nameof(DurationMinimax))

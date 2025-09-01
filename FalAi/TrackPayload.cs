@@ -29,10 +29,18 @@ namespace FalAiPlugin
         [Description("Frames per second of the generated video. Must be between 4 to 60")]
         public int FramesPerSecond { get; set; } = 16;
 
+        public string Style { get; set; }
+        public string CameraMovement { get; set; }
+
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (propertyName == nameof(Style) || propertyName == nameof(CameraMovement))
+                {
+                    return Model.StartsWith("pixverse");
+                }
+
                 if (tp.Model.StartsWith("wan"))
                 {
                     switch (propertyName)

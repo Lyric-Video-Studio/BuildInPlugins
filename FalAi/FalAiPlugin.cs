@@ -42,7 +42,7 @@ namespace FalAiPlugin
                 // Also, when img2Vid
                 var reg = new VideoRequest();
                 reg.prompt = newIp.Prompt + " " + reg.prompt;
-                reg.negative_prompt = (newIp.NegativePrompt + " " + reg.negative_prompt).Trim(); ;
+                reg.negative_prompt = (newIp.NegativePrompt + " " + reg.negative_prompt).Trim();
                 reg.aspect_ratio = newTp.AspectRatio;
                 reg.resolution = newTp.Resolution;
 
@@ -82,11 +82,17 @@ namespace FalAiPlugin
                 if (newTp.Model.StartsWith("minimax") && newTp.Model.Contains("standard"))
                 {
                     reg.resolution = newTp.ResolutionMinimax;
+                    reg.duration = newIp.DurationMinimax;
                 }
 
                 if (newTp.Model.StartsWith("wan"))
                 {
                     reg.resolution = newTp.ResolutionWan;
+                }
+
+                if (newTp.Model.StartsWith("veo"))
+                {
+                    reg.duration = newIp.Duration;
                 }
 
                 if (newTp.Model.StartsWith("ltx"))
@@ -103,6 +109,13 @@ namespace FalAiPlugin
                 else if (!string.IsNullOrEmpty(tempRes1.VideoFile))
                 {
                     reg.audio_url = tempRes1.VideoFile;
+                }
+
+                if (newTp.Model.StartsWith("pixverse"))
+                {
+                    reg.style = newTp.Style;
+                    reg.camera_movement = newTp.CameraMovement;
+                    reg.duration = newIp.DurationPixverse;
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
@@ -207,7 +220,8 @@ namespace FalAiPlugin
                                 "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video",
                             "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
-                            "ltxv-13b-098-distilled/image-to-video"];
+                            "ltxv-13b-098-distilled/image-to-video",
+                            /*"pixverse/v5/image-to-video", "pixverse/v5/text-to-video"*/];
 
                     case nameof(TrackPayload.AspectRatio):
                         return ["16:9", "9:16", "1:1"];
@@ -229,6 +243,17 @@ namespace FalAiPlugin
 
                     case nameof(ItemPayload.DurationMinimax):
                         return ["10", "6"];
+
+                    case nameof(ItemPayload.DurationPixverse):
+                        return ["5", "8"];
+
+                    case nameof(TrackPayload.Style):
+                        return ["anime", "3d_animation", "clay", "comic", "cyberpunk"];
+
+                    case nameof(TrackPayload.CameraMovement):
+                        return ["horizontal_left", "horizontal_right", "vertical_up", "vertical_down",
+                            "zoom_in", "zoom_out", "crane_up", "quickly_zoom_in", "quickly_zoom_out", "smooth_zoom_in",
+                        "camera_rotation", "robo_arm", "super_dolly_out", "whip_pan", "hitchcock", "left_follow", "hitchcock", "right_follow", "pan_left", "pan_right", "fix_bg"];
 
                     default:
                         break;
