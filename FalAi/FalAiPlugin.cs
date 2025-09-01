@@ -221,7 +221,7 @@ namespace FalAiPlugin
                             "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
                             "ltxv-13b-098-distilled/image-to-video",
-                            /*"pixverse/v5/image-to-video", "pixverse/v5/text-to-video"*/];
+                            /*"pixverse/v5/image-to-video"*/ "pixverse/v5/text-to-video"];
 
                     case nameof(TrackPayload.AspectRatio):
                         return ["16:9", "9:16", "1:1"];
