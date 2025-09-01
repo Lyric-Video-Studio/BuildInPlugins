@@ -68,22 +68,15 @@ namespace FalAiPlugin
                     reg.seed = ipOld.Seed;
                 }
 
-                if (!string.IsNullOrEmpty(newIp.ImageSource))
-                {
-                    var fileUpload = await _contentUploader.RequestContentUpload(newIp.ImageSource);
+                var tempRes1 = await UploadSource(reg, newIp.ImageSource);
 
-                    if (fileUpload.isLocalFile)
-                    {
-                        return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
-                    }
-                    else if (fileUpload.responseCode != System.Net.HttpStatusCode.OK)
-                    {
-                        return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {fileUpload.responseCode}" };
-                    }
-                    else
-                    {
-                        reg.image_url = fileUpload.uploadedUrl;
-                    }
+                if (!tempRes1.Success)
+                {
+                    return tempRes1;
+                }
+                else if (!string.IsNullOrEmpty(tempRes1.VideoFile))
+                {
+                    reg.image_url = tempRes1.VideoFile;
                 }
 
                 if (newTp.Model.StartsWith("minimax") && newTp.Model.Contains("standard"))
@@ -101,6 +94,17 @@ namespace FalAiPlugin
                     reg.resolution = newTp.ResolutionLtx;
                 }
 
+                tempRes1 = await UploadSource(reg, newIp.AudioSource);
+
+                if (!tempRes1.Success)
+                {
+                    return tempRes1;
+                }
+                else if (!string.IsNullOrEmpty(tempRes1.VideoFile))
+                {
+                    reg.audio_url = tempRes1.VideoFile;
+                }
+
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
                     textualProgressAction, newTp.Model);
                 return videoResp;
@@ -109,6 +113,28 @@ namespace FalAiPlugin
             {
                 return new VideoResponse { ErrorMsg = "Track playoad or item payload object not valid", Success = false };
             }
+        }
+
+        private async Task<VideoResponse> UploadSource(VideoRequest reg, string imageSource)
+        {
+            if (!string.IsNullOrEmpty(imageSource))
+            {
+                var fileUpload = await _contentUploader.RequestContentUpload(imageSource);
+
+                if (fileUpload.isLocalFile)
+                {
+                    return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
+                }
+                else if (fileUpload.responseCode != System.Net.HttpStatusCode.OK)
+                {
+                    return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {fileUpload.responseCode}" };
+                }
+                else
+                {
+                    return new VideoResponse() { Success = true, VideoFile = fileUpload.uploadedUrl };
+                }
+            }
+            return new VideoResponse() { Success = true };
         }
 
         public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
@@ -179,7 +205,7 @@ namespace FalAiPlugin
                         return ["veo3", "veo3/fast",
                             "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
                                 "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video",
-                            /*"wan/v2.2-a14b/image-to-video",*/ "wan/v2.2-a14b/text-to-video", // wan image to video not working...
+                            /*"wan/v2.2-a14b/image-to-video",*/ "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video", // wan image to video not working...
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
                             "ltxv-13b-098-distilled/image-to-video"];
 

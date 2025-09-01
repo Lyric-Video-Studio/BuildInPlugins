@@ -23,8 +23,8 @@ namespace FalAiPlugin
 
         public string Resolution { get; set; } = "1080p";
 
-        [Description("Number of frames to generate. Must be between 81 to 121 (inclusive)")]
-        public int NumberOfFrames { get; set; } = 81;
+        [Description("Number of frames to generate. Must be between 80 to 120")]
+        public int NumberOfFrames { get; set; } = 80;
 
         [Description("Frames per second of the generated video. Must be between 4 to 60")]
         public int FramesPerSecond { get; set; } = 16;

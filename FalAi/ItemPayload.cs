@@ -27,13 +27,16 @@ namespace FalAiPlugin
         [EnableFileDrop]
         public string ImageSource { get; set; }
 
+        [EnableFileDrop]
+        public string AudioSource { get; set; }
+
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             if (trackPayload is TrackPayload tp)
             {
                 if (propertyName == nameof(ImageSource))
                 {
-                    return tp.Model.EndsWith("image-to-video");
+                    return tp.Model.EndsWith("image-to-video") || tp.Model.EndsWith("speech-to-video");
                 }
 
                 if (propertyName == nameof(Duration))
@@ -43,7 +46,12 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(DurationMinimax))
                 {
-                    return tp.Model.StartsWith("minimax") && !tp.Model.Contains("pro");
+                    return tp.Model.StartsWith("minimax");
+                }
+
+                if (propertyName == nameof(AudioSource))
+                {
+                    return tp.Model.EndsWith("speech-to-video");
                 }
 
                 if (tp.Model.StartsWith("minimax"))
