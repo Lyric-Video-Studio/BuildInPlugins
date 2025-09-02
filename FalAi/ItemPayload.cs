@@ -40,7 +40,7 @@ namespace FalAiPlugin
             {
                 if (propertyName == nameof(DurationPixverse))
                 {
-                    tp.Model.StartsWith("pixverse");
+                    return tp.Model.StartsWith("pixverse");
                 }
 
                 if (propertyName == nameof(ImageSource))
