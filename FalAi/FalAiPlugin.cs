@@ -128,26 +128,28 @@ namespace FalAiPlugin
             }
         }
 
-        private async Task<VideoResponse> UploadSource(string source)
+        public async Task<AudioResponse> GetAudio(object trackPayload, object itemsPayload, string folderToSaveAudio)
         {
-            if (!string.IsNullOrEmpty(source))
+            if (trackPayload is AudioTrackPayload ap && itemsPayload is AudioItemPayload ip)
             {
-                var fileUpload = await _contentUploader.RequestContentUpload(source);
+                var audioReg = new AudioRequest() { cfg_scale = ap.Cfg, script = $"{ap.Prompt} {ip.Prompt}".Trim(), speakers = new() };
+                foreach (var item in ap.Speakers)
+                {
+                    var speaker = new SpeakerRequest() { preset = item.Preset };
+                    var uploaded = await UploadSource(item.AudioFile);
 
-                if (fileUpload.isLocalFile)
-                {
-                    return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
+                    if (!string.IsNullOrEmpty(uploaded.VideoFile))
+                    {
+                        speaker.url = uploaded.VideoFile;
+                    }
+
+                    audioReg.speakers.Add(speaker);
                 }
-                else if (fileUpload.responseCode != System.Net.HttpStatusCode.OK)
-                {
-                    return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {fileUpload.responseCode}" };
-                }
-                else
-                {
-                    return new VideoResponse() { Success = true, VideoFile = fileUpload.uploadedUrl };
-                }
+
+                return await Client.GetAudio(audioReg, folderToSaveAudio, ip, _connectionSettings, ap.Model, saveAndRefreshCallback, textualProgressAction);
             }
-            return new VideoResponse() { Success = true };
+
+            throw new Exception("Internal error");
         }
 
         public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
@@ -188,6 +190,28 @@ namespace FalAiPlugin
                 return await new Client().GetImage(imageReg, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback, textualProgressAction, newTp.Model);
             }
             return new ImageResponse { Success = false, ErrorMsg = "Unknown error" };
+        }
+
+        private async Task<VideoResponse> UploadSource(string source)
+        {
+            if (!string.IsNullOrEmpty(source))
+            {
+                var fileUpload = await _contentUploader.RequestContentUpload(source);
+
+                if (fileUpload.isLocalFile)
+                {
+                    return new VideoResponse() { Success = false, ErrorMsg = "File must be public url or you must apply your content delivery credentials in Settings-view" };
+                }
+                else if (fileUpload.responseCode != System.Net.HttpStatusCode.OK)
+                {
+                    return new VideoResponse() { Success = false, ErrorMsg = $"Error uploading to content delivery: {fileUpload.responseCode}" };
+                }
+                else
+                {
+                    return new VideoResponse() { Success = true, VideoFile = fileUpload.uploadedUrl };
+                }
+            }
+            return new VideoResponse() { Success = true };
         }
 
         public async Task<string> Initialize(object settings)
@@ -278,6 +302,10 @@ namespace FalAiPlugin
             }
             else
             {
+                if (propertyName == nameof(AudioTrackPayload.Model))
+                {
+                    return ["vibevoice/7b", "vibevoice"];
+                }
                 if (propertyName == nameof(Speaker.Preset))
                 {
                     return ["Alice [EN]", "Alice [EN] (Background Music)", "Carter [EN]", "Frank [EN]", "Maya [EN]", "Anchen [ZH] (Background Music)", "Bowen [ZH]", "Xinran [ZH]"];
@@ -654,30 +682,6 @@ namespace FalAiPlugin
         public (bool payloadOk, string reasonIfNot) ValidatePayloads(object trackPaylod, object itemPayload)
         {
             return (true, "");
-        }
-
-        public async Task<AudioResponse> GetAudio(object trackPayload, object itemsPayload, string folderToSaveAudio)
-        {
-            if (trackPayload is AudioTrackPayload ap && itemsPayload is AudioItemPayload ip)
-            {
-                var audioReg = new AudioRequest() { cfg_scale = ap.Cfg, script = $"{ap.Prompt} {ip.Prompt}".Trim(), speakers = new() };
-                foreach (var item in ap.Speakers)
-                {
-                    var speaker = new SpeakerRequest() { preset = item.Preset };
-                    var uploaded = await UploadSource(item.AudioFile);
-
-                    if (!string.IsNullOrEmpty(uploaded.VideoFile))
-                    {
-                        speaker.url = uploaded.VideoFile;
-                    }
-
-                    audioReg.speakers.Add(speaker);
-                }
-
-                return await Client.GetAudio(audioReg, folderToSaveAudio, ip, _connectionSettings, "vibevoice", saveAndRefreshCallback, textualProgressAction);
-            }
-
-            throw new Exception("Internal error");
         }
     }
 

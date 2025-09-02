@@ -16,6 +16,8 @@ namespace FalAiPlugin
             Speaker.Remove += (s, e) => Speakers.Remove((Speaker)s);
         }
 
+        public string Model { get; set; } = "vibevoice/7b";
+
         public string Prompt { get; set; }
 
         [Description("CFG (Classifier-Free Guidance) scale for generation. Higher values increase adherence to text. Default value: 1.3")]
