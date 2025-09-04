@@ -215,7 +215,7 @@ namespace WanPlugin
 
             var file = Path.GetFileName(videoUrl);
 
-            var downloadClient = new HttpClient { BaseAddress = new Uri(videoUrl.Replace(file, "")) };
+            var downloadClient = new HttpClient { BaseAddress = new Uri(videoUrl.Replace(file, "")), Timeout = Timeout.InfiniteTimeSpan };
 
             downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
 

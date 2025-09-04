@@ -245,7 +245,7 @@ namespace FalAiPlugin
                             "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
                             "ltxv-13b-098-distilled/image-to-video",
-                            /*"pixverse/v5/image-to-video"*/ "pixverse/v5/text-to-video"];
+                            "pixverse/v5/image-to-video", "pixverse/v5/text-to-video"];
 
                     case nameof(TrackPayload.AspectRatio):
                         return ["16:9", "9:16", "1:1"];
@@ -348,17 +348,6 @@ namespace FalAiPlugin
                 }
             }
 
-            /*if (payload is TrackPayload tp)
-            {
-                if (tp.Request.model == models[3])
-                {
-                    if (tp.Request.ratio != ratios[^1] && tp.Request.ratio != ratios[^2])
-                    {
-                        return (false, $"{tp.Request.model} supports only  {ratios[^1]} & {ratios[^2]} ratios");
-                    }
-                }
-            }*/
-
             return (true, "");
         }
 
@@ -399,7 +388,7 @@ namespace FalAiPlugin
         {
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
-                return new ItemPayload() { /*ImageSource = imgSource*/ };
+                return new ItemPayload() { ImageSource = imgSource };
             }
 
             return null;
@@ -605,15 +594,10 @@ namespace FalAiPlugin
 
         public List<string> FilePathsOnPayloads(object trackPayload, object itemPayload)
         {
-            /*if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
-                return new List<string>() { ip.ImageSource, ip.VideoSource, tp.ReferenceImage, tp.ReferenceVideo };
-            }*/
-
-            /*if (trackPayload is ImageTrackPayload tpi && itemPayload is ImageItemPayload ipi)
-            {
-                return tpi.ReferenceImages.Select(s => s.FilePath).Concat(ipi.ReferenceImages.Select(s => s.FilePath)).ToList();
-            }*/
+                return new List<string>() { ip.ImageSource, ip.AudioSource };
+            }
 
             return new List<string>();
         }
@@ -621,7 +605,7 @@ namespace FalAiPlugin
         public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
         {
             // No need to do anything
-            /*if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
                 for (int i = 0; i < originalPath.Count; i++)
                 {
@@ -630,42 +614,10 @@ namespace FalAiPlugin
                         ip.ImageSource = newPath[i];
                     }
 
-                    if (originalPath[i] == ip.VideoSource)
+                    if (originalPath[i] == ip.AudioSource)
                     {
-                        ip.VideoSource = newPath[i];
+                        ip.AudioSource = newPath[i];
                     }
-
-                    if (originalPath[i] == tp.ReferenceImage)
-                    {
-                        tp.ReferenceImage = newPath[i];
-                    }
-
-                    if (originalPath[i] == tp.ReferenceVideo)
-                    {
-                        tp.ReferenceVideo = newPath[i];
-                    }
-                }
-            }*/
-
-            if (trackPayload is ImageTrackPayload tpi && itemPayload is ImageItemPayload ipi)
-            {
-                for (int i = 0; i < originalPath.Count; i++)
-                {
-                    /*tpi.ReferenceImages.ToList().ForEach(s =>
-                    {
-                        if (s.FilePath == originalPath[i])
-                        {
-                            s.FilePath = newPath[i];
-                        }
-                    });*/
-
-                    /*ipi.ReferenceImages.ToList().ForEach(s =>
-                    {
-                        if (s.FilePath == originalPath[i])
-                        {
-                            s.FilePath = newPath[i];
-                        }
-                    });*/
                 }
             }
         }

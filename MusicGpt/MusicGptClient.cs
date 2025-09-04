@@ -275,7 +275,7 @@ namespace MusicGptPlugin
 
             var file = Path.GetFileName(audioUrl);
 
-            using var downloadClient = new HttpClient { BaseAddress = new Uri(audioUrl.Replace(file, "")) };
+            using var downloadClient = new HttpClient { BaseAddress = new Uri(audioUrl.Replace(file, "")), Timeout = Timeout.InfiniteTimeSpan };
 
             downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "file/*");
 

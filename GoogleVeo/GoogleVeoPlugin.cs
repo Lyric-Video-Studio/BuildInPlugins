@@ -142,7 +142,7 @@ namespace GoogleVeoPlugin
             {
                 var file = Path.GetFileName(status.VideoUrl);
 
-                using var downloadClient = new HttpClient { BaseAddress = new Uri(status.VideoUrl.Replace(file, "")) };
+                using var downloadClient = new HttpClient { BaseAddress = new Uri(status.VideoUrl.Replace(file, "")), Timeout = Timeout.InfiniteTimeSpan };
 
                 downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
 

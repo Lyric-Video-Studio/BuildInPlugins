@@ -9,7 +9,6 @@ namespace FalAiPlugin
         public string Prompt { get; set; }
         public string NegativePrompt { get; set; }
         public int Seed { get; set; }
-        //public ObservableCollection<ImagePayloadReference> ReferenceImages { get; set; } = new();
 
         [CustomName("Size")]
         public string SizeQwen { get; set; } = "landscape_16_9";
@@ -19,13 +18,6 @@ namespace FalAiPlugin
 
         public ImageTrackPayload()
         {
-            /*ImagePayloadReference.RemoveReference += (s, e) =>
-            {
-                if (s is ImagePayloadReference r)
-                {
-                    ReferenceImages.Remove(r);
-                }
-            };*/
         }
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
@@ -44,11 +36,5 @@ namespace FalAiPlugin
             }
             return true;
         }
-
-        /*[CustomAction("Add reference")]
-        public void AddReference()
-        {
-            ReferenceImages.Add(new ImagePayloadReference() { });
-        }*/
     }
 }
