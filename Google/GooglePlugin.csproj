@@ -13,10 +13,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <BaseOutputPath>..\..\LyricVideoStudio.Desktop\bin\Debug\net9.0-windows10.0.19041.0\win-x64\plugins</BaseOutputPath>
+    <BaseOutputPath>..\..\LyricVideoStudio.Desktop\bin\x64\Debug\net9.0-windows10.0.19041.0\win-x64\plugins</BaseOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Mscc.GenerativeAI" Version="2.8.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SkiaSharp" Version="3.119.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
