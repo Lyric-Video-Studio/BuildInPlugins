@@ -22,7 +22,10 @@ namespace RunwayMlPlugin
         {
             try
             {
-                AccessToken = SecureStorageWrapper.Get(accessTokenKey);
+                SecureStorageWrapper.Get(accessTokenKey).ContinueWith(t =>
+                {
+                    AccessToken = t.Result;
+                });
             }
             catch (Exception)
             {
