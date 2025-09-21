@@ -29,6 +29,8 @@ namespace FalAiPlugin
         [Description("Frames per second of the generated video. Must be between 4 to 60")]
         public int FramesPerSecond { get; set; } = 16;
 
+        public bool GenerateAudio { get; set; }
+
         public string Style { get; set; }
         public string CameraMovement { get; set; }
 
@@ -36,6 +38,11 @@ namespace FalAiPlugin
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (propertyName == nameof(GenerateAudio))
+                {
+                    return Model.StartsWith("veo");
+                }
+
                 if (propertyName == nameof(Style) || propertyName == nameof(CameraMovement))
                 {
                     return Model.StartsWith("pixverse");
@@ -85,16 +92,30 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(ResolutionLtx))
                 {
-                    return tp.Model.StartsWith("ltx");
+                    return tp.Model.StartsWith("ltx") || tp.Model.StartsWith("lucy-edit");
                 }
 
-                if (tp.Model.StartsWith("ltx"))
+                if (tp.Model.StartsWith("ltx") || tp.Model.StartsWith("lucy-edit"))
                 {
                     switch (propertyName)
                     {
                         case nameof(ResolutionMinimax):
                         case nameof(Resolution):
                             return false;
+                    }
+                }
+
+                if (tp.Model.StartsWith("lucy-edit"))
+                {
+                    switch (propertyName)
+                    {
+                        case nameof(AspectRatio):
+                        case nameof(NegativePrompt):
+                        case nameof(Seed):
+                            return false;
+
+                        default:
+                            break;
                     }
                 }
 

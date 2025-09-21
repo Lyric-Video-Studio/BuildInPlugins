@@ -32,11 +32,10 @@ namespace FalAiPlugin
 
     public class VideoRequest : Request
     {
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public bool generate_audio { get; set; } = true;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? generate_audio { get; set; }
 
         public string resolution { get; set; }
-        public string aspect_ratio { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string image_url { get; set; }
@@ -51,6 +50,9 @@ namespace FalAiPlugin
         public string audio_url { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string video_url { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string style { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -58,6 +60,9 @@ namespace FalAiPlugin
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string duration { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? sync_mode { get; set; }
     }
 
     public class AudioRequest
@@ -80,7 +85,7 @@ namespace FalAiPlugin
         public string prompt { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull | JsonIgnoreCondition.WhenWritingDefault)]
-        public string negative_prompt { get; set; } = "";
+        public string negative_prompt { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string image_size { get; set; }
@@ -88,7 +93,8 @@ namespace FalAiPlugin
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string aspect_ratio { get; set; }
 
-        public int seed { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? seed { get; set; }
     }
 
     public class RequestResponse
@@ -108,7 +114,16 @@ namespace FalAiPlugin
                 httpClient.DefaultRequestHeaders.Remove("accept");
 
                 // It's best to keep these here: use can change these from item settings
-                httpClient.BaseAddress = new Uri(connectionSettings.Url);
+                var baseUrl = connectionSettings.Url;
+
+                if (model.Contains("lucy-edit"))
+                {
+                    // Need to prop out the fal-ai
+                    baseUrl = baseUrl.Replace("fal-ai", "decart");
+                    request.sync_mode = false; // Set the sync mode to false, we like to get the response as cdn link
+                }
+
+                httpClient.BaseAddress = new Uri(baseUrl);
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Key {connectionSettings.AccessToken}");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
@@ -327,8 +342,9 @@ namespace FalAiPlugin
             }
 
             var file = Path.GetFileName(videoUrl);
+            var downloadBase = new Uri(videoUrl.Replace(file, ""));
 
-            var downloadClient = new HttpClient { BaseAddress = new Uri(videoUrl.Replace(file, "")), Timeout = Timeout.InfiniteTimeSpan };
+            using var downloadClient = new HttpClient { BaseAddress = downloadBase, Timeout = Timeout.InfiniteTimeSpan };
 
             if (isActuallyImage)
             {

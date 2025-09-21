@@ -1,6 +1,5 @@
 ﻿using PluginBase;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 
 namespace FalAiPlugin
 {
@@ -28,16 +27,52 @@ namespace FalAiPlugin
         [CustomName("Duration")]
         public string DurationPixverse { get; set; } = "5";
 
+        [Description("Duration of the video in seconds")]
+        [CustomName("Duration")]
+        public string DurationVeo { get; set; } = "4s";
+
         [EnableFileDrop]
         public string ImageSource { get; set; }
 
         [EnableFileDrop]
         public string AudioSource { get; set; }
 
+        [EnableFileDrop]
+        public string VideoSource
+        {
+            get; set;
+        }
+
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (propertyName == nameof(DurationVeo))
+                {
+                    return tp.Model.StartsWith("veo");
+                }
+
+                if (tp.Model.StartsWith("lucy-edit"))
+                {
+                    switch (propertyName)
+                    {
+                        case nameof(NegativePrompt):
+                        case nameof(Seed):
+                        case nameof(Duration):
+                        case nameof(DurationMinimax):
+                        case nameof(DurationPixverse):
+                            return false;
+
+                        default:
+                            break;
+                    }
+                }
+
+                if (propertyName == nameof(VideoSource))
+                {
+                    return tp.Model.StartsWith("lucy-edit");
+                }
+
                 if (propertyName == nameof(DurationPixverse))
                 {
                     return tp.Model.StartsWith("pixverse");

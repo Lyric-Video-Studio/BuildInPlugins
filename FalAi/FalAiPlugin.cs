@@ -43,7 +43,7 @@ namespace FalAiPlugin
                 var reg = new VideoRequest();
                 reg.prompt = newIp.Prompt + " " + reg.prompt;
                 reg.negative_prompt = (newIp.NegativePrompt + " " + reg.negative_prompt).Trim();
-                reg.aspect_ratio = newTp.AspectRatio;
+                //reg.aspect_ratio = newTp.AspectRatio;
                 reg.resolution = newTp.Resolution;
 
                 if (newTp.Model.StartsWith("wan"))
@@ -93,11 +93,18 @@ namespace FalAiPlugin
                 if (newTp.Model.StartsWith("veo"))
                 {
                     reg.duration = newIp.Duration;
+                    reg.generate_audio = newTp.GenerateAudio;
                 }
 
-                if (newTp.Model.StartsWith("ltx"))
+                if (newTp.Model.StartsWith("ltx") || newTp.Model.StartsWith("lucy-edit"))
                 {
                     reg.resolution = newTp.ResolutionLtx;
+                }
+
+                if (newTp.Model.StartsWith("lucy-edit"))
+                {
+                    reg.seed = null;
+                    reg.negative_prompt = null;
                 }
 
                 tempRes1 = await UploadSource(newIp.AudioSource);
@@ -111,11 +118,23 @@ namespace FalAiPlugin
                     reg.audio_url = tempRes1.VideoFile;
                 }
 
+                tempRes1 = await UploadSource(newIp.VideoSource);
+
+                if (tempRes1.Success)
+                {
+                    reg.video_url = tempRes1.VideoFile;
+                }
+
                 if (newTp.Model.StartsWith("pixverse"))
                 {
                     reg.style = newTp.Style;
                     reg.camera_movement = newTp.CameraMovement;
                     reg.duration = newIp.DurationPixverse;
+                }
+
+                if (newTp.Model.StartsWith("veo"))
+                {
+                    reg.duration = newIp.DurationVeo;
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
@@ -245,7 +264,8 @@ namespace FalAiPlugin
                             "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
                             "ltxv-13b-098-distilled/image-to-video",
-                            "pixverse/v5/image-to-video", "pixverse/v5/text-to-video"];
+                            "pixverse/v5/image-to-video", "pixverse/v5/text-to-video", "" +
+                            "lucy-edit/pro"];
 
                     case nameof(TrackPayload.AspectRatio):
                         return ["16:9", "9:16", "1:1"];
@@ -270,6 +290,9 @@ namespace FalAiPlugin
 
                     case nameof(ItemPayload.DurationPixverse):
                         return ["5", "8"];
+
+                    case nameof(ItemPayload.DurationVeo):
+                        return ["4s", "6s", "8s"];
 
                     case nameof(TrackPayload.Style):
                         return ["anime", "3d_animation", "clay", "comic", "cyberpunk"];
@@ -626,7 +649,7 @@ namespace FalAiPlugin
         {
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
-                return new ItemPayload() { };
+                return new ItemPayload() { VideoSource = videoSource };
             }
             return new ImageItemPayload();
         }
