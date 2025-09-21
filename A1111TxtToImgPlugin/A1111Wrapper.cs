@@ -11,7 +11,7 @@ namespace A1111TxtToImgPlugin
         private static Process testA111Process;
         private Client client;
 
-        public void StartA1111(ConnectionSettings settings)
+        public async Task StartA1111Async(ConnectionSettings settings)
         {
             if (testA111Process != null && !testA111Process.HasExited)
             {
@@ -22,7 +22,7 @@ namespace A1111TxtToImgPlugin
 
             if (path.EndsWith(".bat"))
             {
-                var content = JsonHelper.ReadAllText(path);
+                var content = await JsonHelper.ReadAllText(path);
                 path = path.Replace(".bat", "modified.bat");
 
                 var split = content.Split('\n');
@@ -111,7 +111,7 @@ namespace A1111TxtToImgPlugin
             {
                 try
                 {
-                    StartA1111(settings);
+                    await StartA1111Async(settings);
                     await Task.Delay(10000);
                 }
                 catch (Exception)
