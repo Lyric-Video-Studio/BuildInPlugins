@@ -6,7 +6,7 @@ namespace GooglePlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class GooglePlugin : IImagePlugin
+    public class GooglePlugin : IImagePlugin, ICancellableGeneration
     {
         public const string PluginName = "GooglePluginBuildIn";
         public string UniqueName { get => PluginName; }
@@ -47,7 +47,7 @@ namespace GooglePlugin
                 if (string.IsNullOrEmpty(effectiveImage))
                 {
                     var request = new GenerateContentRequest(prompt);
-                    var response = await _generativeModel.GenerateContent(request);
+                    var response = await _generativeModel.GenerateContent(request, cancellationToken: ct);
                     var imageData = ExtractImageDataBase64(response);
                     return new ImageResponse() { Success = !string.IsNullOrEmpty(imageData), Image = imageData, ImageFormat = ".png" };
                 }
@@ -66,7 +66,8 @@ namespace GooglePlugin
                         new TextData { Text = prompt },
                         new InlineData { MimeType = mimeType, Data = Convert.ToBase64String(imageBytes) }
                     };
-                    var response = await _generativeModel.GenerateContent(parts);
+
+                    var response = await _generativeModel.GenerateContent(parts, cancellationToken: ct);
                     var imageData = ExtractImageDataBase64(response);
                     return new ImageResponse() { Success = !string.IsNullOrEmpty(imageData), Image = imageData, ImageFormat = ".png" };
                 }
@@ -363,6 +364,13 @@ namespace GooglePlugin
                     }
                 }
             }
+        }
+
+        private CancellationToken ct;
+
+        public void SetCancallationToken(CancellationToken cancellationToken)
+        {
+            ct = cancellationToken;
         }
     }
 
