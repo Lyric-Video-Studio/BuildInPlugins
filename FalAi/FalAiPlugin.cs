@@ -258,7 +258,7 @@ namespace FalAiPlugin
                 switch (propertyName)
                 {
                     case nameof(TrackPayload.Model):
-                        return ["veo3", "veo3/fast",
+                        return ["veo3", "veo3/fast", "veo3/image-to-video", "veo3/image-to-video", "veo3/fast/image-to-video",
                             "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
                                 "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video",
                             "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
