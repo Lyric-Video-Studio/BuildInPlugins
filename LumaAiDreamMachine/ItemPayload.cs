@@ -15,6 +15,7 @@ namespace LumaAiDreamMachinePlugin
         public string Prompt { get => prompt; set => prompt = value; }
 
         [Description("Used for modify video")]
+        [EnableFileDrop]
         public string VideoFile { get; set; }
 
         [Description("Optional, but recommended for modify video. You can copy frame path from video item with right click context menu")]
