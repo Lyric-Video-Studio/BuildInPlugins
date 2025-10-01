@@ -26,8 +26,8 @@ namespace FalAiPlugin
     {
         public string content_type { get; set; }
         public string url { get; set; }
-        public int width { get; set; }
-        public int height { get; set; }
+        public int? width { get; set; }
+        public int? height { get; set; }
     }
 
     public class VideoRequest : Request
@@ -95,6 +95,9 @@ namespace FalAiPlugin
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public int? seed { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string> image_urls { get; set; }
     }
 
     public class RequestResponse

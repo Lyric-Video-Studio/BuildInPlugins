@@ -1,4 +1,5 @@
 ﻿using PluginBase;
+using System.Linq;
 using System.Text.Json.Nodes;
 
 namespace FalAiPlugin
@@ -206,6 +207,21 @@ namespace FalAiPlugin
                         break;
                 }
 
+                foreach (var img in newTp.ImageSources.Concat(newIp.ImageSources))
+                {
+                    if (imageReg.image_urls == null)
+                    {
+                        imageReg.image_urls = new List<string>();
+                    }
+
+                    var res = await UploadSource(img.FileSource);
+
+                    if (!string.IsNullOrEmpty(res.VideoFile))
+                    {
+                        imageReg.image_urls.Add(res.VideoFile);
+                    }
+                }
+
                 return await new Client().GetImage(imageReg, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback, textualProgressAction, newTp.Model);
             }
             return new ImageResponse { Success = false, ErrorMsg = "Unknown error" };
@@ -262,6 +278,7 @@ namespace FalAiPlugin
                             "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
                                 "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video",
                             "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
+                            "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
                             "ltxv-13b-098-distilled/image-to-video",
                             "pixverse/v5/image-to-video", "pixverse/v5/text-to-video", "" +
@@ -320,7 +337,7 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(ImageTrackPayload.Model))
                 {
-                    return ["qwen-image", "imagen4/preview", "wan/v2.2-a14b/text-to-image", "hidream-i1-full"];
+                    return ["qwen-image", "imagen4/preview", "wan/v2.2-a14b/text-to-image", "hidream-i1-full", "wan-25-preview/text-to-image", "wan-25-preview/image-to-image"];
                 }
             }
             else
