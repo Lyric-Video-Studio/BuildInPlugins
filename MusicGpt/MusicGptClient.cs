@@ -329,6 +329,8 @@ namespace MusicGptPlugin
 
                         altFile = finalPath;
                     }
+
+                    textualProgress.Invoke("");
                 }
 
                 return new AudioResponse() { Success = true, AudioFormat = Path.GetExtension(file), AudioFile = audio1, AlternativeAudioFile = altFile };
