@@ -37,7 +37,7 @@ namespace FalAiPlugin
             {
                 if (propertyName == nameof(ImageSources))
                 {
-                    return ip.Model?.EndsWith("image-to-image") ?? false;
+                    return (ip.Model?.EndsWith("image-to-image") ?? false) || (ip.Model?.Contains("edit") ?? false);
                 }
             }
             return true;

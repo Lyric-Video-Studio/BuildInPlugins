@@ -41,11 +41,16 @@ namespace FalAiPlugin
             {
                 if (propertyName == nameof(ImageSources))
                 {
-                    return ip.Model?.EndsWith("image-to-image") ?? false;
+                    return (ip.Model?.EndsWith("image-to-image") ?? false) || (ip.Model?.Contains("edit") ?? false);
                 }
+
                 if (propertyName == nameof(SizeQwen))
                 {
-                    return ip.Model == "qwen-image" || ip.Model == "wan/v2.2-a14b/text-to-image" || ip.Model == "hidream-i1-full";
+                    if (ip.Model.Contains("edit") || ip.Model.Contains("image-to-image"))
+                    {
+                        return false;
+                    }
+                    return ip.Model == "qwen-image" || ip.Model == "wan/v2.2-a14b/text-to-image" || ip.Model == "hidream-i1-full" || ip.Model.Contains("seedream");
                 }
 
                 if (propertyName == nameof(SizeImagen4))

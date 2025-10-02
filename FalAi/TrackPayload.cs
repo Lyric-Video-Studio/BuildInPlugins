@@ -34,10 +34,30 @@ namespace FalAiPlugin
         public string Style { get; set; }
         public string CameraMovement { get; set; }
 
+        [EnableFileDrop]
+        public string ImageSource { get; set; }
+
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (tp.Model.Contains("upscale"))
+                {
+                    // In upscale, there's really not a lot of things to edit
+                    return propertyName == nameof(Model);
+                }
+
+                if (tp.Model.Contains("omnihuman"))
+                {
+                    // THis also has very few inputs
+                    return propertyName == nameof(Model) || propertyName == nameof(ImageSource);
+                }
+
+                if (propertyName == nameof(ImageSource))
+                {
+                    return false;
+                }
+
                 if (propertyName == nameof(GenerateAudio))
                 {
                     return Model.StartsWith("veo");
@@ -48,7 +68,7 @@ namespace FalAiPlugin
                     return Model.StartsWith("pixverse");
                 }
 
-                if (tp.Model.StartsWith("wan"))
+                if (tp.Model.StartsWith("wan") && !tp.Model.StartsWith("wan-25"))
                 {
                     switch (propertyName)
                     {

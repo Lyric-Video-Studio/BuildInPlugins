@@ -69,7 +69,8 @@ namespace FalAiPlugin
                     reg.seed = ipOld.Seed;
                 }
 
-                var tempRes1 = await UploadSource(newIp.ImageSource);
+                var imageInput = string.IsNullOrEmpty(newIp.ImageSource) ? newTp.ImageSource : newIp.ImageSource;
+                var tempRes1 = await UploadSource(imageInput);
 
                 if (!tempRes1.Success)
                 {
@@ -136,6 +137,11 @@ namespace FalAiPlugin
                 if (newTp.Model.StartsWith("veo"))
                 {
                     reg.duration = newIp.DurationVeo;
+                }
+
+                if (newTp.Model.Contains("upscale"))
+                {
+                    reg.upscale_factor = newIp.UpscaleFactor;
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
@@ -277,12 +283,15 @@ namespace FalAiPlugin
                         return ["veo3", "veo3/fast", "veo3/image-to-video", "veo3/fast/image-to-video",
                             "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
                                 "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video",
+                            "wan-25-preview/text-to-video", "wan-25-preview/image-to-video",
                             "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
                             "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
                             "ltxv-13b-098-distilled/image-to-video",
                             "pixverse/v5/image-to-video", "pixverse/v5/text-to-video", "" +
-                            "lucy-edit/pro"];
+                            "lucy-edit/pro",
+                            "bytedance/omnihuman/v1.5",
+                            "seedvr/upscale/video"];
 
                     case nameof(TrackPayload.AspectRatio):
                         return ["16:9", "9:16", "1:1"];
@@ -337,7 +346,9 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(ImageTrackPayload.Model))
                 {
-                    return ["qwen-image", "imagen4/preview", "wan/v2.2-a14b/text-to-image", "hidream-i1-full", "wan-25-preview/text-to-image", "wan-25-preview/image-to-image"];
+                    return ["qwen-image", "qwen-image-edit-plus", "imagen4/preview", "wan/v2.2-a14b/text-to-image", "hidream-i1-full",
+                        "wan-25-preview/text-to-image", "wan-25-preview/image-to-image",
+                        "bytedance/seedream/v4/text-to-image", "bytedance/seedream/v4/edit"];
                 }
             }
             else

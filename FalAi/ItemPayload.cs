@@ -37,6 +37,8 @@ namespace FalAiPlugin
         [EnableFileDrop]
         public string AudioSource { get; set; }
 
+        public int UpscaleFactor { get; set; } = 2;
+
         [EnableFileDrop]
         public string VideoSource
         {
@@ -47,6 +49,23 @@ namespace FalAiPlugin
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (tp.Model.Contains("upscale"))
+                {
+                    // In upscale, there's really not a lot of things to edit
+                    return propertyName == nameof(VideoSource) || propertyName == nameof(UpscaleFactor) || propertyName == nameof(PollingId);
+                }
+
+                if (propertyName == nameof(UpscaleFactor))
+                {
+                    return false;
+                }
+
+                if (tp.Model.Contains("omnihuman"))
+                {
+                    // THis also has very few inputs
+                    return propertyName == nameof(ImageSource) || propertyName == nameof(AudioSource) || propertyName == nameof(PollingId);
+                }
+
                 if (propertyName == nameof(DurationVeo))
                 {
                     return tp.Model.StartsWith("veo");
@@ -70,7 +89,7 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(VideoSource))
                 {
-                    return tp.Model.StartsWith("lucy-edit");
+                    return tp.Model.StartsWith("lucy-edit") || tp.Model.Contains("upscale");
                 }
 
                 if (propertyName == nameof(DurationPixverse))
@@ -85,7 +104,7 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(Duration))
                 {
-                    return !tp.Model.StartsWith("veo3") && !tp.Model.StartsWith("minimax") && !tp.Model.StartsWith("wan") && !tp.Model.StartsWith("ltx") && !tp.Model.StartsWith("pixverse");
+                    return !tp.Model.StartsWith("veo3") && !tp.Model.StartsWith("minimax") && !tp.Model.StartsWith("wan/") && !tp.Model.StartsWith("ltx") && !tp.Model.StartsWith("pixverse");
                 }
 
                 if (propertyName == nameof(DurationMinimax))

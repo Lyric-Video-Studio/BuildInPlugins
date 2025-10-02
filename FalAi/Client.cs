@@ -33,6 +33,9 @@ namespace FalAiPlugin
     public class VideoRequest : Request
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? upscale_factor { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? generate_audio { get; set; }
 
         public string resolution { get; set; }
