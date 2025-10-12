@@ -1,5 +1,6 @@
 ﻿using PluginBase;
 using System.ComponentModel;
+using System.Reflection.Metadata.Ecma335;
 
 namespace FalAiPlugin
 {
@@ -37,10 +38,28 @@ namespace FalAiPlugin
         [EnableFileDrop]
         public string ImageSource { get; set; }
 
+        [CustomName("Aspect ratio")]
+        public string AspectRatioSora { get; internal set; } = "16:9";
+
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (propertyName == nameof(AspectRatioSora))
+                {
+                    return tp.Model.Contains("sora", StringComparison.CurrentCultureIgnoreCase);
+                }
+
+                if (propertyName == nameof(AspectRatio) && tp.Model.Contains("sora", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    return false;
+                }
+
+                if (tp.Model.Contains("sora", StringComparison.CurrentCultureIgnoreCase) && (propertyName == nameof(NegativePrompt)))
+                {
+                    return false;
+                }
+
                 if (tp.Model.Contains("upscale"))
                 {
                     // In upscale, there's really not a lot of things to edit

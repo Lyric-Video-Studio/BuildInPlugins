@@ -65,6 +65,9 @@ namespace FalAiPlugin
         public string duration { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? durationSora { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? sync_mode { get; set; }
     }
 
@@ -151,7 +154,7 @@ namespace FalAiPlugin
                     return new VideoResponse() { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
                 }
 
-                var stringContent = new StringContent(serialized);
+                var stringContent = new StringContent(serialized.Replace("durationSora", "duration"));
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
                 var resp = await httpClient.PostAsync(model, stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();

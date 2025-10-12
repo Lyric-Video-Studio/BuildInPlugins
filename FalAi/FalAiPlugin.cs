@@ -139,13 +139,26 @@ namespace FalAiPlugin
                     reg.duration = newIp.DurationVeo;
                 }
 
-                if (newTp.Model.Contains("upscale"))
+                var model = newTp.Model;
+
+                if (newTp.Model.Contains("sora", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    reg.duration = null;
+                    reg.durationSora = newIp.DurationSora;
+                    reg.aspect_ratio = newTp.AspectRatioSora;
+                    if (reg.resolution == "1080p")
+                    {
+                        model += "/pro";
+                    }
+                }
+
+                if (model.Contains("upscale"))
                 {
                     reg.upscale_factor = newIp.UpscaleFactor;
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
-                    textualProgressAction, newTp.Model);
+                    textualProgressAction, model);
                 return videoResp;
             }
             else
@@ -280,7 +293,8 @@ namespace FalAiPlugin
                 switch (propertyName)
                 {
                     case nameof(TrackPayload.Model):
-                        return ["veo3", "veo3/fast", "veo3/image-to-video", "veo3/fast/image-to-video",
+                        return ["sora-2/text-to-video", "sora-2/image-to-video",
+                            "veo3", "veo3/fast", "veo3/image-to-video", "veo3/fast/image-to-video",
                             "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
                                 "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video",
                             "wan-25-preview/text-to-video", "wan-25-preview/image-to-video",
@@ -295,6 +309,9 @@ namespace FalAiPlugin
 
                     case nameof(TrackPayload.AspectRatio):
                         return ["16:9", "9:16", "1:1"];
+
+                    case nameof(TrackPayload.AspectRatioSora):
+                        return ["16:9", "9:16"];
 
                     case nameof(TrackPayload.Resolution):
                         return ["1080p", "720p"];
@@ -319,6 +336,9 @@ namespace FalAiPlugin
 
                     case nameof(ItemPayload.DurationVeo):
                         return ["4s", "6s", "8s"];
+
+                    case nameof(ItemPayload.DurationSora):
+                        return ["4", "8", "12"];
 
                     case nameof(TrackPayload.Style):
                         return ["anime", "3d_animation", "clay", "comic", "cyberpunk"];

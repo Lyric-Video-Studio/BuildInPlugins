@@ -31,6 +31,10 @@ namespace FalAiPlugin
         [CustomName("Duration")]
         public string DurationVeo { get; set; } = "4s";
 
+        [Description("Duration of the video in seconds")]
+        [CustomName("Duration")]
+        public int DurationSora { get; set; } = 4;
+
         [EnableFileDrop]
         public string ImageSource { get; set; }
 
@@ -49,6 +53,16 @@ namespace FalAiPlugin
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (propertyName == nameof(DurationSora))
+                {
+                    return tp.Model.Contains("sora", StringComparison.CurrentCultureIgnoreCase);
+                }
+
+                if (tp.Model.Contains("sora", StringComparison.CurrentCultureIgnoreCase) && (propertyName == nameof(Duration) || propertyName == nameof(NegativePrompt)))
+                {
+                    return false;
+                }
+
                 if (tp.Model.Contains("upscale"))
                 {
                     // In upscale, there's really not a lot of things to edit
