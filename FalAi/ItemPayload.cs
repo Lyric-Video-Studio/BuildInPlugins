@@ -1,4 +1,5 @@
 ﻿using PluginBase;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 
 namespace FalAiPlugin
@@ -44,15 +45,49 @@ namespace FalAiPlugin
         public int UpscaleFactor { get; set; } = 2;
 
         [EnableFileDrop]
+        public string FirstFrame { get; set; }
+
+        [EnableFileDrop]
+        public string LastFrame { get; set; }
+
+        [EnableFileDrop]
         public string VideoSource
         {
             get; set;
+        }
+
+        public ObservableCollection<ImageSourceItem> ImageSources { get; set; } = new();
+
+        public ItemPayload()
+        {
+            ImageSourceItem.RemoveReference += (s, e) =>
+            {
+                if (s is ImageSourceItem r)
+                {
+                    ImageSources.Remove(r);
+                }
+            };
         }
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (propertyName == nameof(FirstFrame))
+                {
+                    return tp.Model.Contains("first", StringComparison.CurrentCultureIgnoreCase);
+                }
+
+                if (propertyName == nameof(FirstFrame))
+                {
+                    return tp.Model.Contains("last", StringComparison.CurrentCultureIgnoreCase);
+                }
+
+                if (propertyName == nameof(ImageSources))
+                {
+                    return tp.Model.Contains("veo3.1/reference-to-video", StringComparison.CurrentCultureIgnoreCase);
+                }
+
                 if (propertyName == nameof(DurationSora))
                 {
                     return tp.Model.Contains("sora", StringComparison.CurrentCultureIgnoreCase);

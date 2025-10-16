@@ -12,13 +12,13 @@ namespace FalAiPlugin
         public string NegativePrompt { get; set; }
         public int Seed { get; set; }
 
-        public ObservableCollection<ImageSource> ImageSources { get; set; } = new();
+        public ObservableCollection<ImageSourceItem> ImageSources { get; set; } = new();
 
         public ImageItemPayload()
         {
-            ImageSource.RemoveReference += (s, e) =>
+            ImageSourceItem.RemoveReference += (s, e) =>
             {
-                if (s is ImageSource r)
+                if (s is ImageSourceItem r)
                 {
                     ImageSources.Remove(r);
                 }
@@ -28,7 +28,7 @@ namespace FalAiPlugin
         [CustomAction("Add reference")]
         public void AddReference()
         {
-            ImageSources.Add(new ImageSource());
+            ImageSources.Add(new ImageSourceItem());
         }
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)

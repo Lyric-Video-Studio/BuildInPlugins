@@ -157,6 +157,35 @@ namespace FalAiPlugin
                     reg.upscale_factor = newIp.UpscaleFactor;
                 }
 
+                foreach (var img in newTp.ImageSources.Concat(newIp.ImageSources))
+                {
+                    if (reg.image_urls == null)
+                    {
+                        reg.image_urls = new List<string>();
+                    }
+
+                    var res = await UploadSource(img.FileSource);
+
+                    if (!string.IsNullOrEmpty(res.VideoFile))
+                    {
+                        reg.image_urls.Add(res.VideoFile);
+                    }
+                }
+
+                tempRes1 = await UploadSource(newIp.FirstFrame);
+
+                if (tempRes1.Success)
+                {
+                    reg.first_frame = tempRes1.VideoFile;
+                }
+
+                tempRes1 = await UploadSource(newIp.LastFrame);
+
+                if (tempRes1.Success)
+                {
+                    reg.last_frame = tempRes1.VideoFile;
+                }
+
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
                     textualProgressAction, model);
                 return videoResp;
@@ -294,6 +323,7 @@ namespace FalAiPlugin
                 {
                     case nameof(TrackPayload.Model):
                         return ["sora-2/text-to-video", "sora-2/image-to-video",
+                            "veo3.1", "veo3.1/fast", "veo3.1/image-to-video", "veo3.1/fast/image-to-video", "veo3.1/reference-to-video", "veo3.1/first-last-frame-to-video",
                             "veo3", "veo3/fast", "veo3/image-to-video", "veo3/fast/image-to-video",
                             "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
                                 "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video",

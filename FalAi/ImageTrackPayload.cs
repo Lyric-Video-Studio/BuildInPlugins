@@ -16,13 +16,13 @@ namespace FalAiPlugin
         [CustomName("Size")]
         public string SizeImagen4 { get; set; } = "16:9";
 
-        public ObservableCollection<ImageSource> ImageSources { get; set; } = new();
+        public ObservableCollection<ImageSourceItem> ImageSources { get; set; } = new();
 
         public ImageTrackPayload()
         {
-            ImageSource.RemoveReference += (s, e) =>
+            ImageSourceItem.RemoveReference += (s, e) =>
             {
-                if (s is ImageSource r)
+                if (s is ImageSourceItem r)
                 {
                     ImageSources.Remove(r);
                 }
@@ -32,7 +32,7 @@ namespace FalAiPlugin
         [CustomAction("Add reference")]
         public void AddReference()
         {
-            ImageSources.Add(new ImageSource());
+            ImageSources.Add(new ImageSourceItem());
         }
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
@@ -62,7 +62,7 @@ namespace FalAiPlugin
         }
     }
 
-    public class ImageSource
+    public class ImageSourceItem
     {
         public static event EventHandler RemoveReference;
 
