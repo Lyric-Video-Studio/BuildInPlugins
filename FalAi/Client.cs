@@ -33,10 +33,10 @@ namespace FalAiPlugin
     public class VideoRequest : Request
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string first_frame;
+        public string first_frame_url { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string last_frame;
+        public string last_frame_url { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public int? upscale_factor { get; set; }

@@ -42,24 +42,15 @@ namespace FalAiPlugin
         [CustomName("Aspect ratio")]
         public string AspectRatioSora { get; internal set; } = "16:9";
 
-        public ObservableCollection<ImageSourceItem> ImageSources { get; set; } = new();
+        public ImageSourceContainer ImageSourceCont { get; set; } = new();
 
-        public TrackPayload()
-        {
-            ImageSourceItem.RemoveReference += (s, e) =>
-            {
-                if (s is ImageSourceItem r)
-                {
-                    ImageSources.Remove(r);
-                }
-            };
-        }
+
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             if (trackPayload is TrackPayload tp)
             {
-                if (propertyName == nameof(ImageSources))
+                if (propertyName == nameof(ImageSourceCont))
                 {
                     return tp.Model.Contains("veo3.1/reference-to-video", StringComparison.CurrentCultureIgnoreCase);
                 }

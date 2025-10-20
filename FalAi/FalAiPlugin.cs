@@ -157,7 +157,7 @@ namespace FalAiPlugin
                     reg.upscale_factor = newIp.UpscaleFactor;
                 }
 
-                foreach (var img in newTp.ImageSources.Concat(newIp.ImageSources))
+                foreach (var img in newTp.ImageSourceCont.ImageSources.Concat(newIp.ImageSourceCont.ImageSources))
                 {
                     if (reg.image_urls == null)
                     {
@@ -176,14 +176,14 @@ namespace FalAiPlugin
 
                 if (tempRes1.Success)
                 {
-                    reg.first_frame = tempRes1.VideoFile;
+                    reg.first_frame_url = tempRes1.VideoFile;
                 }
 
                 tempRes1 = await UploadSource(newIp.LastFrame);
 
                 if (tempRes1.Success)
                 {
-                    reg.last_frame = tempRes1.VideoFile;
+                    reg.last_frame_url = tempRes1.VideoFile;
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
@@ -255,7 +255,7 @@ namespace FalAiPlugin
                         break;
                 }
 
-                foreach (var img in newTp.ImageSources.Concat(newIp.ImageSources))
+                foreach (var img in newTp.ImageSource.ImageSources.Concat(newIp.ImageSources.ImageSources))
                 {
                     if (imageReg.image_urls == null)
                     {
@@ -365,7 +365,7 @@ namespace FalAiPlugin
                         return ["5", "8"];
 
                     case nameof(ItemPayload.DurationVeo):
-                        return ["4s", "6s", "8s"];
+                        return ["8s"];
 
                     case nameof(ItemPayload.DurationSora):
                         return ["4", "8", "12"];

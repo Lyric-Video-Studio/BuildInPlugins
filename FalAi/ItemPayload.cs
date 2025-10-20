@@ -30,7 +30,7 @@ namespace FalAiPlugin
 
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
-        public string DurationVeo { get; set; } = "4s";
+        public string DurationVeo { get; set; } = "8s";
 
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
@@ -56,17 +56,10 @@ namespace FalAiPlugin
             get; set;
         }
 
-        public ObservableCollection<ImageSourceItem> ImageSources { get; set; } = new();
+        public ImageSourceContainer ImageSourceCont { get; set; } = new();
 
         public ItemPayload()
         {
-            ImageSourceItem.RemoveReference += (s, e) =>
-            {
-                if (s is ImageSourceItem r)
-                {
-                    ImageSources.Remove(r);
-                }
-            };
         }
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
@@ -78,12 +71,12 @@ namespace FalAiPlugin
                     return tp.Model.Contains("first", StringComparison.CurrentCultureIgnoreCase);
                 }
 
-                if (propertyName == nameof(FirstFrame))
+                if (propertyName == nameof(LastFrame))
                 {
                     return tp.Model.Contains("last", StringComparison.CurrentCultureIgnoreCase);
                 }
 
-                if (propertyName == nameof(ImageSources))
+                if (propertyName == nameof(ImageSourceCont))
                 {
                     return tp.Model.Contains("veo3.1/reference-to-video", StringComparison.CurrentCultureIgnoreCase);
                 }
