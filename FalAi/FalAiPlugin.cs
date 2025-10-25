@@ -144,7 +144,7 @@ namespace FalAiPlugin
                 if (newTp.Model.Contains("sora", StringComparison.CurrentCultureIgnoreCase))
                 {
                     reg.duration = null;
-                    reg.durationSora = newIp.DurationSora;
+                    reg.durationInt = newIp.DurationSora;
                     reg.aspect_ratio = newTp.AspectRatioSora;
                     if (reg.resolution == "1080p")
                     {
@@ -184,6 +184,15 @@ namespace FalAiPlugin
                 if (tempRes1.Success)
                 {
                     reg.last_frame_url = tempRes1.VideoFile;
+                }
+
+                if (model.Contains("ltxv-2"))
+                {
+                    reg.durationInt = newIp.DurationLtx2; // Use int based duration
+                    reg.resolution = newTp.ResolutionLtx2;
+                    reg.frames_per_second = newTp.FramesPerSecondLtx2;
+                    reg.aspect_ratio = "16:9";
+                    reg.generate_audio = newTp.GenerateAudio;
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
@@ -331,7 +340,7 @@ namespace FalAiPlugin
                             "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
                             "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
-                            "ltxv-13b-098-distilled/image-to-video",
+                            "ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video", "ltxv-13b-098-distilled/image-to-video",
                             "pixverse/v5/image-to-video", "pixverse/v5/text-to-video", "" +
                             "lucy-edit/pro",
                             "bytedance/omnihuman/v1.5",
@@ -352,6 +361,12 @@ namespace FalAiPlugin
                     case nameof(TrackPayload.ResolutionLtx):
                         return ["720p", "480p"];
 
+                    case nameof(TrackPayload.ResolutionLtx2):
+                        return ["1080p", "1440p", "2160p"];
+
+                    case nameof(TrackPayload.FramesPerSecondLtx2):
+                        return ["25", "50"];
+
                     case nameof(TrackPayload.ResolutionWan):
                         return ["720p", "580p", "480p"];
 
@@ -366,6 +381,9 @@ namespace FalAiPlugin
 
                     case nameof(ItemPayload.DurationVeo):
                         return ["8s"];
+
+                    case nameof(ItemPayload.DurationLtx2):
+                        return ["6", "8", "10"];
 
                     case nameof(ItemPayload.DurationSora):
                         return ["4", "8", "12"];

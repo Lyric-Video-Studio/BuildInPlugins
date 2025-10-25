@@ -33,6 +33,10 @@ namespace FalAiPlugin
 
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
+        public int DurationLtx2 { get; set; } = 6;
+
+        [Description("Duration of the video in seconds")]
+        [CustomName("Duration")]
         public int DurationSora { get; set; } = 4;
 
         [EnableFileDrop]
@@ -65,6 +69,10 @@ namespace FalAiPlugin
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (tp.Model.Contains("ltxv-2") && (propertyName == nameof(NegativePrompt) || propertyName == nameof(Seed)))
+                {
+                    return false;
+                }
                 if (propertyName == nameof(FirstFrame))
                 {
                     return tp.Model.Contains("first", StringComparison.CurrentCultureIgnoreCase);
@@ -78,6 +86,11 @@ namespace FalAiPlugin
                 if (propertyName == nameof(ImageSourceCont))
                 {
                     return tp.Model.Contains("veo3.1/reference-to-video", StringComparison.CurrentCultureIgnoreCase);
+                }
+
+                if (propertyName == nameof(DurationLtx2))
+                {
+                    return tp.Model.Contains("ltxv-2", StringComparison.CurrentCultureIgnoreCase);
                 }
 
                 if (propertyName == nameof(DurationSora))
@@ -140,7 +153,7 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(ImageSource))
                 {
-                    return tp.Model.EndsWith("image-to-video") || tp.Model.EndsWith("speech-to-video");
+                    return tp.Model.Contains("image-to-video") || tp.Model.Contains("speech-to-video");
                 }
 
                 if (propertyName == nameof(Duration))

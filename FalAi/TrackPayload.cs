@@ -39,6 +39,9 @@ namespace FalAiPlugin
         [CustomName("Resolution")]
         public string ResolutionLtx { get; set; } = "720p";
 
+        [CustomName("Resolution")]
+        public string ResolutionLtx2 { get; set; } = "1080p";
+
         public string Resolution { get; set; } = "1080p";
 
         [Description("Number of frames to generate. Must be between 80 to 120")]
@@ -46,6 +49,9 @@ namespace FalAiPlugin
 
         [Description("Frames per second of the generated video. Must be between 4 to 60")]
         public int FramesPerSecond { get; set; } = 16;
+
+        [CustomName("FPS")]
+        public int FramesPerSecondLtx2 { get; set; } = 25;
 
         public bool GenerateAudio { get; set; }
 
@@ -64,6 +70,19 @@ namespace FalAiPlugin
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (propertyName == nameof(ResolutionLtx2) || propertyName == nameof(FramesPerSecondLtx2))
+                {
+                    return tp.Model.Contains("ltxv-2");
+                }
+
+                if(Model.StartsWith("ltxv-2"))
+                {
+                    if(propertyName == nameof(Seed) || propertyName == nameof(NegativePrompt) || propertyName == nameof(AspectRatio) || propertyName == nameof(Resolution) || propertyName == nameof(NumberOfFrames))
+                    {
+                        return false;
+                    }
+                }
+
                 if (propertyName == nameof(ImageSourceCont))
                 {
                     return tp.Model.Contains("veo3.1/reference-to-video", StringComparison.CurrentCultureIgnoreCase);
@@ -102,7 +121,7 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(GenerateAudio))
                 {
-                    return Model.StartsWith("veo");
+                    return Model.StartsWith("veo") || Model.StartsWith("ltxv-2");
                 }
 
                 if (propertyName == nameof(Style) || propertyName == nameof(CameraMovement))
@@ -131,7 +150,7 @@ namespace FalAiPlugin
 
                         case nameof(NumberOfFrames):
                         case nameof(FramesPerSecond):
-                            return tp.Model.StartsWith("ltxv");
+                            return tp.Model.StartsWith("ltxv") && !tp.Model.StartsWith("ltxv-2");
                     }
                 }
 
@@ -154,7 +173,7 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(ResolutionLtx))
                 {
-                    return tp.Model.StartsWith("ltx") || tp.Model.StartsWith("lucy-edit");
+                    return (tp.Model.StartsWith("ltx") && !tp.Model.StartsWith("ltxv-2")) || tp.Model.StartsWith("lucy-edit");
                 }
 
                 if (tp.Model.StartsWith("ltx") || tp.Model.StartsWith("lucy-edit"))
