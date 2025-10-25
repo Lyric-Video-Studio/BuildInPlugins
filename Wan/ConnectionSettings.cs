@@ -41,7 +41,6 @@ namespace WanPlugin
             if (!string.IsNullOrEmpty(AccessToken))
             {
                 SecureStorageWrapper.Set(accessTokenKey, AccessToken);
-                AccessToken = "";
             }
         }
     }

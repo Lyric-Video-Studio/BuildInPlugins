@@ -41,7 +41,6 @@ namespace RunwayMlPlugin
             if (!string.IsNullOrEmpty(AccessToken))
             {
                 SecureStorageWrapper.Set(accessTokenKey, AccessToken);
-                AccessToken = "";
             }
         }
     }

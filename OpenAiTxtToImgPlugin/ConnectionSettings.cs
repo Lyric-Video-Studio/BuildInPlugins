@@ -37,7 +37,6 @@ namespace OpenAiTxtToImgPlugin
             if (!string.IsNullOrEmpty(AccessToken))
             {
                 SecureStorageWrapper.Set(accessTokenKey, AccessToken);
-                AccessToken = "";
             }
         }
     }

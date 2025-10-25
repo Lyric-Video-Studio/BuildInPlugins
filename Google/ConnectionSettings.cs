@@ -36,7 +36,6 @@ namespace GooglePlugin
         public void OnSerializing()
         {
             SecureStorageWrapper.Set(accessTokenKey, AccessToken);
-            AccessToken = "";
         }
     }
 }
