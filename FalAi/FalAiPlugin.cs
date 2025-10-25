@@ -337,6 +337,7 @@ namespace FalAiPlugin
                             "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
                                 "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video",
                             "wan-25-preview/text-to-video", "wan-25-preview/image-to-video",
+                            "wan-alpha",
                             "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
                             "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",

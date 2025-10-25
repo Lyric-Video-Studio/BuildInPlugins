@@ -69,6 +69,12 @@ namespace FalAiPlugin
         {
             if (trackPayload is TrackPayload tp)
             {
+                // Hmm, this system is not really meant for this, but maybe it works:
+                if (tp.Model.StartsWith("wan-alpha") && !Prompt.Contains("The background of this video is transparent"))
+                {
+                    Prompt += "The background of this video is transparent";
+                }
+
                 if (tp.Model.Contains("ltxv-2") && (propertyName == nameof(NegativePrompt) || propertyName == nameof(Seed)))
                 {
                     return false;
@@ -158,7 +164,8 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(Duration))
                 {
-                    return !tp.Model.StartsWith("veo3") && !tp.Model.StartsWith("minimax") && !tp.Model.StartsWith("wan/") && !tp.Model.StartsWith("ltx") && !tp.Model.StartsWith("pixverse");
+                    return !tp.Model.StartsWith("veo3") && !tp.Model.StartsWith("minimax") && !tp.Model.StartsWith("wan/") && !tp.Model.StartsWith("wan-alpha")
+                        && !tp.Model.StartsWith("ltx") && !tp.Model.StartsWith("pixverse");
                 }
 
                 if (propertyName == nameof(DurationMinimax))

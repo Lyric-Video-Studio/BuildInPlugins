@@ -10,6 +10,7 @@ namespace FalAiPlugin
         public string prompt { get; set; }
         public List<ImageItem> images { get; set; }
         public VideoResp video { get; set; }
+        public VideoResp mask { get; set; }
 
         // Sigh, would be nice if all responses would be the same type...
         public VideoResp image { get; set; }
@@ -288,6 +289,7 @@ namespace FalAiPlugin
             var pollingDelay = TimeSpan.FromSeconds(20);
 
             var videoUrl = "";
+            var maskUrl = "";
 
             while (string.IsNullOrEmpty(videoUrl))
             {
@@ -339,6 +341,8 @@ namespace FalAiPlugin
                         {
                             videoUrl = respSerialized?.audio?.url ?? "";
                         }
+
+                        maskUrl = respSerialized?.mask?.url;
 
                         if (string.IsNullOrEmpty(videoUrl))
                         {
@@ -395,6 +399,38 @@ namespace FalAiPlugin
                     var pathToVideo = Path.Combine(folderToSave, $"{id}.mp4");
                     await File.WriteAllBytesAsync(pathToVideo, respBytes);
                     textualProgressAction.Invoke("");
+
+                    if (!string.IsNullOrEmpty(maskUrl))
+                    {
+                        file = Path.GetFileName(maskUrl);
+                        downloadBase = new Uri(maskUrl.Replace(file, ""));
+
+                        using var maskdownloadClient = new HttpClient { BaseAddress = downloadBase, Timeout = Timeout.InfiniteTimeSpan };
+
+                        maskdownloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
+
+                        // Store video request token to disk, in case connection is broken or something
+
+                        textualProgressAction.Invoke("Downloading mask");
+
+                        videoResp = await maskdownloadClient.GetAsync(file);
+
+                        while (videoResp.StatusCode != HttpStatusCode.OK)
+                        {
+                            await Task.Delay(pollingDelay);
+                            videoResp = await maskdownloadClient.GetAsync(file);
+                        }
+
+                        if (videoResp.StatusCode == HttpStatusCode.OK)
+                        {
+                            respBytes = await videoResp.Content.ReadAsByteArrayAsync();
+                            var pathToVideoMask = Path.Combine(folderToSave, $"{id}_mask.mp4");
+                            await File.WriteAllBytesAsync(pathToVideoMask, respBytes);
+                            textualProgressAction.Invoke("");
+                            return new VideoResponse() { Success = true, VideoFile = pathToVideo, VideoMask = pathToVideoMask };
+                        }
+                    }
+
                     return new VideoResponse() { Success = true, VideoFile = pathToVideo };
                 }
             }
