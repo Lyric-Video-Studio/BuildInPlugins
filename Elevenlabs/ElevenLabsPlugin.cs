@@ -62,7 +62,7 @@ namespace ElevenLabsPlugin
                     var length = newTp.Music ? newTp.Length * 1000 : 0;
 
                     return await ElevenLabsClient.GenerateSpeech(newIp.Prompt, voiceId,
-                            folderToSaveAudio, _connectionSettings, itemsPayload as ElevenLabsItemPayload, saveAndRefreshCallback, textualProgress, cancellationToken, length);
+                            folderToSaveAudio, _connectionSettings, length);
                 }
                 else
                 {
@@ -87,10 +87,7 @@ namespace ElevenLabsPlugin
                 _connectionSettings.SetVoiceRefreshCallback(async () =>
                 {
                     await RefreshVoiceListAsync();
-                    if (saveAndRefreshCallback != null)
-                    {
-                        saveAndRefreshCallback.Invoke();
-                    }
+                    saveAndRefreshCallback?.Invoke(true);
                 });
                 _isInitialized = true;
                 return "";
@@ -227,9 +224,9 @@ namespace ElevenLabsPlugin
             }
         }
 
-        private Action saveAndRefreshCallback;
+        private Action<bool> saveAndRefreshCallback;
 
-        public void SetSaveAndRefreshCallback(Action saveAndRefreshCallback)
+        public void SetSaveAndRefreshCallback(Action<bool> saveAndRefreshCallback)
         {
             this.saveAndRefreshCallback = saveAndRefreshCallback;
         }

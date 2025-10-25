@@ -115,7 +115,7 @@ namespace MinimaxPlugin
     internal class Client
     {
         public async Task<VideoResponse> GetImgToVid(Request request, string folderToSave, ConnectionSettings connectionSettings,
-            ItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
+            ItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction)
         {
             try
             {
@@ -174,7 +174,7 @@ namespace MinimaxPlugin
                 if (respSerialized != null && resp.IsSuccessStatusCode && respSerialized.base_resp.status_code == 0)
                 {
                     refItemPlayload.PollingId = respSerialized.task_id.ToString();
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
                     return await PollVideoResults(httpClient, respSerialized.task_id, folderToSave, textualProgressAction);
                 }
                 else

@@ -174,9 +174,9 @@ namespace LumaAiDreamMachinePlugin.AddAudio
             return (true, "");
         }
 
-        private Action saveAndRefreshCallback;
+        private Action<bool> saveAndRefreshCallback;
 
-        public void SetSaveAndRefreshCallback(Action saveAndRefreshCallback)
+        public void SetSaveAndRefreshCallback(Action<bool> saveAndRefreshCallback)
         {
             this.saveAndRefreshCallback = saveAndRefreshCallback;
         }

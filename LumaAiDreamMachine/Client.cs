@@ -124,7 +124,7 @@ namespace LumaAiDreamMachinePlugin
     internal class Client
     {
         public async Task<VideoResponse> GetImgToVid(object request, string folderToSave, ConnectionSettings connectionSettings,
-            ItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
+            ItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction)
         {
             try
             {
@@ -197,7 +197,7 @@ namespace LumaAiDreamMachinePlugin
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
                     refItemPlayload.PollingId = respSerialized.id.ToString();
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
                     return await PollVideoResults(httpClient, respSerialized.assets, respSerialized.id, folderToSave, textualProgressAction);
                 }
                 else
@@ -213,7 +213,7 @@ namespace LumaAiDreamMachinePlugin
         }
 
         public async Task<ImageResponse> GetImg(ImageRequest request, ConnectionSettings connectionSettings,
-            ImageItemPayload refItemPlayload, Action saveAndRefreshCallback)
+            ImageItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback)
         {
             try
             {
@@ -263,7 +263,7 @@ namespace LumaAiDreamMachinePlugin
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
                     refItemPlayload.PollingId = respSerialized.id.ToString();
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
                     return await PollImageResults(httpClient, respSerialized.assets, respSerialized.id);
                 }
                 else
@@ -279,7 +279,7 @@ namespace LumaAiDreamMachinePlugin
         }
 
         public async Task<VideoResponse> UpscaleGeneration(string generationId, string resolution, string folderToSave, ConnectionSettings connectionSettings,
-            GenerationUpscaleItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgress)
+            GenerationUpscaleItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgress)
         {
             try
             {
@@ -317,7 +317,7 @@ namespace LumaAiDreamMachinePlugin
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
                     refItemPlayload.PollingId = respSerialized.id.ToString();
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
                     return await PollVideoResults(httpClient, respSerialized.assets, respSerialized.id, folderToSave, textualProgress);
                 }
                 else
@@ -333,7 +333,7 @@ namespace LumaAiDreamMachinePlugin
         }
 
         public async Task<VideoResponse> AddAudioToGeneration(string generationId, string positivePrompt, string megativePrompt, string folderToSave, ConnectionSettings connectionSettings,
-            GenerationAddAudioItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgress)
+            GenerationAddAudioItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgress)
         {
             try
             {
@@ -370,7 +370,7 @@ namespace LumaAiDreamMachinePlugin
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
                     refItemPlayload.PollingId = respSerialized.id.ToString();
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
                     return await PollVideoResults(httpClient, respSerialized.assets, respSerialized.id, folderToSave, textualProgress);
                 }
                 else

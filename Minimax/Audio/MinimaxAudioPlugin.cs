@@ -143,7 +143,7 @@ namespace MinimaxPlugin.Audio
                     await RefreshVoiceListAsync();
                     if (saveAndRefreshCallback != null)
                     {
-                        saveAndRefreshCallback.Invoke();
+                        saveAndRefreshCallback.Invoke(true);
                     }
                 });
                 _isInitialized = !string.IsNullOrEmpty(s.AccessToken);
@@ -393,9 +393,9 @@ namespace MinimaxPlugin.Audio
             this.saveConnectionSettings = saveConnectionSettings;
         }
 
-        private Action saveAndRefreshCallback;
+        private Action<bool> saveAndRefreshCallback;
 
-        public void SetSaveAndRefreshCallback(Action saveAndRefreshCallback)
+        public void SetSaveAndRefreshCallback(Action<bool> saveAndRefreshCallback)
         {
             this.saveAndRefreshCallback = saveAndRefreshCallback;
         }

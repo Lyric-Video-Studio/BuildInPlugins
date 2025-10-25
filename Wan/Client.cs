@@ -68,7 +68,7 @@ namespace WanPlugin
     internal class Client
     {
         public async Task<VideoResponse> GetVideo(Request request, string folderToSave, ConnectionSettings connectionSettings,
-            ItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
+            ItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction)
         {
             try
             {
@@ -136,7 +136,7 @@ namespace WanPlugin
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
                     refItemPlayload.PollingId = respSerialized.output.task_id;
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
                     return await PollVideoResults(httpClient, respSerialized.output.task_id, folderToSave, textualProgressAction);
                 }
                 else

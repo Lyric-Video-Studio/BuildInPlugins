@@ -47,8 +47,7 @@ namespace ElevenLabsPlugin
     public class ElevenLabsClient
     {
         public static async Task<AudioResponse> GenerateSpeech(string text, string voiceId, string folderToSaveAudio,
-            ConnectionSettings connectionSettings, ElevenLabsItemPayload ElevenLabsItemPayload, Action saveAndRefreshCallback, Action<string> textualProgress,
-            CancellationToken cancellationToken, int length)
+            ConnectionSettings connectionSettings, int length)
         {
             using var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("xi-api-key", connectionSettings.AccessToken);

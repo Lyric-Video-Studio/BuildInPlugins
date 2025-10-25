@@ -102,7 +102,7 @@ namespace RunwayMlPlugin
     internal class Client
     {
         public async Task<VideoResponse> GetVideo(object request, string folderToSave, ConnectionSettings connectionSettings,
-            ItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
+            ItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction)
         {
             try
             {
@@ -177,7 +177,7 @@ namespace RunwayMlPlugin
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
                     refItemPlayload.PollingId = respSerialized.id.ToString();
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
                     return await PollVideoResults(httpClient, respSerialized.output, respSerialized.id, folderToSave, textualProgressAction);
                 }
                 else
@@ -193,7 +193,7 @@ namespace RunwayMlPlugin
         }
 
         public async Task<ImageResponse> GetImage(ImageRequest request, ConnectionSettings connectionSettings,
-            ImageItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
+            ImageItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction)
         {
             try
             {
@@ -250,7 +250,7 @@ namespace RunwayMlPlugin
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
                     refItemPlayload.PollingId = respSerialized.id.ToString();
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
 
                     return await PollImageResults(httpClient, respSerialized.output, respSerialized.id, "", textualProgressAction);
                 }

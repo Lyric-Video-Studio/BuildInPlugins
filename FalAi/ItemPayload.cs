@@ -1,5 +1,4 @@
 ﻿using PluginBase;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 
 namespace FalAiPlugin

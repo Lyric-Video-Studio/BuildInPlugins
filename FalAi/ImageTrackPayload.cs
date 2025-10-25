@@ -5,7 +5,25 @@ namespace FalAiPlugin
 {
     public class ImageTrackPayload : IPayloadPropertyVisibility
     {
-        public string Model { get; set; }
+        public static event EventHandler ModelChanged;
+
+        private string model = "hidream-i1-full";
+
+        public string Model
+        {
+            get => model;
+            set
+            {
+                var notifi = IPayloadPropertyVisibility.UserInitiatedSet;
+                model = value;
+
+                if (notifi)
+                {
+                    ModelChanged?.Invoke(this, null);
+                }
+            }
+        }
+
         public string Prompt { get; set; }
         public string NegativePrompt { get; set; }
         public int Seed { get; set; }
@@ -15,6 +33,7 @@ namespace FalAiPlugin
 
         [CustomName("Size")]
         public string SizeImagen4 { get; set; } = "16:9";
+
         public ImageSourceContainer ImageSource { get; set; } = new();
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)

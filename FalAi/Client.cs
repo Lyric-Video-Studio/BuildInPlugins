@@ -121,7 +121,7 @@ namespace FalAiPlugin
     internal class Client
     {
         public async Task<VideoResponse> GetVideo(VideoRequest request, string folderToSave, ConnectionSettings connectionSettings,
-            ItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction, string model)
+            ItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, string model)
         {
             try
             {
@@ -185,7 +185,7 @@ namespace FalAiPlugin
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
                     refItemPlayload.PollingId = respSerialized.request_id.ToString();
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
                     return await PollVideoResults(httpClient, respSerialized.request_id, folderToSave, textualProgressAction, model);
                 }
                 else
@@ -203,7 +203,7 @@ namespace FalAiPlugin
         // Fail response: {"detail": "User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing."}
 
         public async Task<ImageResponse> GetImage(Request request, ConnectionSettings connectionSettings,
-            ImageItemPayload refItemPlayload, Action saveAndRefreshCallback, Action<string> textualProgressAction, string model)
+            ImageItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, string model)
         {
             try
             {
@@ -259,7 +259,7 @@ namespace FalAiPlugin
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
                     refItemPlayload.PollingId = respSerialized.request_id.ToString();
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
 
                     return await PollImageResults(httpClient, respSerialized.request_id, "", textualProgressAction, model);
                 }
@@ -406,7 +406,7 @@ namespace FalAiPlugin
         }
 
         internal static async Task<AudioResponse> GetAudio(AudioRequest request, string folderToSaveAudio, AudioItemPayload refItemPlayload, ConnectionSettings connectionSettings, string model,
-            Action saveAndRefreshCallback, Action<string> textualProgress)
+            Action<bool> saveAndRefreshCallback, Action<string> textualProgress)
         {
             try
             {
@@ -463,7 +463,7 @@ namespace FalAiPlugin
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
                     refItemPlayload.PollingId = respSerialized.request_id.ToString();
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
 
                     var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model);
                     return new AudioResponse() { Success = res.Success, ErrorMsg = res.ErrorMsg, AudioFile = res.VideoFile, AudioFormat = "wav" };

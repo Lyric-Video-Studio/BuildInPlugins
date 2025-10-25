@@ -65,7 +65,7 @@ namespace FalAiPlugin
                 else if (itemsPayload is ItemPayload ipOld)
                 {
                     ipOld.Seed = new Random().Next(1, int.MaxValue);
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
                     reg.seed = ipOld.Seed;
                 }
 
@@ -233,7 +233,7 @@ namespace FalAiPlugin
                 else if (itemsPayload is ImageItemPayload ipOld)
                 {
                     ipOld.Seed = new Random().Next(1, int.MaxValue);
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
                     imageReg.seed = ipOld.Seed;
                 }
 
@@ -421,9 +421,37 @@ namespace FalAiPlugin
             return JsonHelper.Deserialize<TrackPayload>(fileName);
         }
 
+        // Intentiaonally empty
+        public FalAiImgToVidPlugin()
+        {
+        }
+
+        private readonly bool _isActualInstance;
+
+        public FalAiImgToVidPlugin(bool isActualInstance)
+        {
+            _isActualInstance = isActualInstance; // This is not actually used...
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            {
+                TrackPayload.ModelChanged += (s, e) =>
+                {
+                    saveAndRefreshCallback?.Invoke(false);
+                };
+            }
+
+            if (CurrentTrackType == IPluginBase.TrackType.Image)
+            {
+                ImageTrackPayload.ModelChanged += (s, e) =>
+                {
+                    saveAndRefreshCallback?.Invoke(false);
+                };
+            }
+        }
+
         public IPluginBase CreateNewInstance()
         {
-            var plug = new FalAiImgToVidPlugin();
+            var plug = new FalAiImgToVidPlugin(true);
+
             return plug;
         }
 
@@ -463,9 +491,9 @@ namespace FalAiPlugin
             return (true, "");
         }
 
-        private Action saveAndRefreshCallback;
+        private Action<bool> saveAndRefreshCallback;
 
-        public void SetSaveAndRefreshCallback(Action saveAndRefreshCallback)
+        public void SetSaveAndRefreshCallback(Action<bool> saveAndRefreshCallback)
         {
             this.saveAndRefreshCallback = saveAndRefreshCallback;
         }

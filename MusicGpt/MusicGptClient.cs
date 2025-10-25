@@ -97,7 +97,7 @@ namespace MusicGptPlugin
         public static async Task<AudioResponse> GenerateAudio(string generationId, string prompt, string musicStyle, string lyrics, bool makeInstrumental, bool vocal_only, string voice_id,
             string folderToSaveAudio,
             ConnectionSettings connectionSettings, MusicGptItemPayload musicGptItemPayload,
-            Action saveAndRefreshCallback, Action<string> textualProgress, CancellationToken cancellationToken)
+            Action<bool> saveAndRefreshCallback, Action<string> textualProgress, CancellationToken cancellationToken)
         {
             if (!string.IsNullOrEmpty(musicGptItemPayload.PollingId))
             {
@@ -132,7 +132,7 @@ namespace MusicGptPlugin
                     if (actualResp.success)
                     {
                         musicGptItemPayload.PollingId = actualResp.task_id;
-                        saveAndRefreshCallback.Invoke();
+                        saveAndRefreshCallback.Invoke(true);
                         textualProgress.Invoke(actualResp.message);
                         return await GetConversionResponse(musicGptItemPayload.PollingId, connectionSettings, textualProgress, folderToSaveAudio, cancellationToken, true, false);
                     }
@@ -154,7 +154,7 @@ namespace MusicGptPlugin
         }
 
         public static async Task<AudioResponse> GenerateSpeech(string pollingId, string text, string gender, string voiceId, string folderToSaveAudio,
-            ConnectionSettings connectionSettings, MusicGptItemPayload musicGptItemPayload, Action saveAndRefreshCallback, Action<string> textualProgress, CancellationToken cancellationToken)
+            ConnectionSettings connectionSettings, MusicGptItemPayload musicGptItemPayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgress, CancellationToken cancellationToken)
         {
             if (!string.IsNullOrEmpty(musicGptItemPayload.PollingId))
             {
@@ -186,7 +186,7 @@ namespace MusicGptPlugin
                     if (actualResp.success)
                     {
                         musicGptItemPayload.PollingId = actualResp.task_id;
-                        saveAndRefreshCallback.Invoke();
+                        saveAndRefreshCallback.Invoke(true);
                         textualProgress.Invoke(actualResp.message);
                         return await GetConversionResponse(musicGptItemPayload.PollingId, connectionSettings, textualProgress, folderToSaveAudio, cancellationToken, true, true);
                     }

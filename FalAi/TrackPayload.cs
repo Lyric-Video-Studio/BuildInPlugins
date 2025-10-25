@@ -1,13 +1,29 @@
 ﻿using PluginBase;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Reflection.Metadata.Ecma335;
 
 namespace FalAiPlugin
 {
     public class TrackPayload : IPayloadPropertyVisibility
     {
-        public string Model { get; set; } = "veo3/fast";
+        public static event EventHandler ModelChanged;
+
+        private string model = "veo3/fast";
+
+        public string Model
+        {
+            get => model;
+            set
+            {
+                var notifi = IPayloadPropertyVisibility.UserInitiatedSet;
+                model = value;
+
+                if (notifi)
+                {
+                    ModelChanged?.Invoke(this, null);
+                }
+            }
+        }
+
         public string Prompt { get; set; }
 
         public string NegativePrompt { get; set; }
@@ -43,8 +59,6 @@ namespace FalAiPlugin
         public string AspectRatioSora { get; internal set; } = "16:9";
 
         public ImageSourceContainer ImageSourceCont { get; set; } = new();
-
-
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {

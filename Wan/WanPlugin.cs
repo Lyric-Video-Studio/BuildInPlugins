@@ -50,7 +50,7 @@ namespace WanPlugin
                 else if (itemsPayload is ItemPayload ipOld)
                 {
                     ipOld.Seed = new Random().Next(1, int.MaxValue);
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
                     newTp.Request.parameters.seed = ipOld.Seed;
                 }
 
@@ -193,9 +193,9 @@ namespace WanPlugin
             return (true, "");
         }
 
-        private Action saveAndRefreshCallback;
+        private Action<bool> saveAndRefreshCallback;
 
-        public void SetSaveAndRefreshCallback(Action saveAndRefreshCallback)
+        public void SetSaveAndRefreshCallback(Action<bool> saveAndRefreshCallback)
         {
             this.saveAndRefreshCallback = saveAndRefreshCallback;
         }

@@ -194,7 +194,7 @@ namespace MinimaxPlugin
                     {
                         newTp.Settings.seed = rnd.NextInt64();
                         (itemsPayload as ImageItemPayload).Seed = newTp.Settings.seed;
-                        saveAndRefreshCallback.Invoke();
+                        saveAndRefreshCallback.Invoke(true);
                     }
 
                     return await _wrapper.GetImg(newTp.Settings, _connectionSettings);
@@ -325,10 +325,10 @@ namespace MinimaxPlugin
             return (true, "");
         }
 
-        private Action saveAndRefreshCallback;
+        private Action<bool> saveAndRefreshCallback;
         private IContentUploader _uploader;
 
-        public void SetSaveAndRefreshCallback(Action saveAndRefreshCallback)
+        public void SetSaveAndRefreshCallback(Action<bool> saveAndRefreshCallback)
         {
             this.saveAndRefreshCallback = saveAndRefreshCallback;
         }

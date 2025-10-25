@@ -126,7 +126,7 @@ namespace BflTxtToImgPlugin
                     if (!string.IsNullOrEmpty(imageRequest.Id))
                     {
                         ((ItemPayload)itemsPayload).PollingId = imageRequest.Id;
-                        saveCallback?.Invoke();
+                        saveCallback?.Invoke(true);
                         return await PollImage(imageRequest.Id);
                     }
                 }
@@ -324,9 +324,9 @@ namespace BflTxtToImgPlugin
             cancelToken = cancellationToken;
         }
 
-        private Action saveCallback;
+        private Action<bool> saveCallback;
 
-        public void SetSaveAndRefreshCallback(Action saveAndRefreshCallback)
+        public void SetSaveAndRefreshCallback(Action<bool> saveAndRefreshCallback)
         {
             saveCallback = saveAndRefreshCallback;
         }

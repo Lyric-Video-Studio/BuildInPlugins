@@ -14,7 +14,7 @@ namespace StabilityAiImgToVidPlugin
             client = new Client();
         }
 
-        public async Task<VideoResponse> GetImgToVid(Request payload, string pathToSourceImage, string pathForSaving, ConnectionSettings connectionSettings, ItemPayload refItemPlayload, Action saveAndRefreshCallback)
+        public async Task<VideoResponse> GetImgToVid(Request payload, string pathToSourceImage, string pathForSaving, ConnectionSettings connectionSettings, ItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback)
         {
             if (client == null)
             {

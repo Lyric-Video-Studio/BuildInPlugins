@@ -50,7 +50,7 @@ namespace RunwayMlPlugin
                 else if (itemsPayload is ItemPayload ipOld)
                 {
                     ipOld.Seed = new Random().Next(1, int.MaxValue);
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
                     newTp.Request.seed = ipOld.Seed;
                 }
 
@@ -170,7 +170,7 @@ namespace RunwayMlPlugin
                     else if (itemsPayload is ItemPayload ipOld)
                     {
                         ipOld.Seed = new Random().Next(1, int.MaxValue);
-                        saveAndRefreshCallback.Invoke();
+                        saveAndRefreshCallback.Invoke(true);
                         newTp.Request.seed = newTp.Request.seed;
                     }
 
@@ -259,7 +259,7 @@ namespace RunwayMlPlugin
                     else if (itemsPayload is ItemPayload ipOld)
                     {
                         ipOld.Seed = new Random().Next(1, int.MaxValue);
-                        saveAndRefreshCallback.Invoke();
+                        saveAndRefreshCallback.Invoke(true);
                         request.seed = ipOld.Seed;
                     }
 
@@ -296,7 +296,7 @@ namespace RunwayMlPlugin
                 else if (itemsPayload is ImageItemPayload ipOld)
                 {
                     ipOld.Seed = new Random().Next(1, int.MaxValue);
-                    saveAndRefreshCallback.Invoke();
+                    saveAndRefreshCallback.Invoke(true);
                     imageReg.seed = ipOld.Seed;
                 }
 
@@ -451,9 +451,9 @@ namespace RunwayMlPlugin
             return (true, "");
         }
 
-        private Action saveAndRefreshCallback;
+        private Action<bool> saveAndRefreshCallback;
 
-        public void SetSaveAndRefreshCallback(Action saveAndRefreshCallback)
+        public void SetSaveAndRefreshCallback(Action<bool> saveAndRefreshCallback)
         {
             this.saveAndRefreshCallback = saveAndRefreshCallback;
         }

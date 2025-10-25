@@ -125,7 +125,7 @@ namespace LumaAiDreamMachinePlugin
         }
 
         private async Task<VideoResponse> ModifyVideo(TrackPayload newTp, ItemPayload newIp, string folderToSaveVideo, ConnectionSettings connectionSettings,
-            ItemPayload itemPayload, Action saveAndRefreshCallback, Action<string> textualProgressAction)
+            ItemPayload itemPayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction)
         {
             var modifyRequest = new ModifyRequest() { mode = newTp.VideoEditMode, model = newTp.Settings.model };
             modifyRequest.prompt = (newTp.Settings.prompt + " " + newIp.Prompt).Trim();
@@ -421,10 +421,10 @@ namespace LumaAiDreamMachinePlugin
             return (true, "");
         }
 
-        private Action saveAndRefreshCallback;
+        private Action<bool> saveAndRefreshCallback;
         private IContentUploader _uploader;
 
-        public void SetSaveAndRefreshCallback(Action saveAndRefreshCallback)
+        public void SetSaveAndRefreshCallback(Action<bool> saveAndRefreshCallback)
         {
             this.saveAndRefreshCallback = saveAndRefreshCallback;
         }

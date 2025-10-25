@@ -13,7 +13,7 @@ namespace StabilityAiImgToVidPlugin
 
     internal class Client
     {
-        public async Task<VideoResponse> GetImgToVid(Request request, string pathToSourceImage, string folderToSave, ConnectionSettings connectionSettings, ItemPayload refItemPlayload, Action saveAndRefreshCallback)
+        public async Task<VideoResponse> GetImgToVid(Request request, string pathToSourceImage, string folderToSave, ConnectionSettings connectionSettings, ItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback)
         {
             try
             {
@@ -61,7 +61,7 @@ namespace StabilityAiImgToVidPlugin
             }
         }
 
-        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string pollingId, ItemPayload refItemPlayload, string folderToSave, Action saveAndRefreshCallback)
+        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string pollingId, ItemPayload refItemPlayload, string folderToSave, Action<bool> saveAndRefreshCallback)
         {
             var pollingDelay = TimeSpan.FromSeconds(20);
 
@@ -72,7 +72,7 @@ namespace StabilityAiImgToVidPlugin
             // Store video request token to disk, in case connection is broken or something
 
             refItemPlayload.PollingId = pollingId;
-            saveAndRefreshCallback?.Invoke();
+            saveAndRefreshCallback?.Invoke(true);
 
             var videoResp = await httpClient.GetAsync($"/v2beta/image-to-video/result/{pollingId}");
 
