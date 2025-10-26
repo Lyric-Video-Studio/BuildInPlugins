@@ -22,6 +22,11 @@ namespace FalAiPlugin
         {
             if (trackPayload is ImageTrackPayload ip)
             {
+                if (ip.Model.Contains("gpt", StringComparison.InvariantCultureIgnoreCase) && (propertyName is nameof(Seed) or nameof(NegativePrompt)))
+                {
+                    return false;
+                }
+
                 if (propertyName == nameof(ImageSources))
                 {
                     return (ip.Model?.EndsWith("image-to-image") ?? false) || (ip.Model?.Contains("edit") ?? false);
