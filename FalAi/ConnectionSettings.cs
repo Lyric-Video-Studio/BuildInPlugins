@@ -16,6 +16,7 @@ namespace FalAiPlugin
         [Description("Access token. Each video creation uses credits. Access token is found from https://fal.ai/dashboard/keys" +
             "This application is not resposible for possible usage of credits and will not in any way refund any used credits!!!")]
         [EditorWidth(300)]
+        [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
         public void OnDeserialized()

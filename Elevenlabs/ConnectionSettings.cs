@@ -16,6 +16,7 @@ namespace ElevenLabsPlugin
         [Description("Access token. Each audio creation uses credits. Access token is found from https://ElevenLabs.com/api-dashboard/api-keys " +
             "This application is not resposible for possible usage of credits and will not in any way refund any used credits!!!")]
         [EditorWidth(300)]
+        [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
         [IgnoreDynamicEdit]

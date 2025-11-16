@@ -12,6 +12,7 @@ namespace MistralTxtToImgPlugin
         [Description("Access token. Each image creation uses credits. Access token is found from https://api.mistral.ai/v1. " +
             "This application is not resposible for possible usage of credits and will not in any way refund any used credits!!!")]
         [EditorWidth(300)]
+        [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
         [Description("Mistral AI needs to create AI Agent to create images. It is created automatically on first image generation, only change this if you have make custom agent yourself. " +

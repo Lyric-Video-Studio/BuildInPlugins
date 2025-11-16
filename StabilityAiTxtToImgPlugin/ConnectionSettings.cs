@@ -16,6 +16,7 @@ namespace StabilityAiTxtToImgPlugin
         [Description("Access token. Each image creation uses credits. Access token is found from stability.ai/account/keys. " +
             "This application is not responsible for possible usage of credits and will not in any way refund any used credits!!!")]
         [EditorWidth(300)]
+        [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
         public void OnDeserialized()
