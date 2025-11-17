@@ -69,7 +69,7 @@ namespace OpenAiTxtToImgPlugin
 
             if (trackPayload is TrackPayload newTp && itemsPayload is ItemPayload newIp)
             {
-                var payload = new ImageGenerationRequest($"{newIp.Prompt} {newTp.Prompt}", newTp.Model, 1, newTp.Quality, ImageResponseFormat.B64_Json, newTp.Size, newTp.Style);
+                var payload = new ImageGenerationRequest($"{newIp.Prompt} {newTp.Prompt}", newTp.Model, 1, newTp.Quality, ImageResponseFormat.B64_Json, newTp.Size, style: newTp.Style);
 
                 try
                 {
