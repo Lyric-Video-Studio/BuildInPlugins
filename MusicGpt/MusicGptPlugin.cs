@@ -76,7 +76,7 @@ namespace MusicGptPlugin
                     else
                     {
                         return await MusicGptClient.GenerateAudio(newIp.PollingId, newIp.Prompt + " " + newTp.Prompt, newTp.MusicStyle, newIp.Lyrics, newTp.Instrumental, newTp.VoiceOnly, voiceId,
-                            folderToSaveAudio, _connectionSettings, itemsPayload as MusicGptItemPayload, saveAndRefreshCallback, textualProgress, cancellationToken);
+                            folderToSaveAudio, _connectionSettings, itemsPayload as MusicGptItemPayload, saveAndRefreshCallback, textualProgress, cancellationToken, newIp.AudioSource, newTp.Gender);
                     }
                 }
                 else

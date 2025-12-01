@@ -43,13 +43,22 @@ namespace GooglePlugin
                 }
                 var effectiveImage = !string.IsNullOrEmpty(ip.ImageSource) ? ip.ImageSource : tp.ImageSource;
                 var prompt = (tp.Prompt + " " + ip.Prompt).Trim();
+                GenerationConfig? genConfig = null;
+                if (tp.Model == "gemini-3-pro-image-preview")
+                {
+                    var imgSize = Enum.GetValues<ImageSize>().FirstOrDefault(s => s.ToString().EndsWith(tp.Size, StringComparison.InvariantCultureIgnoreCase));
+
+                    genConfig = new GenerationConfig();
+                    genConfig.ImageConfig = new ImageConfig() { ImageSize = imgSize };
+                }
 
                 if (string.IsNullOrEmpty(effectiveImage))
                 {
                     var request = new GenerateContentRequest(prompt);
+                    request.GenerationConfig = genConfig;
                     var response = await _generativeModel.GenerateContent(request, cancellationToken: ct);
                     var imageData = ExtractImageDataBase64(response);
-                    return new ImageResponse() { Success = !string.IsNullOrEmpty(imageData), Image = imageData, ImageFormat = ".png" };
+                    return new ImageResponse() { Success = !string.IsNullOrEmpty(imageData.img), Image = imageData.img, ImageFormat = $".{imageData.format}" };
                 }
                 else
                 {
@@ -67,15 +76,15 @@ namespace GooglePlugin
                         new InlineData { MimeType = mimeType, Data = Convert.ToBase64String(imageBytes) }
                     };
 
-                    var response = await _generativeModel.GenerateContent(parts, cancellationToken: ct);
+                    var response = await _generativeModel.GenerateContent(parts, genConfig, cancellationToken: ct);
                     var imageData = ExtractImageDataBase64(response);
-                    return new ImageResponse() { Success = !string.IsNullOrEmpty(imageData), Image = imageData, ImageFormat = ".png" };
+                    return new ImageResponse() { Success = !string.IsNullOrEmpty(imageData.img), Image = imageData.img, ImageFormat = $".{imageData.format}" };
                 }
             }
             throw new Exception("Internal error");
         }
 
-        private string ExtractImageDataBase64(GenerateContentResponse response)
+        private (string img, string format) ExtractImageDataBase64(GenerateContentResponse response)
         {
             var imageStrings = new List<string>();
             if (response.Candidates != null)
@@ -88,13 +97,18 @@ namespace GooglePlugin
                         {
                             if (part.InlineData != null && !string.IsNullOrEmpty(part.InlineData.Data) && part.InlineData.MimeType == "image/png")
                             {
-                                return part.InlineData.Data;
+                                return (part.InlineData.Data, "png");
+                            }
+
+                            if (part.InlineData != null && !string.IsNullOrEmpty(part.InlineData.Data) && part.InlineData.MimeType == "image/jpeg")
+                            {
+                                return (part.InlineData.Data, "jpg");
                             }
                         }
                     }
                 }
             }
-            return "";
+            return ("", "");
         }
 
         private GenerativeModel _generativeModel;
@@ -126,6 +140,16 @@ namespace GooglePlugin
             if (_connectionSettings == null)
             {
                 return Array.Empty<string>();
+            }
+
+            if (propertyName == nameof(ImageTrackPayload.Size))
+            {
+                return ["1K", "2K", "4K"];
+            }
+
+            if (propertyName == nameof(ImageTrackPayload.Model))
+            {
+                return ["gemini-3-pro-image-preview", "gemini-2.5-flash-image-preview"];
             }
 
             return Array.Empty<string>();

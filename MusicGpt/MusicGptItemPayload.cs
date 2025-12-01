@@ -18,5 +18,8 @@ namespace MusicGptPlugin
         //[Description("Use for defining the lyrics or text to synthesize")]
         [EditorColumnSpan(2)]
         public string Lyrics { get => lyrics; set => lyrics = value; }
+
+        [EnableFileDrop]
+        public string AudioSource { get; set; }
     }
 }
