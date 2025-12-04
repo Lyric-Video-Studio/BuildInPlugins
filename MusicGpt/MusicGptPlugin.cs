@@ -5,7 +5,7 @@ namespace MusicGptPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class MusicGptPlugin : IAudioPlugin, ISaveAndRefresh, IContentId, ITextualProgressIndication, ISaveConnectionSettings, IImportFromLyrics, ICancellableGeneration
+    public class MusicGptPlugin : IAudioPlugin, ISaveAndRefresh, IContentId, ITextualProgressIndication, ISaveConnectionSettings, ICancellableGeneration
     {
         public string UniqueName { get => "MusicGptPlugin"; }
         public string DisplayName { get => "MusicGpt"; }
@@ -377,6 +377,14 @@ namespace MusicGptPlugin
         public void SetCancallationToken(CancellationToken cancellationToken)
         {
             this.cancellationToken = cancellationToken;
+        }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+            if (payload is MusicGptItemPayload ip)
+            {
+                ip.Prompt = text;
+            }
         }
     }
 

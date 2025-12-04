@@ -6,8 +6,8 @@ namespace FalAiPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class FalAiImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
-        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAppendLyrics, IAudioPlugin
+    public class FalAiImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
+        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAudioPlugin
     {
         public string UniqueName { get => "FalAiBuildIn"; }
         public string DisplayName { get => "Fal AI (multi-model)"; }

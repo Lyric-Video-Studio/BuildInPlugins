@@ -7,7 +7,7 @@ namespace OpenAiTxtToImgPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class OpenAiTxtToImgPlugin : IImagePlugin, IImportFromLyrics
+    public class OpenAiTxtToImgPlugin : IImagePlugin
     {
         public string UniqueName { get => "OpenAiTxtToImageBuildIn"; }
         public string DisplayName { get => "Open Ai TxtToImg (dall-e-3)"; }
@@ -294,6 +294,14 @@ namespace OpenAiTxtToImgPlugin
 
         public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
         {
+        }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+            if (payload is ItemPayload ip)
+            {
+                ip.Prompt = text;
+            }
         }
     }
 

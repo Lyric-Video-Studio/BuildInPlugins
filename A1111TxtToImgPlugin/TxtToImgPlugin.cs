@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 
 namespace A1111TxtToImgPlugin
 {
-    public class TxtToImgPlugin : IImagePlugin, IImportFromLyrics
+    public class TxtToImgPlugin : IImagePlugin
     {
         public string UniqueName { get => "Automatic1111TxtToImageBuildIn"; }
         public string DisplayName { get => "Automatic1111 TxtToImg"; }
@@ -267,6 +267,14 @@ namespace A1111TxtToImgPlugin
 
         public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
         {
+        }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+            if (payload is ItemPayload ip)
+            {
+                ip.PositivePrompt = text;
+            }
         }
     }
 }

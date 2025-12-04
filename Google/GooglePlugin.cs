@@ -396,6 +396,14 @@ namespace GooglePlugin
         {
             ct = cancellationToken;
         }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+            if (payload is ImageItemPayload ip)
+            {
+                ip.Prompt = text;
+            }
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

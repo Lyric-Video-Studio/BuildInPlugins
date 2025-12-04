@@ -8,7 +8,7 @@ namespace BflTxtToImgPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class BflTxtToImgPlugin : IImagePlugin, IImportFromLyrics, ICancellableGeneration, ISaveAndRefresh, IImportFromImage
+    public class BflTxtToImgPlugin : IImagePlugin, ICancellableGeneration, ISaveAndRefresh, IImportFromImage
     {
         public string UniqueName { get => "BflTxtToImageBuildIn"; }
         public string DisplayName { get => "Black Forest Labs"; }
@@ -450,6 +450,14 @@ namespace BflTxtToImgPlugin
                         ip.ImageSource = newPath[i];
                     }
                 }
+            }
+        }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+            if (payload is ItemPayload ip)
+            {
+                ip.Prompt = text;
             }
         }
     }

@@ -477,5 +477,14 @@ namespace CroppedImagePlugin
                 }
             }
         }
+
+        public object ItemPayloadFromLyrics(string text)
+        {
+            return new ItemPayload();
+        }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+        }
     }
 }

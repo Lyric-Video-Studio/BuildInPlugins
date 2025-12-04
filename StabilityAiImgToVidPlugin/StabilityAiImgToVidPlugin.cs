@@ -299,6 +299,15 @@ namespace StabilityAiImgToVidPlugin
                 }
             }
         }
+
+        public object ItemPayloadFromLyrics(string text)
+        {
+            return new ItemPayload();
+        }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

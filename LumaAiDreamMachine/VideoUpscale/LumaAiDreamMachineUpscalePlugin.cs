@@ -307,6 +307,19 @@ namespace LumaAiDreamMachinePlugin.VideoUpscale
         public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
         {
         }
+
+        public object ItemPayloadFromLyrics(string text)
+        {
+            return new ItemPayload() { Prompt = text };
+        }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+            if (payload is ItemPayload ip)
+            {
+                ip.Prompt = text;
+            }
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

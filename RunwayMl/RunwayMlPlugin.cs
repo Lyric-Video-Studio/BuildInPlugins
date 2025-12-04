@@ -5,8 +5,8 @@ namespace RunwayMlPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class RunwayMlImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
-        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAppendLyrics
+    public class RunwayMlImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
+        IImportFromVideo, IImagePlugin, IValidateBothPayloads
     {
         public string UniqueName { get => "RunwayMlImgToVidBuildIn"; }
         public string DisplayName { get => "Runway ML"; }

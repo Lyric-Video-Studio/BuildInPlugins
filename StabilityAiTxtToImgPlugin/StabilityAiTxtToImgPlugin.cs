@@ -5,7 +5,7 @@ namespace StabilityAiTxtToImgPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class StabilityAiTxtToImgPlugin : IImagePlugin, IImportFromLyrics
+    public class StabilityAiTxtToImgPlugin : IImagePlugin
     {
         public string UniqueName { get => "StabilityAiTxtToImageBuildIn"; }
         public string DisplayName { get => "Stability Ai SD3 TxtToImg (stable diffusion)"; }
@@ -261,6 +261,14 @@ namespace StabilityAiTxtToImgPlugin
 
         public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
         {
+        }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+            if (payload is ItemPayload ip)
+            {
+                ip.PositivePrompt = text;
+            }
         }
     }
 

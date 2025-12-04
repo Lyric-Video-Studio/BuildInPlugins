@@ -5,8 +5,8 @@ namespace LumaAiDreamMachinePlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class LumaAiDreamMachineImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader,
-        IImagePlugin, IContentId, ITextualProgressIndication, IValidateBothPayloads, IAppendLyrics
+    public class LumaAiDreamMachineImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IRequestContentUploader,
+        IImagePlugin, IContentId, ITextualProgressIndication, IValidateBothPayloads
     {
         public const string PluginName = "LumaAiDreamMachineImgToVidBuildIn";
         public string UniqueName { get => PluginName; }

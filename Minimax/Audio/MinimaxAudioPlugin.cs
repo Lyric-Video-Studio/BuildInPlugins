@@ -6,7 +6,7 @@ namespace MinimaxPlugin.Audio
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class MinimaxAudioPlugin : IAudioPlugin, IImportFromLyrics, ISaveConnectionSettings, ISaveAndRefresh, IValidateBothPayloads
+    public class MinimaxAudioPlugin : IAudioPlugin, ISaveConnectionSettings, ISaveAndRefresh, IValidateBothPayloads
     {
         public const string PluginName = "MinimaxAudioBuildIn";
         public string UniqueName { get => PluginName; }
@@ -424,6 +424,14 @@ namespace MinimaxPlugin.Audio
             }
 
             return (true, "");
+        }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+            if (payload is ItemPayload ip)
+            {
+                ip.Prompt = text;
+            }
         }
     }
 

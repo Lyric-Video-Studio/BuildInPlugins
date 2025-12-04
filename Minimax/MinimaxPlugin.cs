@@ -6,7 +6,7 @@ namespace MinimaxPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class MinimaxImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, IImagePlugin, ITextualProgressIndication, IAppendLyrics
+    public class MinimaxImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IRequestContentUploader, IImagePlugin, ITextualProgressIndication
     {
         public const string PluginName = "MinimaxImgToVidBuildIn";
         public string UniqueName { get => PluginName; }

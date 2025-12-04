@@ -5,7 +5,7 @@ namespace MistralTxtToImgPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class MistralTxtToImgPlugin : IImagePlugin, IImportFromLyrics, ISaveConnectionSettings
+    public class MistralTxtToImgPlugin : IImagePlugin, ISaveConnectionSettings
     {
         public string UniqueName { get => "MistralTxtToImageBuildIn"; }
         public string DisplayName { get => "Mistral AI"; }
@@ -167,6 +167,14 @@ namespace MistralTxtToImgPlugin
         public void SetSaveConnectionSettingsCallback(Action<object> saveConnectionSettings)
         {
             this.saveConnectionSettings = saveConnectionSettings;
+        }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+            if (payload is ItemPayload ip)
+            {
+                ip.Prompt = text;
+            }
         }
     }
 

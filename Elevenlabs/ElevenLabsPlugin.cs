@@ -5,7 +5,7 @@ namespace ElevenLabsPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class ElevenLabsPlugin : IAudioPlugin, ISaveAndRefresh, ITextualProgressIndication, ISaveConnectionSettings, IImportFromLyrics, ICancellableGeneration
+    public class ElevenLabsPlugin : IAudioPlugin, ISaveAndRefresh, ITextualProgressIndication, ISaveConnectionSettings, ICancellableGeneration
     {
         public string UniqueName { get => "ElevenLabsPlugin"; }
         public string DisplayName { get => "ElevenLabs"; }
@@ -357,6 +357,14 @@ namespace ElevenLabsPlugin
         public void SetCancallationToken(CancellationToken cancellationToken)
         {
             this.cancellationToken = cancellationToken;
+        }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+            if (payload is ElevenLabsItemPayload ip)
+            {
+                ip.Prompt = text;
+            }
         }
     }
 

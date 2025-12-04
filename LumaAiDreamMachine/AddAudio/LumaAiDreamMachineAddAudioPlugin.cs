@@ -299,6 +299,19 @@ namespace LumaAiDreamMachinePlugin.AddAudio
         {
             // No need to do anything
         }
+
+        public object ItemPayloadFromLyrics(string text)
+        {
+            return new ItemPayload() { Prompt = text };
+        }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+            if (payload is ItemPayload ip)
+            {
+                ip.Prompt = text;
+            }
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

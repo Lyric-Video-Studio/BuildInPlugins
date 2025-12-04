@@ -5,7 +5,7 @@ namespace WanPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class WanVideoPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromLyrics, IImportFromImage, IRequestContentUploader, ITextualProgressIndication, IAppendLyrics
+    public class WanVideoPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IRequestContentUploader, ITextualProgressIndication
     {
         public string UniqueName { get => "WanVideoBuildIn"; }
         public string DisplayName { get => "WAN API"; }

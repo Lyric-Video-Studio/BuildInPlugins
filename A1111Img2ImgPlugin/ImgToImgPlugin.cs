@@ -447,5 +447,18 @@ namespace A1111ImgToImgPlugin
                 }
             }
         }
+
+        public void AppendToPayloadFromLyrics(string text, object payload)
+        {
+            if (payload is ItemPayload ip)
+            {
+                ip.PositivePrompt = text;
+            }
+        }
+
+        public object ItemPayloadFromLyrics(string text)
+        {
+            return new ItemPayload() { PositivePrompt = text };
+        }
     }
 }
