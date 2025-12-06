@@ -3,34 +3,30 @@ using PluginBase;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
+using static MinimaxPlugin.ItemPayload;
 
 namespace MinimaxPlugin
 {
-    public class TrackPayload : IJsonOnDeserialized
+    public class TrackPayload : IPayloadPropertyVisibility
     {
-        [IgnoreDynamicEdit]
-        public bool IsVideo { get; set; } = true;
-
         private Request imgToVidPayload = new Request();
 
         [Description("Video settings")]
         [IgnorePropertyName]
         public Request Settings { get => imgToVidPayload; set => imgToVidPayload = value; }
 
-        public ObservableCollection<SubjectRef> SubjectReferences { get; set; } = new();
+        public SubjectRefContainer SubjectReferences { get; set; } = new();
 
-        [CustomAction("Add subject reference")]
-        public void AddSubject()
+        public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
-            SubjectReferences.Add(new SubjectRef(SubjectReferences));
-        }
-
-        public void OnDeserialized()
-        {
-            foreach (var item in SubjectReferences)
+            if (trackPayload is TrackPayload tp && tp.Settings.model == "MiniMax-Hailuo-2.3")
             {
-                item.AddParent(SubjectReferences);
+                if (propertyName == "SubjectReferences" || propertyName == "AddSubject")
+                {
+                    return false;
+                }
             }
+            return true;
         }
     }
 

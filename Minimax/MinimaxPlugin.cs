@@ -82,25 +82,25 @@ namespace MinimaxPlugin
                         newTp.Settings.first_frame_image = newUrl.uploadedUrl;
                     }
 
-                    if (newIp.SubjectReferences.Count > 0)
+                    if (newIp.SubjectReferences.SubjectReferences.Count > 0)
                     {
-                        foreach (var item in newIp.SubjectReferences)
+                        foreach (var item in newIp.SubjectReferences.SubjectReferences)
                         {
-                            newTp.SubjectReferences.Add(item);
+                            newTp.SubjectReferences.SubjectReferences.Add(item);
                         }
                     }
 
-                    if (newTp.SubjectReferences.Count > 0)
+                    if (newTp.SubjectReferences.SubjectReferences.Count > 0)
                     {
                         newTp.Settings.subject_reference = new KeyFrame[1];
-                        newTp.Settings.subject_reference[0] = new KeyFrame() { image = new string[newTp.SubjectReferences.Count(s => File.Exists(s.Path))] };
+                        newTp.Settings.subject_reference[0] = new KeyFrame() { image = new string[newTp.SubjectReferences.SubjectReferences.Count(s => File.Exists(s.Path))] };
                     }
                     var actualIndex = 0;
-                    for (int i = 0; i < newTp.SubjectReferences.Count; i++)
+                    for (int i = 0; i < newTp.SubjectReferences.SubjectReferences.Count; i++)
                     {
-                        if (File.Exists(newTp.SubjectReferences[i].Path))
+                        if (File.Exists(newTp.SubjectReferences.SubjectReferences[i].Path))
                         {
-                            var newUrl = await _uploader.RequestContentUpload(newTp.SubjectReferences[i].Path);
+                            var newUrl = await _uploader.RequestContentUpload(newTp.SubjectReferences.SubjectReferences[i].Path);
 
                             if (newUrl.responseCode != System.Net.HttpStatusCode.OK)
                             {
@@ -110,6 +110,11 @@ namespace MinimaxPlugin
                             newTp.Settings.subject_reference[0].image[actualIndex] = newUrl.uploadedUrl;
                             actualIndex++;
                         }
+                    }
+
+                    if (newTp.Settings.model == "MiniMax-Hailuo-2.3")
+                    {
+                        newTp.Settings.resolution = "1080P";
                     }
 
                     return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
@@ -244,7 +249,7 @@ namespace MinimaxPlugin
                 switch (CurrentTrackType)
                 {
                     case IPluginBase.TrackType.Video:
-                        return ["MiniMax-Hailuo-02", "S2V-01", "T2V-01", "T2V-01-Director", "I2V-01", "I2V-01-Director", "I2V-01-live"];
+                        return ["MiniMax-Hailuo-2.3", "MiniMax-Hailuo-02", "S2V-01", "T2V-01", "T2V-01-Director", "I2V-01", "I2V-01-Director", "I2V-01-live"];
 
                     default:
                         break;
@@ -566,7 +571,8 @@ namespace MinimaxPlugin
         {
             if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
-                return (new List<string>() { ip.ImagePath, tp.Settings.first_frame_image }.Concat(tp.SubjectReferences.Select(s => s.Path)).Concat(ip.SubjectReferences.Select(s => s.Path))).ToList();
+                return (new List<string>() { ip.ImagePath, tp.Settings.first_frame_image }.Concat(tp.SubjectReferences.SubjectReferences.Select(s => s.Path))
+                    .Concat(ip.SubjectReferences.SubjectReferences.Select(s => s.Path))).ToList();
             }
 
             return new List<string>();
@@ -589,7 +595,7 @@ namespace MinimaxPlugin
                         tp.Settings.first_frame_image = newPath[i];
                     }
 
-                    foreach (var item in tp.SubjectReferences)
+                    foreach (var item in tp.SubjectReferences.SubjectReferences)
                     {
                         if (originalPath[i] == item.Path)
                         {
@@ -597,7 +603,7 @@ namespace MinimaxPlugin
                         }
                     }
 
-                    foreach (var item in ip.SubjectReferences)
+                    foreach (var item in ip.SubjectReferences.SubjectReferences)
                     {
                         if (originalPath[i] == item.Path)
                         {

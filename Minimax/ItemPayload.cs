@@ -5,11 +5,8 @@ using System.Text.Json.Serialization;
 
 namespace MinimaxPlugin
 {
-    public class ItemPayload : IJsonOnDeserialized
+    public class ItemPayload : IPayloadPropertyVisibility
     {
-        [IgnoreDynamicEdit]
-        public bool IsVideo { get; set; } = true;
-
         private string prompt = "";
         private string imagePath;
 
@@ -27,19 +24,37 @@ namespace MinimaxPlugin
         [EnableFileDrop]
         public string ImagePath { get => imagePath; set => imagePath = value; }
 
-        public ObservableCollection<SubjectRef> SubjectReferences { get; set; } = new();
+        public SubjectRefContainer SubjectReferences { get; set; } = new();
 
-        [CustomAction("Add subject reference")]
-        public void AddSubject()
+        public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
-            SubjectReferences.Add(new SubjectRef(SubjectReferences));
+            if (trackPayload is TrackPayload tp && tp.Settings.model == "MiniMax-Hailuo-2.3")
+            {
+                if (propertyName == "SubjectReferences" || propertyName == "AddSubject")
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
-        public void OnDeserialized()
+        public class SubjectRefContainer : IJsonOnDeserialized
         {
-            foreach (var item in SubjectReferences)
+            public ObservableCollection<SubjectRef> SubjectReferences { get; set; } = new();
+
+            [CustomAction("Add subject reference")]
+            public void AddSubject()
             {
-                item.AddParent(SubjectReferences);
+                SubjectReferences.Add(new SubjectRef(SubjectReferences));
+            }
+
+            public void OnDeserialized()
+            {
+                foreach (var item in SubjectReferences)
+                {
+                    item.AddParent(SubjectReferences);
+                }
             }
         }
     }

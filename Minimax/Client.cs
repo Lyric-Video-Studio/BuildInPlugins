@@ -8,7 +8,9 @@ namespace MinimaxPlugin
 {
     public class Request
     {
+        [TriggerReload]
         public string model { get; set; } = "MiniMax-Hailuo-02";
+
         public string prompt { get; set; } = "";
         public bool prompt_optimizer { get; set; } = true;
 
