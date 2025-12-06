@@ -241,15 +241,18 @@ namespace FalAiPlugin
             {
                 var imageReg = new Request();
 
-                if (newIp.Seed != 0)
+                if (newIp.ShouldPropertyBeVisible(nameof(newIp.Seed), newTp, newIp))
                 {
-                    imageReg.seed = newIp.Seed;
-                }
-                else if (itemsPayload is ImageItemPayload ipOld)
-                {
-                    ipOld.Seed = new Random().Next(1, int.MaxValue);
-                    saveAndRefreshCallback.Invoke(true);
-                    imageReg.seed = ipOld.Seed;
+                    if (newIp.Seed != 0)
+                    {
+                        imageReg.seed = newIp.Seed;
+                    }
+                    else if (itemsPayload is ImageItemPayload ipOld)
+                    {
+                        ipOld.Seed = new Random().Next(1, int.MaxValue);
+                        saveAndRefreshCallback.Invoke(true);
+                        imageReg.seed = ipOld.Seed;
+                    }
                 }
 
                 imageReg.prompt = newTp.Prompt + " " + newIp.Prompt;

@@ -193,6 +193,11 @@ namespace FalAiPlugin
                             break;
                     }
                 }
+
+                if (tp.Model.StartsWith("kling-video/v2.6/") && propertyName == nameof(Seed))
+                {
+                    return false;
+                }
             }
 
             return true;
