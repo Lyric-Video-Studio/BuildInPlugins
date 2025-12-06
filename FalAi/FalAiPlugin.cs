@@ -58,15 +58,18 @@ namespace FalAiPlugin
                     reg.aspect_ratio = newTp.AspectRatio;
                 }
 
-                if (newIp.Seed != 0)
+                if (newIp.ShouldPropertyBeVisible(nameof(newIp.Seed), newTp, newIp))
                 {
-                    reg.seed = newIp.Seed;
-                }
-                else if (itemsPayload is ItemPayload ipOld)
-                {
-                    ipOld.Seed = new Random().Next(1, int.MaxValue);
-                    saveAndRefreshCallback.Invoke(true);
-                    reg.seed = ipOld.Seed;
+                    if (newIp.Seed != 0)
+                    {
+                        reg.seed = newIp.Seed;
+                    }
+                    else if (itemsPayload is ItemPayload ipOld)
+                    {
+                        ipOld.Seed = new Random().Next(1, int.MaxValue);
+                        saveAndRefreshCallback.Invoke(true);
+                        reg.seed = ipOld.Seed;
+                    }
                 }
 
                 var imageInput = string.IsNullOrEmpty(newIp.ImageSource) ? newTp.ImageSource : newIp.ImageSource;
@@ -95,6 +98,10 @@ namespace FalAiPlugin
                 if (newTp.Model.StartsWith("veo"))
                 {
                     reg.duration = newIp.Duration;
+                }
+
+                if (newTp.ShouldPropertyBeVisible(nameof(newTp.GenerateAudio), newTp, newIp))
+                {
                     reg.generate_audio = newTp.GenerateAudio;
                 }
 
@@ -192,7 +199,6 @@ namespace FalAiPlugin
                     reg.resolution = newTp.ResolutionLtx2;
                     reg.frames_per_second = newTp.FramesPerSecondLtx2;
                     reg.aspect_ratio = "16:9";
-                    reg.generate_audio = newTp.GenerateAudio;
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
@@ -248,21 +254,14 @@ namespace FalAiPlugin
 
                 imageReg.prompt = newTp.Prompt + " " + newIp.Prompt;
 
-                switch (newTp.Model)
+                if (newTp.ShouldPropertyBeVisible(nameof(ImageTrackPayload.SizeQwen), newTp, newIp))
                 {
-                    case "qwen-image":
-                    case "wan/v2.2-a14b/text-to-image":
-                    case "hidream-i1-full":
-                    case "ovis-image":
-                        imageReg.image_size = newTp.SizeQwen;
-                        break;
+                    imageReg.image_size = newTp.SizeQwen;
+                }
 
-                    case "imagen4/preview":
-                        imageReg.aspect_ratio = newTp.SizeImagen4;
-                        break;
-
-                    default:
-                        break;
+                if (newTp.ShouldPropertyBeVisible(nameof(ImageTrackPayload.SizeImagen4), newTp, newIp))
+                {
+                    imageReg.aspect_ratio = newTp.SizeImagen4;
                 }
 
                 foreach (var img in newTp.ImageSource.ImageSources.Concat(newIp.ImageSources.ImageSources))
@@ -340,6 +339,7 @@ namespace FalAiPlugin
                             "wan-25-preview/text-to-video", "wan-25-preview/image-to-video",
                             "wan-alpha",
                             "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
+                            "kling-video/v2.6/pro/text-to-video", "kling-video/v2.6/pro/image-to-video",
                             "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
                             "ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video", "ltxv-13b-098-distilled/image-to-video",

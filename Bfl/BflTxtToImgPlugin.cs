@@ -8,7 +8,7 @@ namespace BflTxtToImgPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class BflTxtToImgPlugin : IImagePlugin, ICancellableGeneration, ISaveAndRefresh, IImportFromImage
+    public class BflTxtToImgPlugin : IImagePlugin, ICancellableGeneration, ISaveAndRefresh, IImportFromImage, IGenerationCost, ITextualProgressIndication
     {
         public string UniqueName { get => "BflTxtToImageBuildIn"; }
         public string DisplayName { get => "Black Forest Labs"; }
@@ -28,7 +28,6 @@ namespace BflTxtToImgPlugin
         private ConnectionSettings _connectionSettings = new ConnectionSettings();
 
         private HttpClient httpClient;
-        private ResultClient client;
         private Client imgClient;
 
         public IPluginBase.TrackType CurrentTrackType { get; set; }
@@ -45,13 +44,15 @@ namespace BflTxtToImgPlugin
 
         private void EnsureClients()
         {
-            if (client == null || httpClient == null)
+            if (httpClient == null)
             {
                 httpClient?.Dispose();
-                httpClient = new HttpClient();
+                httpClient = new HttpClient()
+                {
+                    Timeout = TimeSpan.FromMinutes(10),
+                };
                 httpClient.DefaultRequestHeaders.Add("x-key", _connectionSettings.AccessToken);
-                client = new ResultClient("https://api.bfl.ml", httpClient);
-                imgClient = new Client("https://api.bfl.ml", httpClient);
+                imgClient = new Client(httpClient);
             }
         }
 
@@ -68,24 +69,9 @@ namespace BflTxtToImgPlugin
 
             if (JsonHelper.DeepCopy<TrackPayload>(trackPayload) is TrackPayload newTp && JsonHelper.DeepCopy<ItemPayload>(itemsPayload) is ItemPayload newIp && itemsPayload is ItemPayload oldPl)
             {
-                if (!string.IsNullOrEmpty(newIp.PollingId))
+                if (!string.IsNullOrEmpty(newIp.PollingUrl))
                 {
-                    return await PollImage(newIp.PollingId);
-                }
-
-                newTp.Settings.Prompt = $"{newIp.Prompt} {newTp.Settings.Prompt}";
-
-                newTp.Settings.Prompt = newTp.Settings.Prompt.Trim();
-
-                if (!string.IsNullOrEmpty(newIp.ImageSource) && File.Exists(newIp.ImageSource))
-                {
-                    /*var ext = Path.GetExtension(newIp.ImageSource).Replace(".", "").ToLowerInvariant();
-                    if(ext == "jpg")
-                    {
-                        ext = "jpeg";
-                    }*/
-                    //newTp.Settings.Image_prompt = $"data:image/{ext};base64,{Convert.ToBase64String(File.ReadAllBytes(newIp.ImageSource))}";
-                    newTp.Settings.ImagePrompt = Convert.ToBase64String(File.ReadAllBytes(newIp.ImageSource));
+                    return await PollImage(newIp.PollingUrl);
                 }
 
                 try
@@ -100,34 +86,146 @@ namespace BflTxtToImgPlugin
 
                     newTp.Settings.Seed = newIp.Seed;
 
-                    if (newIp.EditImage)
+                    if (newTp.OldModels)
                     {
-                        var newInput = new FluxKontextInputs()
-                        {
-                            InputImage = newTp.Settings.ImagePrompt,
-                            Prompt = newTp.Settings.Prompt,
-                            Output_format = newTp.Settings.Output_format,
-                            Prompt_upsampling = newTp.Settings.Prompt_upsampling,
-                            Safety_tolerance = newTp.Settings.Safety_tolerance,
-                            Seed = newTp.Settings.Seed
-                        };
+                        newTp.Settings.Prompt = $"{newIp.Prompt} {newTp.Settings.Prompt}";
+                        newTp.Settings.Prompt = newTp.Settings.Prompt.Trim();
 
-                        imageRequest = await imgClient.PostAsync(newInput);
+                        if (!string.IsNullOrEmpty(newIp.ImageSource) && File.Exists(newIp.ImageSource))
+                        {
+                            newTp.Settings.Image_prompt = Convert.ToBase64String(File.ReadAllBytes(newIp.ImageSource));
+                        }
+
+                        if (newIp.EditImage)
+                        {
+                            var newInput = new FluxKontextProInputs()
+                            {
+                                Input_image = newTp.Settings.Image_prompt,
+                                Prompt = newTp.Settings.Prompt,
+                                Output_format = newTp.Settings.Output_format,
+                                Prompt_upsampling = newTp.Settings.Prompt_upsampling,
+                                Safety_tolerance = newTp.Settings.Safety_tolerance,
+                                Seed = newTp.Settings.Seed
+                            };
+
+                            imageRequest = await imgClient.Generate_flux_kontext_pro_v1_flux_kontext_pro_postAsync(newInput);
+                        }
+                        else
+                        {
+                            if (newTp.Settings.Image_prompt == "")
+                            {
+                                newTp.Settings.Image_prompt = null;
+                            }
+                            imageRequest = await imgClient.Flux_pro_1_1_v1_flux_pro_1_1_postAsync(newTp.Settings);
+                        }
                     }
                     else
                     {
-                        if (newTp.Settings.ImagePrompt == "")
+                        newTp.SettingsNew.Prompt = $"{newIp.Prompt} {newTp.SettingsNew.Prompt}";
+                        newTp.SettingsNew.Prompt = newTp.SettingsNew.Prompt.Trim();
+
+                        // Gather all input images
+                        var inputImages = new string[] {newTp.InputImage, newTp.InputImage2, newTp.InputImage3, newTp.InputImage4, newTp.InputImage5,
+                                newTp.InputImage6, newTp.InputImage7,newTp.InputImage8,
+                                newIp.InputImage, newIp.InputImage2, newIp.InputImage3, newIp.InputImage4, newIp.InputImage5,
+                                newIp.InputImage6, newIp.InputImage7, newIp.InputImage8 }.Where(s => !string.IsNullOrEmpty(s) && File.Exists(s)).ToList();
+
+                        for (int i = 0; i < inputImages.Count && i < 8; i++)
                         {
-                            newTp.Settings.ImagePrompt = null;
+                            // Bit silly way to go, but, well...
+
+                            var b64 = Convert.ToBase64String(File.ReadAllBytes(inputImages[i]));
+
+                            switch (i)
+                            {
+                                case 0:
+                                    newTp.SettingsNew.Input_image = b64;
+                                    break;
+
+                                case 1:
+                                    newTp.SettingsNew.Input_image_2 = b64;
+                                    break;
+
+                                case 2:
+                                    newTp.SettingsNew.Input_image_3 = b64;
+                                    break;
+
+                                case 3:
+                                    newTp.SettingsNew.Input_image_4 = b64;
+                                    break;
+
+                                case 4:
+                                    newTp.SettingsNew.Input_image_5 = b64;
+                                    break;
+
+                                case 5:
+                                    newTp.SettingsNew.Input_image_6 = b64;
+                                    break;
+
+                                case 6:
+                                    newTp.SettingsNew.Input_image_7 = b64;
+                                    break;
+
+                                case 7:
+                                    newTp.SettingsNew.Input_image_8 = b64;
+                                    break;
+
+                                default:
+                                    break;
+                            }
                         }
-                        imageRequest = await imgClient.PostAsync(newTp.Settings);
+
+                        // Sigh, make sure the images are null if empty. Sigh, BFL, please fix your code :D
+                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image))
+                        {
+                            newTp.SettingsNew.Input_image = null;
+                        }
+
+                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_2))
+                        {
+                            newTp.SettingsNew.Input_image_2 = null;
+                        }
+
+                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_3))
+                        {
+                            newTp.SettingsNew.Input_image_3 = null;
+                        }
+
+                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_4))
+                        {
+                            newTp.SettingsNew.Input_image_4 = null;
+                        }
+
+                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_5))
+                        {
+                            newTp.SettingsNew.Input_image_5 = null;
+                        }
+
+                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_6))
+                        {
+                            newTp.SettingsNew.Input_image_6 = null;
+                        }
+
+                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_7))
+                        {
+                            newTp.SettingsNew.Input_image_7 = null;
+                        }
+
+                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_8))
+                        {
+                            newTp.SettingsNew.Input_image_8 = null;
+                        }
+
+                        imageRequest = await imgClient.Generate_flux_2_pro_v1_flux_2_pro_postAsync(newTp.SettingsNew);
                     }
+
+                    costAction.Invoke((imageRequest.Cost / 100).ToString() + "€");
 
                     if (!string.IsNullOrEmpty(imageRequest.Id))
                     {
-                        ((ItemPayload)itemsPayload).PollingId = imageRequest.Id;
+                        ((ItemPayload)itemsPayload).PollingUrl = imageRequest.Polling_url;
                         saveCallback?.Invoke(true);
-                        return await PollImage(imageRequest.Id);
+                        return await PollImage(imageRequest.Polling_url);
                     }
                 }
                 catch (ApiException<HTTPValidationError> validation)
@@ -148,7 +246,7 @@ namespace BflTxtToImgPlugin
             }
         }
 
-        private async Task<ImageResponse> PollImage(string pollingId)
+        private async Task<ImageResponse> PollImage(string pollingUrl)
         {
             try
             {
@@ -167,18 +265,26 @@ namespace BflTxtToImgPlugin
 
                     try
                     {
-                        resp = await client.GetAsync(pollingId, cancelToken);
+                        using var fetchImgClient = new HttpClient() { Timeout = TimeSpan.FromMinutes(10), BaseAddress = new Uri(pollingUrl) };
+
+                        var rawRes = await fetchImgClient.GetAsync("");
+
+                        var stringResp = await rawRes.Content.ReadAsStringAsync();
+
+                        resp = JsonHelper.DeserializeString<ResultResponse>(stringResp);
+
+                        progressAction.Invoke(resp.Status.ToString());
 
                         if (resp.Status == StatusResponse.Ready)
                         {
-                            var url = resp.Result.AdditionalProperties["sample"] as string; // This is naughty
+                            var url = resp.Result.AdditionalProperties["sample"].ToString(); // This is naughty
 
                             try
                             {
-                                using var client = new HttpClient();
+                                using var client = new HttpClient() { Timeout = TimeSpan.FromMinutes(10), BaseAddress = new Uri(url as string) };
 
-                                var response = await client.GetByteArrayAsync(url);
-                                var fileFormat = url.Contains(".png") ? "png" : "jpg";
+                                var response = await client.GetByteArrayAsync("");
+                                var fileFormat = (url as string).Contains(".png") ? "png" : "jpg";
                                 var imageBase64 = Convert.ToBase64String(response);
                                 return new ImageResponse { Success = true, ImageFormat = fileFormat, Image = imageBase64 };
                             }
@@ -212,7 +318,7 @@ namespace BflTxtToImgPlugin
         {
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)
             {
-                client = null;
+                imgClient = null;
                 httpClient = null;
                 _connectionSettings = s;
                 _isInitialized = !string.IsNullOrEmpty(s.AccessToken);
@@ -235,7 +341,7 @@ namespace BflTxtToImgPlugin
                 return Array.Empty<string>();
             }
 
-            if (propertyName == nameof(FluxKontextInputs.Output_format))
+            if (propertyName == nameof(FluxKontextProInputs.Output_format))
             {
                 return ["png", "jpeg"];
             }
@@ -459,6 +565,20 @@ namespace BflTxtToImgPlugin
             {
                 ip.Prompt = text;
             }
+        }
+
+        private Action<string> costAction;
+
+        public void SetShowCostAction(Action<string> cost)
+        {
+            costAction = cost;
+        }
+
+        private Action<string> progressAction;
+
+        public void SetTextProgressCallback(Action<string> action)
+        {
+            progressAction = action;
         }
     }
 

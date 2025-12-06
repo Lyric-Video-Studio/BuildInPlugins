@@ -75,9 +75,9 @@ namespace FalAiPlugin
                     return tp.Model.Contains("ltxv-2");
                 }
 
-                if(Model.StartsWith("ltxv-2"))
+                if (Model.StartsWith("ltxv-2"))
                 {
-                    if(propertyName == nameof(Seed) || propertyName == nameof(NegativePrompt) || propertyName == nameof(AspectRatio) || propertyName == nameof(Resolution) || propertyName == nameof(NumberOfFrames))
+                    if (propertyName == nameof(Seed) || propertyName == nameof(NegativePrompt) || propertyName == nameof(AspectRatio) || propertyName == nameof(Resolution) || propertyName == nameof(NumberOfFrames))
                     {
                         return false;
                     }
@@ -121,7 +121,7 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(GenerateAudio))
                 {
-                    return Model.StartsWith("veo") || Model.StartsWith("ltxv-2");
+                    return Model.StartsWith("veo") || Model.StartsWith("ltxv-2") || Model.Contains("kling-video/v2.6/pro");
                 }
 
                 if (propertyName == nameof(Style) || propertyName == nameof(CameraMovement))
@@ -161,6 +161,9 @@ namespace FalAiPlugin
                         case nameof(Resolution):
                         case nameof(ResolutionMinimax):
                         case nameof(ResolutionWan):
+                            return false;
+
+                        case nameof(Seed):
                             return false;
 
                         case nameof(AspectRatio):
