@@ -56,7 +56,7 @@ namespace FalAiPlugin
                     {
                         return false;
                     }
-                    return ip.Model == "qwen-image" || ip.Model == "wan/v2.2-a14b/text-to-image" || ip.Model == "hidream-i1-full" || ip.Model.Contains("seedream");
+                    return ip.Model == "qwen-image" || ip.Model == "wan/v2.2-a14b/text-to-image" || ip.Model == "hidream-i1-full" || ip.Model.Contains("seedream") || ip.Model.Contains("ovis-image");
                 }
 
                 if (propertyName == nameof(SizeImagen4))

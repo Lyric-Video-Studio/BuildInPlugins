@@ -253,6 +253,7 @@ namespace FalAiPlugin
                     case "qwen-image":
                     case "wan/v2.2-a14b/text-to-image":
                     case "hidream-i1-full":
+                    case "ovis-image":
                         imageReg.image_size = newTp.SizeQwen;
                         break;
 
@@ -418,7 +419,8 @@ namespace FalAiPlugin
                     return ["qwen-image", "qwen-image-edit-plus", "imagen4/preview", "wan/v2.2-a14b/text-to-image", "hidream-i1-full",
                         "wan-25-preview/text-to-image", "wan-25-preview/image-to-image",
                         "bytedance/seedream/v4/text-to-image", "bytedance/seedream/v4/edit",
-                        "gpt-image-1-mini", "gpt-image-1-mini/edit"];
+                        "gpt-image-1-mini", "gpt-image-1-mini/edit",
+                        "ovis-image"];
                 }
             }
             else
