@@ -69,6 +69,11 @@ namespace FalAiPlugin
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (tp.Model == "editto")
+                {
+                    return propertyName == nameof(Model) || propertyName == nameof(Prompt);
+                }
+
                 if (tp.Model == "kling-video/ai-avatar/v2/pro")
                 {
                     return propertyName == nameof(Prompt) || propertyName == nameof(ImageSource) || propertyName == nameof(Model);

@@ -149,7 +149,7 @@ namespace GooglePlugin
 
             if (propertyName == nameof(ImageTrackPayload.Model))
             {
-                return ["gemini-3-pro-image-preview", "gemini-2.5-flash-image-preview"];
+                return ["gemini-3-pro-image-preview", "gemini-2.5-flash-image"];
             }
 
             return Array.Empty<string>();

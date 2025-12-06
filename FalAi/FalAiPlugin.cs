@@ -205,6 +205,11 @@ namespace FalAiPlugin
                     reg.aspect_ratio = "16:9";
                 }
 
+                if (model == "editto")
+                {
+                    reg.resolution = "auto";
+                }
+
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
                     textualProgressAction, model);
                 return videoResp;
@@ -353,7 +358,7 @@ namespace FalAiPlugin
                             "pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video", "pixverse/v5/image-to-video", "pixverse/v5/text-to-video", "" +
                             "lucy-edit/pro",
                             "bytedance/omnihuman/v1.5",
-                            "seedvr/upscale/video"];
+                            "seedvr/upscale/video", "editto"];
 
                     case nameof(TrackPayload.AspectRatio):
                         return ["16:9", "9:16", "1:1"];
