@@ -76,6 +76,9 @@ namespace FalAiPlugin
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? sync_mode { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? generate_audio_switch { get; set; }
     }
 
     public class AudioRequest

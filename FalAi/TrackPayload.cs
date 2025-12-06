@@ -56,7 +56,6 @@ namespace FalAiPlugin
         public bool GenerateAudio { get; set; }
 
         public string Style { get; set; }
-        public string CameraMovement { get; set; }
 
         [EnableFileDrop]
         public string ImageSource { get; set; }
@@ -126,10 +125,10 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(GenerateAudio))
                 {
-                    return Model.StartsWith("veo") || Model.StartsWith("ltxv-2") || Model.Contains("kling-video/v2.6/pro");
+                    return Model.StartsWith("veo") || Model.StartsWith("ltxv-2") || Model.Contains("kling-video/v2.6/pro") || Model.Contains("pixverse/v5.5/");
                 }
 
-                if (propertyName == nameof(Style) || propertyName == nameof(CameraMovement))
+                if (propertyName == nameof(Style))
                 {
                     return Model.StartsWith("pixverse");
                 }

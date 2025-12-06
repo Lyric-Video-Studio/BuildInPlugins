@@ -137,13 +137,17 @@ namespace FalAiPlugin
                 if (newTp.Model.StartsWith("pixverse"))
                 {
                     reg.style = newTp.Style;
-                    reg.camera_movement = newTp.CameraMovement;
                     reg.duration = newIp.DurationPixverse;
                 }
 
                 if (newTp.Model.StartsWith("veo"))
                 {
                     reg.duration = newIp.DurationVeo;
+                }
+
+                if (newTp.Model.Contains("pixverse/v5.5"))
+                {
+                    reg.generate_audio_switch = newTp.GenerateAudio;
                 }
 
                 var model = newTp.Model;
@@ -346,7 +350,7 @@ namespace FalAiPlugin
                             "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
                             "ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video", "ltxv-13b-098-distilled/image-to-video",
-                            "pixverse/v5/image-to-video", "pixverse/v5/text-to-video", "" +
+                            "pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video", "pixverse/v5/image-to-video", "pixverse/v5/text-to-video", "" +
                             "lucy-edit/pro",
                             "bytedance/omnihuman/v1.5",
                             "seedvr/upscale/video"];
@@ -395,11 +399,6 @@ namespace FalAiPlugin
 
                     case nameof(TrackPayload.Style):
                         return ["anime", "3d_animation", "clay", "comic", "cyberpunk"];
-
-                    case nameof(TrackPayload.CameraMovement):
-                        return ["horizontal_left", "horizontal_right", "vertical_up", "vertical_down",
-                            "zoom_in", "zoom_out", "crane_up", "quickly_zoom_in", "quickly_zoom_out", "smooth_zoom_in",
-                        "camera_rotation", "robo_arm", "super_dolly_out", "whip_pan", "hitchcock", "left_follow", "hitchcock", "right_follow", "pan_left", "pan_right", "fix_bg"];
 
                     default:
                         break;
