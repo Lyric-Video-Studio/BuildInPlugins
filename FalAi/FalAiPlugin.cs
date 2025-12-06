@@ -342,7 +342,7 @@ namespace FalAiPlugin
                             "wan-25-preview/text-to-video", "wan-25-preview/image-to-video",
                             "wan-alpha",
                             "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
-                            "kling-video/v2.6/pro/text-to-video", "kling-video/v2.6/pro/image-to-video",
+                            "kling-video/ai-avatar/v2/pro", "kling-video/v2.6/pro/text-to-video", "kling-video/v2.6/pro/image-to-video",
                             "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
                             "ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video", "ltxv-13b-098-distilled/image-to-video",

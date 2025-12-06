@@ -70,6 +70,11 @@ namespace FalAiPlugin
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (tp.Model == "kling-video/ai-avatar/v2/pro")
+                {
+                    return propertyName == nameof(Prompt) || propertyName == nameof(ImageSource) || propertyName == nameof(Model);
+                }
+
                 if (propertyName == nameof(ResolutionLtx2) || propertyName == nameof(FramesPerSecondLtx2))
                 {
                     return tp.Model.Contains("ltxv-2");

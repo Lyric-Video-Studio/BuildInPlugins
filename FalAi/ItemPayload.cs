@@ -69,6 +69,11 @@ namespace FalAiPlugin
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (tp.Model == "kling-video/ai-avatar/v2/pro")
+                {
+                    return propertyName == nameof(Prompt) || propertyName == nameof(ImageSource) || propertyName == nameof(AudioSource);
+                }
+
                 // Hmm, this system is not really meant for this, but maybe it works:
                 if (tp.Model.StartsWith("wan-alpha") && !Prompt.Contains("The background of this video is transparent"))
                 {
