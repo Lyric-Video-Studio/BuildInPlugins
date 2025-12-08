@@ -358,7 +358,8 @@ namespace FalAiPlugin
                             "pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video", "pixverse/v5/image-to-video", "pixverse/v5/text-to-video", "" +
                             "lucy-edit/pro",
                             "bytedance/omnihuman/v1.5",
-                            "seedvr/upscale/video", "editto"];
+                            "seedvr/upscale/video",
+                            "editto"];
 
                     case nameof(TrackPayload.AspectRatio):
                         return ["16:9", "9:16", "1:1"];
