@@ -7,7 +7,7 @@ namespace FalAiPlugin
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
     public class FalAiImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
-        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAudioPlugin
+        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAudioPlugin, ICancellableGeneration
     {
         public string UniqueName { get => "FalAiBuildIn"; }
         public string DisplayName { get => "Fal AI (multi-model)"; }
@@ -210,8 +210,21 @@ namespace FalAiPlugin
                     reg.resolution = "auto";
                 }
 
+                if (model.Contains("kling", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    reg.duration = newIp.Duration;
+                }
+
+                if (model.Contains("kling-video/o1/", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    reg.start_image_url = reg.first_frame_url;
+                    reg.end_image_url = reg.last_frame_url;
+                    reg.first_frame_url = null;
+                    reg.last_frame_url = null;
+                }
+
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
-                    textualProgressAction, model);
+                    textualProgressAction, model, _ct);
                 return videoResp;
             }
             else
@@ -291,7 +304,7 @@ namespace FalAiPlugin
                     }
                 }
 
-                return await new Client().GetImage(imageReg, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback, textualProgressAction, newTp.Model);
+                return await new Client().GetImage(imageReg, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback, textualProgressAction, newTp.Model, _ct);
             }
             return new ImageResponse { Success = false, ErrorMsg = "Unknown error" };
         }
@@ -351,7 +364,7 @@ namespace FalAiPlugin
                             "wan-25-preview/text-to-video", "wan-25-preview/image-to-video",
                             "wan-alpha",
                             "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
-                            "kling-video/ai-avatar/v2/pro", "kling-video/v2.6/pro/text-to-video", "kling-video/v2.6/pro/image-to-video",
+                            "kling-video/ai-avatar/v2/pro", "kling-video/v2.6/pro/text-to-video", "kling-video/v2.6/pro/image-to-video", "kling-video/o1/image-to-video",
                             "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
                             "ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video", "ltxv-13b-098-distilled/image-to-video",
@@ -793,6 +806,13 @@ namespace FalAiPlugin
         public (bool payloadOk, string reasonIfNot) ValidatePayloads(object trackPaylod, object itemPayload)
         {
             return (true, "");
+        }
+
+        private CancellationToken _ct;
+
+        public void SetCancallationToken(CancellationToken cancellationToken)
+        {
+            _ct = cancellationToken;
         }
     }
 

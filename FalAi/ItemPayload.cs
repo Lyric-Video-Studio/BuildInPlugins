@@ -96,12 +96,12 @@ namespace FalAiPlugin
                 }
                 if (propertyName == nameof(FirstFrame))
                 {
-                    return tp.Model.Contains("first", StringComparison.CurrentCultureIgnoreCase);
+                    return tp.Model.Contains("first", StringComparison.CurrentCultureIgnoreCase) || tp.Model.Contains("kling-video/o1", StringComparison.CurrentCultureIgnoreCase);
                 }
 
                 if (propertyName == nameof(LastFrame))
                 {
-                    return tp.Model.Contains("last", StringComparison.CurrentCultureIgnoreCase);
+                    return tp.Model.Contains("last", StringComparison.CurrentCultureIgnoreCase) || tp.Model.Contains("kling-video/o1", StringComparison.CurrentCultureIgnoreCase);
                 }
 
                 if (propertyName == nameof(ImageSourceCont))
@@ -174,7 +174,7 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(ImageSource))
                 {
-                    return tp.Model.Contains("image-to-video") || tp.Model.Contains("speech-to-video");
+                    return (tp.Model.Contains("image-to-video") || tp.Model.Contains("speech-to-video")) && !tp.Model.Contains("kling-video/o1", StringComparison.InvariantCultureIgnoreCase);
                 }
 
                 if (propertyName == nameof(Duration))

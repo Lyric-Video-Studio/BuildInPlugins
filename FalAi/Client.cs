@@ -79,6 +79,12 @@ namespace FalAiPlugin
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? generate_audio_switch { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string start_image_url { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string end_image_url { get; set; }
     }
 
     public class AudioRequest
@@ -125,7 +131,7 @@ namespace FalAiPlugin
     internal class Client
     {
         public async Task<VideoResponse> GetVideo(VideoRequest request, string folderToSave, ConnectionSettings connectionSettings,
-            ItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, string model)
+            ItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, string model, CancellationToken ct)
         {
             try
             {
@@ -149,7 +155,7 @@ namespace FalAiPlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave, textualProgressAction, model);
+                    return await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave, textualProgressAction, model, cancelToken: ct);
                 }
 
                 var serialized = "";
@@ -190,7 +196,7 @@ namespace FalAiPlugin
                 {
                     refItemPlayload.PollingId = respSerialized.request_id.ToString();
                     saveAndRefreshCallback.Invoke(true);
-                    return await PollVideoResults(httpClient, respSerialized.request_id, folderToSave, textualProgressAction, model);
+                    return await PollVideoResults(httpClient, respSerialized.request_id, folderToSave, textualProgressAction, model, cancelToken: ct);
                 }
                 else
                 {
@@ -207,7 +213,7 @@ namespace FalAiPlugin
         // Fail response: {"detail": "User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing."}
 
         public async Task<ImageResponse> GetImage(Request request, ConnectionSettings connectionSettings,
-            ImageItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, string model)
+            ImageItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, string model, CancellationToken ct)
         {
             try
             {
@@ -222,7 +228,7 @@ namespace FalAiPlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollImageResults(httpClient, refItemPlayload.PollingId, "", textualProgressAction, model);
+                    return await PollImageResults(httpClient, refItemPlayload.PollingId, "", textualProgressAction, model, ct);
                 }
 
                 var serialized = "";
@@ -265,7 +271,7 @@ namespace FalAiPlugin
                     refItemPlayload.PollingId = respSerialized.request_id.ToString();
                     saveAndRefreshCallback.Invoke(true);
 
-                    return await PollImageResults(httpClient, respSerialized.request_id, "", textualProgressAction, model);
+                    return await PollImageResults(httpClient, respSerialized.request_id, "", textualProgressAction, model, ct);
                 }
                 else
                 {
@@ -280,14 +286,14 @@ namespace FalAiPlugin
         }
 
         private static async Task<ImageResponse> PollImageResults(HttpClient httpClient, string id, string folderToSave,
-            Action<string> textualProgressAction, string model)
+            Action<string> textualProgressAction, string model, CancellationToken ct)
         {
-            var resp = await PollVideoResults(httpClient, id, folderToSave, textualProgressAction, model, true);
+            var resp = await PollVideoResults(httpClient, id, folderToSave, textualProgressAction, model, true, ct);
             return new ImageResponse() { Success = resp.Success, ErrorMsg = resp.ErrorMsg, Image = resp.VideoFile, ImageFormat = "png" };
         }
 
         private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string id, string folderToSave,
-            Action<string> textualProgressAction, string model, bool isActuallyImage = false)
+            Action<string> textualProgressAction, string model, bool isActuallyImage = false, CancellationToken? cancelToken = null)
         {
             var pollingDelay = TimeSpan.FromSeconds(20);
 
@@ -296,6 +302,10 @@ namespace FalAiPlugin
 
             while (string.IsNullOrEmpty(videoUrl))
             {
+                if (cancelToken != null && cancelToken.Value.IsCancellationRequested)
+                {
+                    break;
+                }
                 // Wait for assets to be filled
                 try
                 {
@@ -361,6 +371,11 @@ namespace FalAiPlugin
                 {
                     throw;
                 }
+            }
+
+            if (cancelToken != null && cancelToken.Value.IsCancellationRequested)
+            {
+                throw new Exception("User cancelled");
             }
 
             var file = Path.GetFileName(videoUrl);
