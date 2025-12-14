@@ -5,7 +5,7 @@ namespace FalAiPlugin
 {
     public class TrackPayload : IPayloadPropertyVisibility
     {
-        public static event EventHandler ModelChanged;
+        public event EventHandler ModelChanged;
 
         private string model = "veo3/fast";
 

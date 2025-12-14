@@ -1,4 +1,5 @@
-﻿using PluginBase;
+﻿using Avalonia.Controls;
+using PluginBase;
 using System.Linq;
 using System.Text.Json.Nodes;
 
@@ -7,7 +8,7 @@ namespace FalAiPlugin
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
     public class FalAiImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
-        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAudioPlugin, ICancellableGeneration
+        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAudioPlugin, ICancellableGeneration, IGenerationCost
     {
         public string UniqueName { get => "FalAiBuildIn"; }
         public string DisplayName { get => "Fal AI (multi-model)"; }
@@ -469,33 +470,52 @@ namespace FalAiPlugin
         {
         }
 
-        private readonly bool _isActualInstance;
-
-        public FalAiImgToVidPlugin(bool isActualInstance)
+        private void SetupConnections(TrackPayload tp)
         {
-            _isActualInstance = isActualInstance; // This is not actually used...
-            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            tp.ModelChanged += (s, e) =>
             {
-                TrackPayload.ModelChanged += (s, e) =>
-                {
-                    saveAndRefreshCallback?.Invoke(false);
-                };
-            }
+                saveAndRefreshCallback?.Invoke(false);
 
-            if (CurrentTrackType == IPluginBase.TrackType.Image)
-            {
-                ImageTrackPayload.ModelChanged += (s, e) =>
+                if (s is TrackPayload tp)
                 {
-                    saveAndRefreshCallback?.Invoke(false);
-                };
-            }
+                    GetPricingForModel(tp.Model);
+                }
+            };
+        }
+
+        private void SetupConnections(ImageTrackPayload tp)
+        {
+            tp.ModelChanged += (s, e) =>
+            {
+                saveAndRefreshCallback?.Invoke(false);
+
+                if (s is ImageTrackPayload tp)
+                {
+                    GetPricingForModel(tp.Model);
+                }
+            };
+        }
+
+        private void GetPricingForModel(string model)
+        {
+            // Not doing anything because API not working...
+            /*Task.Run(async () =>
+            {
+                if (_connectionSettings != null && !string.IsNullOrEmpty(_connectionSettings.AccessToken))
+                {
+                    var res = await Client.GetPrice(_connectionSettings, model);
+
+                    if (res != null && res.prices != null && res.prices.Count > 1)
+                    {
+                        cost.Invoke(res.prices.FirstOrDefault().unit_price + res.prices.FirstOrDefault().currency);
+                    }
+                }
+            });*/
         }
 
         public IPluginBase CreateNewInstance()
         {
-            var plug = new FalAiImgToVidPlugin(true);
-
-            return plug;
+            return new FalAiImgToVidPlugin();
         }
 
         public async Task<string> TestInitialization()
@@ -607,13 +627,17 @@ namespace FalAiPlugin
         {
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
-                return JsonHelper.ToExactType<TrackPayload>(obj);
+                var tp = JsonHelper.ToExactType<TrackPayload>(obj);
+                SetupConnections((TrackPayload)tp);
+                return tp;
             }
             else if (CurrentTrackType == IPluginBase.TrackType.Audio)
             {
                 return JsonHelper.ToExactType<AudioTrackPayload>(obj);
             }
-            return JsonHelper.ToExactType<ImageTrackPayload>(obj);
+            var tp1 = JsonHelper.ToExactType<ImageTrackPayload>(obj);
+            SetupConnections((ImageTrackPayload)tp1);
+            return tp1;
         }
 
         public object ObjectToGeneralSettings(JsonObject obj)
@@ -645,10 +669,14 @@ namespace FalAiPlugin
             switch (CurrentTrackType)
             {
                 case IPluginBase.TrackType.Video:
-                    return new TrackPayload();
+                    var tp = new TrackPayload();
+                    SetupConnections(tp);
+                    return tp;
 
                 case IPluginBase.TrackType.Image:
-                    return new ImageTrackPayload();
+                    var tp1 = new ImageTrackPayload();
+                    SetupConnections(tp1);
+                    return tp1;
 
                 case IPluginBase.TrackType.Audio:
                     return new AudioTrackPayload();
@@ -683,10 +711,14 @@ namespace FalAiPlugin
             switch (CurrentTrackType)
             {
                 case IPluginBase.TrackType.Video:
-                    return JsonHelper.DeepCopy<TrackPayload>(obj);
+                    var tp = JsonHelper.DeepCopy<TrackPayload>(obj);
+                    SetupConnections(tp);
+                    return tp;
 
                 case IPluginBase.TrackType.Image:
-                    return JsonHelper.DeepCopy<ImageTrackPayload>(obj);
+                    var tp1 = JsonHelper.DeepCopy<ImageTrackPayload>(obj);
+                    SetupConnections(tp1);
+                    return tp1;
 
                 case IPluginBase.TrackType.Audio:
                     return JsonHelper.DeepCopy<AudioTrackPayload>(obj);
@@ -813,6 +845,13 @@ namespace FalAiPlugin
         public void SetCancallationToken(CancellationToken cancellationToken)
         {
             _ct = cancellationToken;
+        }
+
+        private Action<string> cost;
+
+        public void SetShowCostAction(Action<string> cost)
+        {
+            this.cost = cost;
         }
     }
 

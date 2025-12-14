@@ -5,7 +5,7 @@ namespace FalAiPlugin
 {
     public class ImageTrackPayload : IPayloadPropertyVisibility
     {
-        public static event EventHandler ModelChanged;
+        public event EventHandler ModelChanged;
 
         private string model = "hidream-i1-full";
 
