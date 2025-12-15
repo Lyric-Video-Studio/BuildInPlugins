@@ -313,8 +313,8 @@ namespace FalAiPlugin
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Key {connectionSettings.AccessToken}");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
-
-                var resp = await httpClient.GetAsync($"models/pricing?endpoint_id={"fal-ai/flux/dev"}");
+                var test = "[\"flux/dev\"]";
+                var resp = await httpClient.GetAsync($"models/pricing?endpoint_id={test}");
                 var asString = await resp.Content.ReadAsStringAsync();
                 if (resp.IsSuccessStatusCode)
                 {
@@ -332,7 +332,7 @@ namespace FalAiPlugin
 
                 return null;
             }
-        }*7
+        }*/
 
         private static async Task<ImageResponse> PollImageResults(HttpClient httpClient, string id, string folderToSave,
             Action<string> textualProgressAction, string model, CancellationToken ct)
@@ -389,13 +389,12 @@ namespace FalAiPlugin
                             return new VideoResponse() { Success = false, ErrorMsg = "Runway ML backend reported that video generating failed. " + respSerialized.failure };
                         }*/
 
-        //System.Diagnostics.Debug.WriteLine($"State: {respSerialized.status}");
-        //textualProgressAction.Invoke(respSerialized.status);
+                        //System.Diagnostics.Debug.WriteLine($"State: {respSerialized.status}");
+                        //textualProgressAction.Invoke(respSerialized.status);
 
-        videoUrl = respSerialized.images != null && respSerialized.images.Count > 0 ? respSerialized.images[0].url : respSerialized.video?.url;
+                        videoUrl = respSerialized.images != null && respSerialized.images.Count > 0 ? respSerialized.images[0].url : respSerialized.video?.url;
 
-                        if (string.private IsNullOrEmpty(videoUrl))
-
+                        if (string.IsNullOrEmpty(videoUrl))
                         {
                             videoUrl = respSerialized?.image?.url ?? "";
                         }
@@ -405,12 +404,12 @@ namespace FalAiPlugin
                             videoUrl = respSerialized?.audio?.url ?? "";
                         }
 
-maskUrl = respSerialized?.mask?.url;
+                        maskUrl = respSerialized?.mask?.url;
 
-if (string.IsNullOrEmpty(videoUrl))
-{
-    await Task.Delay(pollingDelay);
-}
+                        if (string.IsNullOrEmpty(videoUrl))
+                        {
+                            await Task.Delay(pollingDelay);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -419,169 +418,169 @@ if (string.IsNullOrEmpty(videoUrl))
                 }
                 catch (Exception)
                 {
-    throw;
-}
+                    throw;
+                }
             }
 
             if (cancelToken != null && cancelToken.Value.IsCancellationRequested)
-{
-    throw new Exception("User cancelled");
-}
+            {
+                throw new Exception("User cancelled");
+            }
 
-var file = Path.GetFileName(videoUrl);
-var downloadBase = new Uri(videoUrl.Replace(file, ""));
+            var file = Path.GetFileName(videoUrl);
+            var downloadBase = new Uri(videoUrl.Replace(file, ""));
 
-using var downloadClient = new HttpClient { BaseAddress = downloadBase, Timeout = Timeout.InfiniteTimeSpan };
+            using var downloadClient = new HttpClient { BaseAddress = downloadBase, Timeout = Timeout.InfiniteTimeSpan };
 
-if (isActuallyImage)
-{
-    downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "image/*");
-}
-else
-{
-    downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
-}
-
-// Store video request token to disk, in case connection is broken or something
-
-textualProgressAction.Invoke("Downloading");
-
-var videoResp = await downloadClient.GetAsync(file);
-
-while (videoResp.StatusCode != HttpStatusCode.OK)
-{
-    await Task.Delay(pollingDelay);
-    videoResp = await downloadClient.GetAsync(file);
-}
-
-if (videoResp.StatusCode == HttpStatusCode.OK)
-{
-    var respBytes = await videoResp.Content.ReadAsByteArrayAsync();
-    if (isActuallyImage)
-    {
-        textualProgressAction.Invoke("");
-        return new VideoResponse() { Success = true, VideoFile = Convert.ToBase64String(respBytes) };
-    }
-    else
-    {
-        var pathToVideo = Path.Combine(folderToSave, $"{id}.mp4");
-        await File.WriteAllBytesAsync(pathToVideo, respBytes);
-        textualProgressAction.Invoke("");
-
-        if (!string.IsNullOrEmpty(maskUrl))
-        {
-            file = Path.GetFileName(maskUrl);
-            downloadBase = new Uri(maskUrl.Replace(file, ""));
-
-            using var maskdownloadClient = new HttpClient { BaseAddress = downloadBase, Timeout = Timeout.InfiniteTimeSpan };
-
-            maskdownloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
+            if (isActuallyImage)
+            {
+                downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "image/*");
+            }
+            else
+            {
+                downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
+            }
 
             // Store video request token to disk, in case connection is broken or something
 
-            textualProgressAction.Invoke("Downloading mask");
+            textualProgressAction.Invoke("Downloading");
 
-            videoResp = await maskdownloadClient.GetAsync(file);
+            var videoResp = await downloadClient.GetAsync(file);
 
             while (videoResp.StatusCode != HttpStatusCode.OK)
             {
                 await Task.Delay(pollingDelay);
-                videoResp = await maskdownloadClient.GetAsync(file);
+                videoResp = await downloadClient.GetAsync(file);
             }
 
             if (videoResp.StatusCode == HttpStatusCode.OK)
             {
-                respBytes = await videoResp.Content.ReadAsByteArrayAsync();
-                var pathToVideoMask = Path.Combine(folderToSave, $"{id}_mask.mp4");
-                await File.WriteAllBytesAsync(pathToVideoMask, respBytes);
-                textualProgressAction.Invoke("");
-                return new VideoResponse() { Success = true, VideoFile = pathToVideo, VideoMask = pathToVideoMask };
-            }
-        }
+                var respBytes = await videoResp.Content.ReadAsByteArrayAsync();
+                if (isActuallyImage)
+                {
+                    textualProgressAction.Invoke("");
+                    return new VideoResponse() { Success = true, VideoFile = Convert.ToBase64String(respBytes) };
+                }
+                else
+                {
+                    var pathToVideo = Path.Combine(folderToSave, $"{id}.mp4");
+                    await File.WriteAllBytesAsync(pathToVideo, respBytes);
+                    textualProgressAction.Invoke("");
 
-        return new VideoResponse() { Success = true, VideoFile = pathToVideo };
-    }
-}
-else
-{
-    textualProgressAction.Invoke("");
-    return new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
-}
+                    if (!string.IsNullOrEmpty(maskUrl))
+                    {
+                        file = Path.GetFileName(maskUrl);
+                        downloadBase = new Uri(maskUrl.Replace(file, ""));
+
+                        using var maskdownloadClient = new HttpClient { BaseAddress = downloadBase, Timeout = Timeout.InfiniteTimeSpan };
+
+                        maskdownloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
+
+                        // Store video request token to disk, in case connection is broken or something
+
+                        textualProgressAction.Invoke("Downloading mask");
+
+                        videoResp = await maskdownloadClient.GetAsync(file);
+
+                        while (videoResp.StatusCode != HttpStatusCode.OK)
+                        {
+                            await Task.Delay(pollingDelay);
+                            videoResp = await maskdownloadClient.GetAsync(file);
+                        }
+
+                        if (videoResp.StatusCode == HttpStatusCode.OK)
+                        {
+                            respBytes = await videoResp.Content.ReadAsByteArrayAsync();
+                            var pathToVideoMask = Path.Combine(folderToSave, $"{id}_mask.mp4");
+                            await File.WriteAllBytesAsync(pathToVideoMask, respBytes);
+                            textualProgressAction.Invoke("");
+                            return new VideoResponse() { Success = true, VideoFile = pathToVideo, VideoMask = pathToVideoMask };
+                        }
+                    }
+
+                    return new VideoResponse() { Success = true, VideoFile = pathToVideo };
+                }
+            }
+            else
+            {
+                textualProgressAction.Invoke("");
+                return new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
+            }
         }
 
         internal static async Task<AudioResponse> GetAudio(AudioRequest request, string folderToSaveAudio, AudioItemPayload refItemPlayload, ConnectionSettings connectionSettings, string model,
             Action<bool> saveAndRefreshCallback, Action<string> textualProgress)
-{
-    try
-    {
-        using var httpClient = new HttpClient();
-        httpClient.DefaultRequestHeaders.Remove("accept");
-
-        // It's best to keep these here: use can change these from item settings
-        httpClient.BaseAddress = new Uri(connectionSettings.Url);
-        httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Key {connectionSettings.AccessToken}");
-        httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
-        httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
-
-        if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
         {
-            var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model);
-            return new AudioResponse() { Success = res.Success, ErrorMsg = res.ErrorMsg, AudioFile = res.VideoFile, AudioFormat = "wav" };
+            try
+            {
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Remove("accept");
+
+                // It's best to keep these here: use can change these from item settings
+                httpClient.BaseAddress = new Uri(connectionSettings.Url);
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Key {connectionSettings.AccessToken}");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+
+                if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
+                {
+                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model);
+                    return new AudioResponse() { Success = res.Success, ErrorMsg = res.ErrorMsg, AudioFile = res.VideoFile, AudioFormat = "wav" };
+                }
+
+                var serialized = "";
+
+                try
+                {
+                    serialized = JsonHelper.Serialize(request);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new AudioResponse() { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
+                }
+
+                var stringContent = new StringContent(serialized);
+                stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+                var resp = await httpClient.PostAsync(model, stringContent);
+                var respString = await resp.Content.ReadAsStringAsync();
+
+                if (resp.StatusCode != HttpStatusCode.OK)
+                {
+                    return new AudioResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+                }
+
+                RequestResponse respSerialized = null;
+
+                try
+                {
+                    respSerialized = JsonHelper.DeserializeString<RequestResponse>(respString);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    return new AudioResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
+                }
+
+                if (respSerialized != null && resp.IsSuccessStatusCode)
+                {
+                    refItemPlayload.PollingId = respSerialized.request_id.ToString();
+                    saveAndRefreshCallback.Invoke(true);
+
+                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model);
+                    return new AudioResponse() { Success = res.Success, ErrorMsg = res.ErrorMsg, AudioFile = res.VideoFile, AudioFormat = "wav" };
+                }
+                else
+                {
+                    return new AudioResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
+                return new AudioResponse() { ErrorMsg = ex.Message, Success = false };
+            }
         }
-
-        var serialized = "";
-
-        try
-        {
-            serialized = JsonHelper.Serialize(request);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine(ex.ToString());
-            return new AudioResponse() { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
-        }
-
-        var stringContent = new StringContent(serialized);
-        stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
-
-        var resp = await httpClient.PostAsync(model, stringContent);
-        var respString = await resp.Content.ReadAsStringAsync();
-
-        if (resp.StatusCode != HttpStatusCode.OK)
-        {
-            return new AudioResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
-        }
-
-        RequestResponse respSerialized = null;
-
-        try
-        {
-            respSerialized = JsonHelper.DeserializeString<RequestResponse>(respString);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine(ex.ToString());
-            return new AudioResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
-        }
-
-        if (respSerialized != null && resp.IsSuccessStatusCode)
-        {
-            refItemPlayload.PollingId = respSerialized.request_id.ToString();
-            saveAndRefreshCallback.Invoke(true);
-
-            var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model);
-            return new AudioResponse() { Success = res.Success, ErrorMsg = res.ErrorMsg, AudioFile = res.VideoFile, AudioFormat = "wav" };
-        }
-        else
-        {
-            return new AudioResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
-        }
-    }
-    catch (Exception ex)
-    {
-        System.Diagnostics.Debug.WriteLine(ex.ToString());
-        return new AudioResponse() { ErrorMsg = ex.Message, Success = false };
-    }
-}
     }
 }
