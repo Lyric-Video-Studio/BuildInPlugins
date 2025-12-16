@@ -91,7 +91,7 @@ namespace FalAiPlugin
                     reg.duration = newIp.DurationMinimax;
                 }
 
-                if (newTp.Model.StartsWith("wan"))
+                if (newTp.Model.StartsWith("wan") && !newTp.Model.Contains("2.6", StringComparison.InvariantCultureIgnoreCase))
                 {
                     reg.resolution = newTp.ResolutionWan;
                 }
@@ -222,6 +222,31 @@ namespace FalAiPlugin
                     reg.end_image_url = reg.last_frame_url;
                     reg.first_frame_url = null;
                     reg.last_frame_url = null;
+                }
+
+                if (model == "creatify/aurora")
+                {
+                    reg.resolution = "720p";
+                }
+
+                if (newTp.ShouldPropertyBeVisible(nameof(TrackPayload.AspectRatioWan26), newTp, newIp))
+                {
+                    reg.aspect_ratio = newTp.AspectRatioWan26;
+                }
+
+                if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationWan26), newTp, newIp))
+                {
+                    reg.duration = newIp.DurationWan26;
+                }
+
+                if (!newTp.ShouldPropertyBeVisible(nameof(TrackPayload.FramesPerSecond), newTp, newIp))
+                {
+                    reg.frames_per_second = null;
+                }
+
+                if (!newTp.ShouldPropertyBeVisible(nameof(TrackPayload.NumberOfFrames), newTp, newIp))
+                {
+                    reg.num_frames = null;
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
@@ -362,6 +387,7 @@ namespace FalAiPlugin
                             "veo3", "veo3/fast", "veo3/image-to-video", "veo3/fast/image-to-video",
                             "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
                                 "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video",
+                            "wan/v2.6/text-to-video", "wan/v2.6/image-to-video",
                             "wan-25-preview/text-to-video", "wan-25-preview/image-to-video",
                             "wan-alpha",
                             "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
@@ -373,10 +399,14 @@ namespace FalAiPlugin
                             "lucy-edit/pro",
                             "bytedance/omnihuman/v1.5",
                             "seedvr/upscale/video",
-                            "editto"];
+                            "editto",
+                            "creatify/aurora"];
 
                     case nameof(TrackPayload.AspectRatio):
                         return ["16:9", "9:16", "1:1"];
+
+                    case nameof(TrackPayload.AspectRatioWan26):
+                        return ["16:9", "9:16", "1:1", "4:3", "3:4"];
 
                     case nameof(TrackPayload.AspectRatioSora):
                         return ["16:9", "9:16"];
@@ -416,6 +446,9 @@ namespace FalAiPlugin
 
                     case nameof(ItemPayload.DurationSora):
                         return ["4", "8", "12"];
+
+                    case nameof(ItemPayload.DurationWan26):
+                        return ["5", "10", "15"];
 
                     case nameof(TrackPayload.Style):
                         return ["anime", "3d_animation", "clay", "comic", "cyberpunk"];

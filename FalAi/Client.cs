@@ -163,6 +163,12 @@ namespace FalAiPlugin
                     request.sync_mode = false; // Set the sync mode to false, we like to get the response as cdn link
                 }
 
+                if (model.Contains("wan/v2.6"))
+                {
+                    // Need to prop out the fal-ai
+                    baseUrl = baseUrl.Replace("fal-ai/", "");
+                }
+
                 httpClient.BaseAddress = new Uri(baseUrl);
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Key {connectionSettings.AccessToken}");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
@@ -358,7 +364,11 @@ namespace FalAiPlugin
                 // Wait for assets to be filled
                 try
                 {
-                    if (model.Contains('/'))
+                    if (model.Contains("v2.6"))
+                    {
+                        model = model.Split('/')[0] + '/' + model.Split('/')[1];
+                    }
+                    else if (model.Contains('/'))
                     {
                         model = model.Split('/')[0];
                     }

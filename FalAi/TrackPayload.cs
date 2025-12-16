@@ -30,6 +30,9 @@ namespace FalAiPlugin
         public int Seed { get; set; }
         public string AspectRatio { get; set; } = "16:9";
 
+        [CustomName("AspectRatio")]
+        public string AspectRatioWan26 { get; set; } = "16:9";
+
         [CustomName("Resolution")]
         public string ResolutionMinimax { get; set; } = "768P";
 
@@ -69,14 +72,33 @@ namespace FalAiPlugin
         {
             if (trackPayload is TrackPayload tp)
             {
+                if (propertyName == nameof(Model))
+                {
+                    return true;
+                }
+
+                if (tp.Model != null && tp.Model.StartsWith("wan/v2.6/", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (tp.Model.Contains("image", StringComparison.InvariantCultureIgnoreCase) && propertyName == nameof(ImageSource))
+                    {
+                        return true;
+                    }
+                    return propertyName == nameof(Prompt) || propertyName == nameof(NegativePrompt) || propertyName == nameof(Resolution) || propertyName == nameof(Seed);
+                }
+
                 if (tp.Model == "editto")
                 {
-                    return propertyName == nameof(Model) || propertyName == nameof(Prompt);
+                    return propertyName == nameof(Prompt);
+                }
+
+                if (tp.Model == "creatify/aurora")
+                {
+                    return propertyName == nameof(ImageSource);
                 }
 
                 if (tp.Model == "kling-video/ai-avatar/v2/pro")
                 {
-                    return propertyName == nameof(Prompt) || propertyName == nameof(ImageSource) || propertyName == nameof(Model);
+                    return propertyName == nameof(Prompt) || propertyName == nameof(ImageSource);
                 }
 
                 if (propertyName == nameof(ResolutionLtx2) || propertyName == nameof(FramesPerSecondLtx2))

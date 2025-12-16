@@ -21,6 +21,10 @@ namespace FalAiPlugin
 
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
+        public string DurationWan26 { get; set; } = "5";
+
+        [Description("Duration of the video in seconds")]
+        [CustomName("Duration")]
         public string DurationMinimax { get; set; } = "5";
 
         [Description("Duration of the video in seconds")]
@@ -72,6 +76,24 @@ namespace FalAiPlugin
                 if (propertyName == nameof(PollingId))
                 {
                     return true;
+                }
+
+                if (tp.Model != null && tp.Model.StartsWith("wan/v2.6/", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (tp.Model.Contains("image", StringComparison.InvariantCultureIgnoreCase) && propertyName == nameof(ImageSource))
+                    {
+                        return true;
+                    }
+                    return propertyName == nameof(Prompt) || propertyName == nameof(NegativePrompt) || propertyName == nameof(DurationWan26) || propertyName == nameof(Seed);
+                }
+                else if (propertyName == nameof(DurationWan26))
+                {
+                    return false;
+                }
+
+                if (tp.Model == "creatify/aurora")
+                {
+                    return propertyName == nameof(ImageSource) || propertyName == nameof(AudioSource);
                 }
 
                 if (tp.Model == "editto")
