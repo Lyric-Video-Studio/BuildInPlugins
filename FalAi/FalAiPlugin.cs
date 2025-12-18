@@ -330,6 +330,16 @@ namespace FalAiPlugin
                     }
                 }
 
+                if (newTp.ShouldPropertyBeVisible(nameof(ImageTrackPayload.BackGround), newTp, newIp))
+                {
+                    imageReg.background = newTp.BackGround;
+                }
+
+                if (newTp.ShouldPropertyBeVisible(nameof(ImageTrackPayload.SizeGpt15), newTp, newIp))
+                {
+                    imageReg.image_size = newTp.SizeGpt15;
+                }
+
                 return await new Client().GetImage(imageReg, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback, textualProgressAction, newTp.Model, _ct);
             }
             return new ImageResponse { Success = false, ErrorMsg = "Unknown error" };
@@ -469,12 +479,22 @@ namespace FalAiPlugin
                     return ["16:9", "9:16", "1:1", "3:4", "4:3"];
                 }
 
+                if (propertyName == nameof(ImageTrackPayload.SizeGpt15))
+                {
+                    return ["1024x1024", "1536x1024", "1024x1536"];
+                }
+
+                if (propertyName == nameof(ImageTrackPayload.BackGround))
+                {
+                    return ["auto", "transparent", "opaque"];
+                }
+
                 if (propertyName == nameof(ImageTrackPayload.Model))
                 {
                     return ["qwen-image", "qwen-image-edit-plus", "imagen4/preview", "wan/v2.2-a14b/text-to-image", "hidream-i1-full",
                         "wan-25-preview/text-to-image", "wan-25-preview/image-to-image",
                         "bytedance/seedream/v4/text-to-image", "bytedance/seedream/v4/edit",
-                        "gpt-image-1-mini", "gpt-image-1-mini/edit",
+                        "gpt-image-1.5", "gpt-image-1.5/edit", "gpt-image-1-mini", "gpt-image-1-mini/edit",
                         "ovis-image"];
                 }
             }

@@ -104,6 +104,9 @@ namespace FalAiPlugin
 
     public class Request
     {
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string background;
+
         public string prompt { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull | JsonIgnoreCondition.WhenWritingDefault)]

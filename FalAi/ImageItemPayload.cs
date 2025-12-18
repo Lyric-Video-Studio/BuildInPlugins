@@ -31,6 +31,11 @@ namespace FalAiPlugin
                 {
                     return (ip.Model?.EndsWith("image-to-image") ?? false) || (ip.Model?.Contains("edit") ?? false);
                 }
+
+                if (propertyName == nameof(ImageSourceContainer.AddReference))
+                {
+                    return (ip.Model?.EndsWith("image-to-image") ?? false) || (ip.Model?.Contains("edit") ?? false);
+                }
             }
             return true;
         }

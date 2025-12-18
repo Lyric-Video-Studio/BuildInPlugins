@@ -34,6 +34,11 @@ namespace FalAiPlugin
         [CustomName("Size")]
         public string SizeImagen4 { get; set; } = "16:9";
 
+        [CustomName("Size")]
+        public string SizeGpt15 { get; set; } = "1536x1024";
+
+        public string BackGround { get; set; } = "auto";
+
         public ImageSourceContainer ImageSource { get; set; } = new();
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
@@ -43,6 +48,11 @@ namespace FalAiPlugin
                 if (ip.Model.Contains("gpt", StringComparison.InvariantCultureIgnoreCase) && (propertyName is nameof(Seed) or nameof(NegativePrompt)))
                 {
                     return false;
+                }
+
+                if (propertyName is nameof(SizeGpt15) or nameof(BackGround))
+                {
+                    return ip.Model.Contains("gpt-image-1.5", StringComparison.InvariantCultureIgnoreCase);
                 }
 
                 if (propertyName == nameof(ImageSource))
