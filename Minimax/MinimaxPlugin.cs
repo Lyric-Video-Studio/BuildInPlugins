@@ -613,6 +613,14 @@ namespace MinimaxPlugin
                 }
             }
         }
+
+        public void UserDataDeleteRequested()
+        {
+            if (_connectionSettings != null)
+            {
+                _connectionSettings.DeleteTokens();
+            }
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

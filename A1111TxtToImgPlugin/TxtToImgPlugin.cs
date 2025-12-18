@@ -276,5 +276,9 @@ namespace A1111TxtToImgPlugin
                 ip.PositivePrompt = text;
             }
         }
+
+        public void UserDataDeleteRequested()
+        {
+        }
     }
 }

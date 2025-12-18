@@ -23,7 +23,7 @@ namespace LumaAiDreamMachinePlugin
         {
             try
             {
-                AccessToken = SecureStorageWrapper.Get(accessTokenKey);
+                AccessToken = SecureStorageWrapper.SecStorage.Get(accessTokenKey);
             }
             catch (Exception)
             {
@@ -41,8 +41,13 @@ namespace LumaAiDreamMachinePlugin
         {
             if (!string.IsNullOrEmpty(AccessToken))
             {
-                SecureStorageWrapper.Set(accessTokenKey, AccessToken);
+                SecureStorageWrapper.SecStorage.Set(accessTokenKey, AccessToken);
             }
+        }
+
+        internal void DeleteTokens()
+        {
+            SecureStorageWrapper.SecStorage.Delete(accessTokenKey);
         }
     }
 }

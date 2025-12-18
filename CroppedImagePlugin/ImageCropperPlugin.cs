@@ -486,5 +486,9 @@ namespace CroppedImagePlugin
         public void AppendToPayloadFromLyrics(string text, object payload)
         {
         }
+
+        public void UserDataDeleteRequested()
+        {
+        }
     }
 }

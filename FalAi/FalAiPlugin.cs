@@ -906,6 +906,11 @@ namespace FalAiPlugin
         {
             this.cost = cost;
         }
+
+        public void UserDataDeleteRequested()
+        {
+            _connectionSettings.DeleteTokens();
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

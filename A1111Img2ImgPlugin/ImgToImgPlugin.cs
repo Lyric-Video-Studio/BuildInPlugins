@@ -460,5 +460,9 @@ namespace A1111ImgToImgPlugin
         {
             return new ItemPayload() { PositivePrompt = text };
         }
+
+        public void UserDataDeleteRequested()
+        {
+        }
     }
 }

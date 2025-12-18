@@ -26,7 +26,7 @@ namespace MinimaxPlugin
         {
             try
             {
-                AccessToken = SecureStorageWrapper.Get(accessTokenKey);
+                AccessToken = SecureStorageWrapper.SecStorage.Get(accessTokenKey);
             }
             catch (Exception)
             {
@@ -44,7 +44,7 @@ namespace MinimaxPlugin
         {
             if (!string.IsNullOrEmpty(AccessToken))
             {
-                SecureStorageWrapper.Set(accessTokenKey, AccessToken);
+                SecureStorageWrapper.SecStorage.Set(accessTokenKey, AccessToken);
             }
         }
 
@@ -59,6 +59,11 @@ namespace MinimaxPlugin
         internal void SetVoiceRefreshCallback(Action voiceRefresh)
         {
             this.voiceRefresh = voiceRefresh;
+        }
+
+        internal void DeleteTokens()
+        {
+            SecureStorageWrapper.SecStorage.Delete(accessTokenKey);
         }
     }
 }
