@@ -8,7 +8,7 @@ namespace FalAiPlugin
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
     public class FalAiImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
-        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAudioPlugin, ICancellableGeneration, IGenerationCost
+        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAudioPlugin, ICancellableGeneration, IGenerationCost, IContentId
     {
         public string UniqueName { get => "FalAiBuildIn"; }
         public string DisplayName { get => "Fal AI (multi-model)"; }
@@ -910,6 +910,26 @@ namespace FalAiPlugin
         public void UserDataDeleteRequested()
         {
             _connectionSettings.DeleteTokens();
+        }
+
+        public string GetContentFromPayloadId(object payload)
+        {
+            if (payload is ItemPayload ip)
+            {
+                return ip.PollingId;
+            }
+
+            if (payload is ImageItemPayload imageItemPayload)
+            {
+                return imageItemPayload.PollingId;
+            }
+
+            if (payload is AudioItemPayload aip)
+            {
+                return aip.PollingId;
+            }
+
+            return "";
         }
     }
 
