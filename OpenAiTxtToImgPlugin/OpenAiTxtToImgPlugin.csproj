@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
@@ -11,11 +11,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <BaseOutputPath>..\..\LyricVideoStudio.Desktop\bin\Debug\net9.0-windows10.0.19041.0\win-x64\plugins</BaseOutputPath>
+    <BaseOutputPath>..\..\LyricVideoStudio.Desktop\bin\Debug\net10.0-windows10.0.19041.0\win-x64\plugins</BaseOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <BaseOutputPath>..\..\LyricVideoStudio.Desktop\bin\x64\Debug\net9.0-windows10.0.19041.0\win-x64\plugins</BaseOutputPath>
+    <BaseOutputPath>..\..\LyricVideoStudio.Desktop\bin\x64\Debug\net10.0-windows10.0.19041.0\win-x64\plugins</BaseOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
