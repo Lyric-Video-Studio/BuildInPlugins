@@ -367,9 +367,9 @@ namespace FalAiPlugin
                 // Wait for assets to be filled
                 try
                 {
-                    if (model.Contains("v2.6"))
+                    if (model.Contains("kling-video"))
                     {
-                        model = model.Split('/')[0] + '/' + model.Split('/')[1];
+                        model = "kling-video";
                     }
                     else if (model.Contains('/'))
                     {
