@@ -82,142 +82,105 @@ namespace BflTxtToImgPlugin
                     {
                         newIp.Seed = rnd.Next();
                         oldPl.Seed = newIp.Seed;
-                    }
+                    }                    
+                    
+                    newTp.SettingsNew.Prompt = $"{newIp.Prompt} {newTp.SettingsNew.Prompt}";
+                    newTp.SettingsNew.Prompt = newTp.SettingsNew.Prompt.Trim();
 
-                    newTp.Settings.Seed = newIp.Seed;
+                    // Gather all input images
+                    var inputImages = new string[] {newTp.InputImage, newTp.InputImage2, newTp.InputImage3, newTp.InputImage4, newTp.InputImage5,
+                            newTp.InputImage6, newTp.InputImage7,newTp.InputImage8,
+                            newIp.InputImage, newIp.InputImage2, newIp.InputImage3, newIp.InputImage4, newIp.InputImage5,
+                            newIp.InputImage6, newIp.InputImage7, newIp.InputImage8 }.Where(s => !string.IsNullOrEmpty(s) && File.Exists(s)).ToList();
 
-                    if (newTp.OldModels)
+                    for (int i = 0; i < inputImages.Count && i < 8; i++)
                     {
-                        newTp.Settings.Prompt = $"{newIp.Prompt} {newTp.Settings.Prompt}";
-                        newTp.Settings.Prompt = newTp.Settings.Prompt.Trim();
+                        // Bit silly way to go, but, well...
 
-                        if (!string.IsNullOrEmpty(newIp.ImageSource) && File.Exists(newIp.ImageSource))
-                        {
-                            newTp.Settings.Image_prompt = Convert.ToBase64String(File.ReadAllBytes(newIp.ImageSource));
-                        }
+                        var b64 = Convert.ToBase64String(File.ReadAllBytes(inputImages[i]));
 
-                        if (newIp.EditImage)
+                        switch (i)
                         {
-                            var newInput = new FluxKontextProInputs()
-                            {
-                                Input_image = newTp.Settings.Image_prompt,
-                                Prompt = newTp.Settings.Prompt,
-                                Output_format = newTp.Settings.Output_format,
-                                Prompt_upsampling = newTp.Settings.Prompt_upsampling,
-                                Safety_tolerance = newTp.Settings.Safety_tolerance,
-                                Seed = newTp.Settings.Seed
-                            };
+                            case 0:
+                                newTp.SettingsNew.Input_image = b64;
+                                break;
 
-                            imageRequest = await imgClient.Generate_flux_kontext_pro_v1_flux_kontext_pro_postAsync(newInput);
-                        }
-                        else
-                        {
-                            if (newTp.Settings.Image_prompt == "")
-                            {
-                                newTp.Settings.Image_prompt = null;
-                            }
-                            imageRequest = await imgClient.Flux_pro_1_1_v1_flux_pro_1_1_postAsync(newTp.Settings);
+                            case 1:
+                                newTp.SettingsNew.Input_image_2 = b64;
+                                break;
+
+                            case 2:
+                                newTp.SettingsNew.Input_image_3 = b64;
+                                break;
+
+                            case 3:
+                                newTp.SettingsNew.Input_image_4 = b64;
+                                break;
+
+                            case 4:
+                                newTp.SettingsNew.Input_image_5 = b64;
+                                break;
+
+                            case 5:
+                                newTp.SettingsNew.Input_image_6 = b64;
+                                break;
+
+                            case 6:
+                                newTp.SettingsNew.Input_image_7 = b64;
+                                break;
+
+                            case 7:
+                                newTp.SettingsNew.Input_image_8 = b64;
+                                break;
+
+                            default:
+                                break;
                         }
                     }
-                    else
+
+                    // Sigh, make sure the images are null if empty. Sigh, BFL, please fix your code :D
+                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image))
                     {
-                        newTp.SettingsNew.Prompt = $"{newIp.Prompt} {newTp.SettingsNew.Prompt}";
-                        newTp.SettingsNew.Prompt = newTp.SettingsNew.Prompt.Trim();
-
-                        // Gather all input images
-                        var inputImages = new string[] {newTp.InputImage, newTp.InputImage2, newTp.InputImage3, newTp.InputImage4, newTp.InputImage5,
-                                newTp.InputImage6, newTp.InputImage7,newTp.InputImage8,
-                                newIp.InputImage, newIp.InputImage2, newIp.InputImage3, newIp.InputImage4, newIp.InputImage5,
-                                newIp.InputImage6, newIp.InputImage7, newIp.InputImage8 }.Where(s => !string.IsNullOrEmpty(s) && File.Exists(s)).ToList();
-
-                        for (int i = 0; i < inputImages.Count && i < 8; i++)
-                        {
-                            // Bit silly way to go, but, well...
-
-                            var b64 = Convert.ToBase64String(File.ReadAllBytes(inputImages[i]));
-
-                            switch (i)
-                            {
-                                case 0:
-                                    newTp.SettingsNew.Input_image = b64;
-                                    break;
-
-                                case 1:
-                                    newTp.SettingsNew.Input_image_2 = b64;
-                                    break;
-
-                                case 2:
-                                    newTp.SettingsNew.Input_image_3 = b64;
-                                    break;
-
-                                case 3:
-                                    newTp.SettingsNew.Input_image_4 = b64;
-                                    break;
-
-                                case 4:
-                                    newTp.SettingsNew.Input_image_5 = b64;
-                                    break;
-
-                                case 5:
-                                    newTp.SettingsNew.Input_image_6 = b64;
-                                    break;
-
-                                case 6:
-                                    newTp.SettingsNew.Input_image_7 = b64;
-                                    break;
-
-                                case 7:
-                                    newTp.SettingsNew.Input_image_8 = b64;
-                                    break;
-
-                                default:
-                                    break;
-                            }
-                        }
-
-                        // Sigh, make sure the images are null if empty. Sigh, BFL, please fix your code :D
-                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image))
-                        {
-                            newTp.SettingsNew.Input_image = null;
-                        }
-
-                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_2))
-                        {
-                            newTp.SettingsNew.Input_image_2 = null;
-                        }
-
-                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_3))
-                        {
-                            newTp.SettingsNew.Input_image_3 = null;
-                        }
-
-                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_4))
-                        {
-                            newTp.SettingsNew.Input_image_4 = null;
-                        }
-
-                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_5))
-                        {
-                            newTp.SettingsNew.Input_image_5 = null;
-                        }
-
-                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_6))
-                        {
-                            newTp.SettingsNew.Input_image_6 = null;
-                        }
-
-                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_7))
-                        {
-                            newTp.SettingsNew.Input_image_7 = null;
-                        }
-
-                        if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_8))
-                        {
-                            newTp.SettingsNew.Input_image_8 = null;
-                        }
-
-                        imageRequest = await imgClient.Generate_flux_2_pro_v1_flux_2_pro_postAsync(newTp.SettingsNew);
+                        newTp.SettingsNew.Input_image = null;
                     }
+
+                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_2))
+                    {
+                        newTp.SettingsNew.Input_image_2 = null;
+                    }
+
+                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_3))
+                    {
+                        newTp.SettingsNew.Input_image_3 = null;
+                    }
+
+                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_4))
+                    {
+                        newTp.SettingsNew.Input_image_4 = null;
+                    }
+
+                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_5))
+                    {
+                        newTp.SettingsNew.Input_image_5 = null;
+                    }
+
+                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_6))
+                    {
+                        newTp.SettingsNew.Input_image_6 = null;
+                    }
+
+                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_7))
+                    {
+                        newTp.SettingsNew.Input_image_7 = null;
+                    }
+
+                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_8))
+                    {
+                        newTp.SettingsNew.Input_image_8 = null;
+                    }
+
+                    imageRequest = await imgClient.Generate_flux_2_pro_v1_flux_2_pro_postAsync(newTp.SettingsNew);
+                    
 
                     costAction.Invoke((imageRequest.Cost / 100).ToString() + "€");
 
@@ -416,10 +379,6 @@ namespace BflTxtToImgPlugin
                 return (false, "Prompt missing");
             }
 
-            if (payload is ItemPayload ip2 && ip2.EditImage && string.IsNullOrEmpty(ip2.ImageSource))
-            {
-                return (false, "Image is required for editing");
-            }
             return (true, "");
         }
 
@@ -454,7 +413,7 @@ namespace BflTxtToImgPlugin
 
         public object ItemPayloadFromImageSource(string imgSource)
         {
-            return new ItemPayload() { ImageSource = imgSource };
+            return new ItemPayload() { InputImage = imgSource };
         }
 
         public string TextualRepresentation(object itemPayload)
@@ -538,7 +497,7 @@ namespace BflTxtToImgPlugin
         {
             if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
-                return new List<string>() { ip.ImageSource };
+                return new List<string>() { ip.InputImage, ip.InputImage2, ip.InputImage3, ip.InputImage4, ip.InputImage5, ip.InputImage6, ip.InputImage7, ip.InputImage8 };
             }
 
             return new List<string>();
@@ -551,9 +510,44 @@ namespace BflTxtToImgPlugin
             {
                 for (int i = 0; i < originalPath.Count; i++)
                 {
-                    if (originalPath[i] == ip.ImageSource)
+                    if (originalPath[i] == ip.InputImage)
                     {
-                        ip.ImageSource = newPath[i];
+                        ip.InputImage = newPath[i];
+                    }
+
+                    if (originalPath[i] == ip.InputImage2)
+                    {
+                        ip.InputImage2 = newPath[i];
+                    }
+
+                    if (originalPath[i] == ip.InputImage3)
+                    {
+                        ip.InputImage3 = newPath[i];
+                    }
+
+                    if (originalPath[i] == ip.InputImage4)
+                    {
+                        ip.InputImage4 = newPath[i];
+                    }
+
+                    if (originalPath[i] == ip.InputImage5)
+                    {
+                        ip.InputImage5 = newPath[i];
+                    }
+
+                    if (originalPath[i] == ip.InputImage6)
+                    {
+                        ip.InputImage6 = newPath[i];
+                    }
+
+                    if (originalPath[i] == ip.InputImage7)
+                    {
+                        ip.InputImage7 = newPath[i];
+                    }
+
+                    if (originalPath[i] == ip.InputImage8)
+                    {
+                        ip.InputImage8 = newPath[i];
                     }
                 }
             }
