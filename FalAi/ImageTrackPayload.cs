@@ -29,13 +29,13 @@ namespace FalAiPlugin
         public int Seed { get; set; }
 
         [CustomName("Size")]
-        public string SizeQwen { get; set; } = "landscape_16_9";
-
-        [CustomName("Size")]
         public string SizeImagen4 { get; set; } = "16:9";
 
         [CustomName("Size")]
         public string SizeGpt15 { get; set; } = "1536x1024";
+
+        public int WidthPx { get; set; } = 1920;
+        public int HeigthPx { get; set; } = 1080;
 
         public string BackGround { get; set; } = "auto";
 
@@ -45,6 +45,11 @@ namespace FalAiPlugin
         {
             if (trackPayload is ImageTrackPayload ip)
             {
+                if (propertyName == nameof(WidthPx) || propertyName == nameof(HeigthPx)) // TODO: Käyköhän tää kaikille??
+                {
+                    return !ip.Model.Contains("gpt-image-1.5");
+                }
+
                 if (ip.Model.Contains("gpt", StringComparison.InvariantCultureIgnoreCase) && (propertyName is nameof(Seed) or nameof(NegativePrompt)))
                 {
                     return false;
@@ -58,15 +63,6 @@ namespace FalAiPlugin
                 if (propertyName == nameof(ImageSource))
                 {
                     return (ip.Model?.EndsWith("image-to-image") ?? false) || (ip.Model?.Contains("edit") ?? false);
-                }
-
-                if (propertyName == nameof(SizeQwen))
-                {
-                    if (ip.Model.Contains("edit") || ip.Model.Contains("image-to-image"))
-                    {
-                        return false;
-                    }
-                    return ip.Model == "qwen-image" || ip.Model == "wan/v2.2-a14b/text-to-image" || ip.Model == "hidream-i1-full" || ip.Model.Contains("seedream") || ip.Model.Contains("ovis-image");
                 }
 
                 if (propertyName == nameof(SizeImagen4))

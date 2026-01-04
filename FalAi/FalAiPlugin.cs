@@ -8,7 +8,7 @@ namespace FalAiPlugin
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
     public class FalAiImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
-        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAudioPlugin, ICancellableGeneration, IGenerationCost, IContentId
+        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAudioPlugin, ICancellableGeneration, IGenerationCost, IContentId, ITrackPayloadFromModel
     {
         public string UniqueName { get => "FalAiBuildIn"; }
         public string DisplayName { get => "Fal AI (multi-model)"; }
@@ -305,11 +305,6 @@ namespace FalAiPlugin
 
                 imageReg.prompt = newTp.Prompt + " " + newIp.Prompt;
 
-                if (newTp.ShouldPropertyBeVisible(nameof(ImageTrackPayload.SizeQwen), newTp, newIp))
-                {
-                    imageReg.image_size = newTp.SizeQwen;
-                }
-
                 if (newTp.ShouldPropertyBeVisible(nameof(ImageTrackPayload.SizeImagen4), newTp, newIp))
                 {
                     imageReg.aspect_ratio = newTp.SizeImagen4;
@@ -338,6 +333,12 @@ namespace FalAiPlugin
                 if (newTp.ShouldPropertyBeVisible(nameof(ImageTrackPayload.SizeGpt15), newTp, newIp))
                 {
                     imageReg.image_size = newTp.SizeGpt15;
+                }
+
+                if (newTp.ShouldPropertyBeVisible(nameof(ImageTrackPayload.WidthPx), newTp, newIp))
+                {
+                    imageReg.image_size_custom = new ImageSizeCustom() { height = newTp.HeigthPx, width = newTp.WidthPx };
+                    imageReg.image_size = null;
                 }
 
                 return await new Client().GetImage(imageReg, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback, textualProgressAction, newTp.Model, _ct);
@@ -469,11 +470,6 @@ namespace FalAiPlugin
             }
             else if (CurrentTrackType == IPluginBase.TrackType.Image)
             {
-                if (propertyName == nameof(ImageTrackPayload.SizeQwen))
-                {
-                    return ["landscape_16_9", "landscape_4_3", "portrait_16_9", "portrait_4_3", "square", "square_hd"];
-                }
-
                 if (propertyName == nameof(ImageTrackPayload.SizeImagen4))
                 {
                     return ["16:9", "9:16", "1:1", "3:4", "4:3"];
@@ -491,11 +487,13 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(ImageTrackPayload.Model))
                 {
-                    return ["qwen-image", "qwen-image-edit-plus", "imagen4/preview", "wan/v2.2-a14b/text-to-image", "hidream-i1-full",
+                    return ["qwen-image-2512", "qwen-image-edit-2511", 
+                        "imagen4/preview", "wan/v2.2-a14b/text-to-image", "hidream-i1-full",
                         "wan-25-preview/text-to-image", "wan-25-preview/image-to-image",
-                        "bytedance/seedream/v4/text-to-image", "bytedance/seedream/v4/edit",
+                        "bytedance/seedream/v4.5/text-to-image", "bytedance/seedream/v4/text-to-image", "bytedance/seedream/v4/edit",
                         "gpt-image-1.5", "gpt-image-1.5/edit", "gpt-image-1-mini", "gpt-image-1-mini/edit",
-                        "ovis-image"];
+                        "ovis-image",
+                        "z-image/turbo"];
                 }
             }
             else
@@ -930,6 +928,20 @@ namespace FalAiPlugin
             }
 
             return "";
+        }
+
+        public object TrackPayloadFromModel(string model)
+        {
+            if (CurrentTrackType == IPluginBase.TrackType.Image)
+            {
+                return new ImageTrackPayload() { Model = model };
+            }
+
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            {
+                return new TrackPayload() { Model = model };
+            }
+            return null;
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using PluginBase;
+using System.Buffers.Text;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
@@ -116,6 +117,9 @@ namespace FalAiPlugin
         public string image_size { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public ImageSizeCustom image_size_custom { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string aspect_ratio { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -123,6 +127,12 @@ namespace FalAiPlugin
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<string> image_urls { get; set; }
+    }
+
+    public class ImageSizeCustom
+    {
+        public int width { get; set; }
+        public int height { get; set; }
     }
 
     public class RequestResponse
@@ -169,7 +179,8 @@ namespace FalAiPlugin
                 if (model.Contains("wan/v2.6"))
                 {
                     // Need to prop out the fal-ai
-                    baseUrl = baseUrl.Replace("fal-ai/", "");
+                    baseUrl = baseUrl.Replace("fal-ai/", "wan/");
+                    model = string.Join('/', model.Split('/').Skip(1));
                 }
 
                 httpClient.BaseAddress = new Uri(baseUrl);
@@ -245,10 +256,18 @@ namespace FalAiPlugin
                 httpClient.DefaultRequestHeaders.Remove("accept");
 
                 // It's best to keep these here: use can change these from item settings
-                httpClient.BaseAddress = new Uri(connectionSettings.Url);
+                var baseUrl = connectionSettings.Url;
+                if (model.Contains("wan/v2.6"))
+                {
+                    // Need to prop out the fal-ai
+                    baseUrl = baseUrl.Replace("fal-ai/", "wan/");
+                    model = string.Join('/', model.Split('/').Skip(1));
+                }
+
+                httpClient.BaseAddress = new Uri(baseUrl);
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Key {connectionSettings.AccessToken}");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");                
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
@@ -260,6 +279,9 @@ namespace FalAiPlugin
                 try
                 {
                     serialized = JsonHelper.Serialize(request);
+
+                    // Stupid json collides even when ignored...
+                    serialized = serialized.Replace("\"image_size_custom\"", "\"image_size\"");
                 }
                 catch (Exception ex)
                 {
@@ -367,14 +389,9 @@ namespace FalAiPlugin
                 // Wait for assets to be filled
                 try
                 {
-                    if (model.Contains("kling-video"))
-                    {
-                        model = "kling-video";
-                    }
-                    else if (model.Contains('/'))
-                    {
-                        model = model.Split('/')[0];
-                    }
+                    var modelSplit = model.Split('/');
+                    model = modelSplit[0];                    
+
                     var generationResp = await httpClient.GetAsync($"{model}/requests/{id}");
                     var respString = await generationResp.Content.ReadAsStringAsync();
 
