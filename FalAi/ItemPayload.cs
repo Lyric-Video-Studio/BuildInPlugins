@@ -25,7 +25,7 @@ namespace FalAiPlugin
 
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
-        public string DurationMinimax { get; set; } = "5";
+        public string DurationMinimax { get; set; } = "6";
 
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
@@ -82,6 +82,11 @@ namespace FalAiPlugin
                     return true;
                 }
 
+                if (tp.Model != null && tp.Model.Contains("hailuo-2.3-fast") && propertyName is nameof(NegativePrompt) or nameof(Seed) or nameof(ImageSourceContainer.AddReference))
+                {
+                    return false;
+                }
+
                 if (tp.Model != null && tp.Model.Contains("bytedance/seedance"))
                 {
                     if (propertyName is nameof(LastFrame) or nameof(ImageSource))
@@ -89,6 +94,11 @@ namespace FalAiPlugin
                         return tp.Model.Contains("image-to-video");
                     }
                     return propertyName is nameof(DurationSeedream) or nameof(Prompt);
+                }
+                else if(propertyName is nameof(DurationSeedream))
+                {
+                    // Hide minimax specific
+                    return false;
                 }
 
                 if (tp.Model != null && tp.Model.StartsWith("wan/v2.6/", StringComparison.InvariantCultureIgnoreCase))

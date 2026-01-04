@@ -76,6 +76,12 @@ namespace FalAiPlugin
                 {
                     return true;
                 }
+                
+                if (tp.Model != null && tp.Model.Contains("hailuo-2.3-fast") && propertyName is nameof(NegativePrompt) or nameof(AspectRatio) or nameof(AspectRatioSora) or nameof(AspectRatioWan26)
+                    or nameof(ResolutionMinimax) or nameof(Resolution) or nameof(Seed) or nameof(ImageSourceContainer.AddReference))
+                {
+                    return false;
+                }
 
                 if (tp.Model != null && tp.Model.Contains("bytedance/seedance"))
                 {

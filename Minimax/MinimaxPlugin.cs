@@ -22,7 +22,8 @@ namespace MinimaxPlugin
 
         public bool AsynchronousGeneration { get; } = true;
 
-        public string[] SettingsLinks => new[] { "https://www.minimax.io/platform/user-center/basic-information/interface-key", "https://www.minimax.io/platform/user-center/basic-information" };
+        public string[] SettingsLinks => new[] { "https://www.minimax.io/platform/user-center/basic-information/interface-key", 
+            "https://www.minimax.io/platform/user-center/basic-information" };
 
         public IPluginBase.TrackType CurrentTrackType { get; set; }
 
