@@ -37,6 +37,10 @@ namespace FalAiPlugin
 
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
+        public string DurationSeedream { get; set; } = "12";
+
+        [Description("Duration of the video in seconds")]
+        [CustomName("Duration")]
         public int DurationLtx2 { get; set; } = 6;
 
         [Description("Duration of the video in seconds")]
@@ -76,6 +80,15 @@ namespace FalAiPlugin
                 if (propertyName == nameof(PollingId))
                 {
                     return true;
+                }
+
+                if (tp.Model != null && tp.Model.Contains("bytedance/seedance"))
+                {
+                    if (propertyName is nameof(LastFrame) or nameof(ImageSource))
+                    {
+                        return tp.Model.Contains("image-to-video");
+                    }
+                    return propertyName is nameof(DurationSeedream) or nameof(Prompt);
                 }
 
                 if (tp.Model != null && tp.Model.StartsWith("wan/v2.6/", StringComparison.InvariantCultureIgnoreCase))

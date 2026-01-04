@@ -77,6 +77,15 @@ namespace FalAiPlugin
                     return true;
                 }
 
+                if (tp.Model != null && tp.Model.Contains("bytedance/seedance"))
+                {
+                    if (propertyName is nameof(ImageSource))
+                    {
+                        return tp.Model.Contains("image-to-video");
+                    }
+                    return propertyName is nameof(AspectRatioWan26) or nameof(ResolutionLtx) or nameof(GenerateAudio) or nameof(ImageSource) or nameof(Prompt);
+                }
+
                 if (tp.Model != null && tp.Model.StartsWith("wan/v2.6/", StringComparison.InvariantCultureIgnoreCase))
                 {
                     if (tp.Model.Contains("image", StringComparison.InvariantCultureIgnoreCase) && propertyName == nameof(ImageSource))

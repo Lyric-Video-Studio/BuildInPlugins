@@ -91,7 +91,7 @@ namespace FalAiPlugin
                     reg.duration = newIp.DurationMinimax;
                 }
 
-                if (newTp.Model.StartsWith("wan") && !newTp.Model.Contains("2.6", StringComparison.InvariantCultureIgnoreCase))
+                if (newTp.ShouldPropertyBeVisible(nameof(newTp.ResolutionWan), newTp, newIp))
                 {
                     reg.resolution = newTp.ResolutionWan;
                 }
@@ -106,7 +106,7 @@ namespace FalAiPlugin
                     reg.generate_audio = newTp.GenerateAudio;
                 }
 
-                if (newTp.Model.StartsWith("ltx") || newTp.Model.StartsWith("lucy-edit"))
+                if (newTp.ShouldPropertyBeVisible(nameof(newTp.ResolutionLtx), newTp, newIp))
                 {
                     reg.resolution = newTp.ResolutionLtx;
                 }
@@ -247,6 +247,18 @@ namespace FalAiPlugin
                 if (!newTp.ShouldPropertyBeVisible(nameof(TrackPayload.NumberOfFrames), newTp, newIp))
                 {
                     reg.num_frames = null;
+                }
+
+                if (!newTp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationSeedream), newTp, newIp))
+                {
+                    reg.duration = newIp.DurationSeedream;
+                }
+
+                if (model.Contains("seedance/v1.5/pro/image-to-video") && reg.last_frame_url != null && !string.IsNullOrEmpty(reg.last_frame_url))
+                {
+                    reg.end_image_url = reg.last_frame_url;
+                    reg.first_frame_url = null;
+                    reg.last_frame_url = null;
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
@@ -408,7 +420,7 @@ namespace FalAiPlugin
                             "ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video", "ltxv-13b-098-distilled/image-to-video",
                             "pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video", "pixverse/v5/image-to-video", "pixverse/v5/text-to-video", "" +
                             "lucy-edit/pro",
-                            "bytedance/omnihuman/v1.5",
+                            "bytedance/seedance/v1.5/pro/text-to-video", "bytedance/seedance/v1.5/pro/image-to-video", "bytedance/omnihuman/v1.5",
                             "seedvr/upscale/video",
                             "editto",
                             "creatify/aurora"];
@@ -460,6 +472,8 @@ namespace FalAiPlugin
 
                     case nameof(ItemPayload.DurationWan26):
                         return ["5", "10", "15"];
+                    case nameof(ItemPayload.DurationSeedream):
+                        return ["4", "5", "6", "7", "8", "9", "10", "11", "12"];
 
                     case nameof(TrackPayload.Style):
                         return ["anime", "3d_animation", "clay", "comic", "cyberpunk"];
