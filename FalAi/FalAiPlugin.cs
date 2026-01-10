@@ -8,7 +8,7 @@ namespace FalAiPlugin
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
     public class FalAiImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
-        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAudioPlugin, ICancellableGeneration, IGenerationCost, IContentId, ITrackPayloadFromModel
+        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAudioPlugin, ICancellableGeneration, IGenerationCost, IContentId, ITrackPayloadFromModel, IMenuSelectionOptionsForProperty
     {
         public string UniqueName { get => "FalAiBuildIn"; }
         public string DisplayName { get => "Fal AI (multi-model)"; }
@@ -403,35 +403,55 @@ namespace FalAiPlugin
         {
         }
 
+        public Task<Dictionary<string, string[]>> MenuSelectionOptionsForProperty(string propertyName)
+        {
+            if (CurrentTrackType == IPluginBase.TrackType.Video && propertyName == nameof(TrackPayload.Model))
+            {
+                var output = new Dictionary<string, string[]>();
+                output["openAi"] = ["sora-2/text-to-video", "sora-2/image-to-video"];
+                output["Google"] = ["veo3.1", "veo3.1/fast", "veo3.1/image-to-video", "veo3.1/fast/image-to-video", "veo3.1/reference-to-video", "veo3.1/first-last-frame-to-video",
+                                    "veo3", "veo3/fast", "veo3/image-to-video", "veo3/fast/image-to-video"];
+                output["Minimax"] = ["minimax/hailuo-2.3-fast/standard/image-to-video", "minimax/hailuo-2.3-fast/pro/image-to-video",
+                                    "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
+                                    "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video"];
+                output["Wan"] = ["wan/v2.6/text-to-video", "wan/v2.6/image-to-video",
+                                "wan-25-preview/text-to-video", "wan-25-preview/image-to-video",
+                                "wan-alpha",
+                                "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video"];
+
+                output["KlingAi"] = ["kling-video/ai-avatar/v2/pro", "kling-video/v2.6/pro/text-to-video", "kling-video/v2.6/pro/image-to-video", "kling-video/o1/image-to-video",
+                            "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
+                            "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video"];
+
+                output["Ltxv"] = ["ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video", "ltxv-13b-098-distilled/image-to-video"];
+                output["Pixverse"] = ["pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video", "pixverse/v5/image-to-video", "pixverse/v5/text-to-video"];
+                output["Bytedance"] = ["bytedance/seedance/v1.5/pro/text-to-video", "bytedance/seedance/v1.5/pro/image-to-video", "bytedance/omnihuman/v1.5"];
+                output["Upscale"] = ["seedvr/upscale/video"];
+                output["Edit videos"] = ["lucy-edit/pro", "editto", "one-to-all-animation/1.3b", "one-to-all-animation/14b"];
+                output["Misc"] = ["creatify/aurora"];
+                return Task.FromResult(output);
+            }
+            else if(CurrentTrackType == IPluginBase.TrackType.Image && propertyName == nameof(ImageTrackPayload.Model))
+            {
+                var output = new Dictionary<string, string[]>();
+                output["General"] = ["z-image/turbo", "ovis-image", "hidream-i1-full"];
+                output["Qwen"] = ["qwen-image-2512", "qwen-image-edit-2511"];
+                output["Google"] = ["imagen4/preview"];
+                output["Wan"] = ["wan/v2.2-a14b/text-to-image", "wan-25-preview/text-to-image", "wan-25-preview/image-to-image"];
+                output["Bytedance"] = ["bytedance/seedream/v4.5/text-to-image", "bytedance/seedream/v4/text-to-image", "bytedance/seedream/v4/edit"];
+                output["OpenAi"] = ["gpt-image-1.5", "gpt-image-1.5/edit", "gpt-image-1-mini", "gpt-image-1-mini/edit"];
+
+
+            }
+            return Task.FromResult(new Dictionary<string, string[]>());
+        }
+
         public async Task<string[]> SelectionOptionsForProperty(string propertyName)
         {
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 switch (propertyName)
                 {
-                    case nameof(TrackPayload.Model):
-                        return ["sora-2/text-to-video", "sora-2/image-to-video",
-                            "veo3.1", "veo3.1/fast", "veo3.1/image-to-video", "veo3.1/fast/image-to-video", "veo3.1/reference-to-video", "veo3.1/first-last-frame-to-video",
-                            "veo3", "veo3/fast", "veo3/image-to-video", "veo3/fast/image-to-video",
-                            "minimax/hailuo-2.3-fast/standard/image-to-video", "minimax/hailuo-2.3-fast/pro/image-to-video", 
-                                "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
-                                "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video",
-                            "wan/v2.6/text-to-video", "wan/v2.6/image-to-video",
-                            "wan-25-preview/text-to-video", "wan-25-preview/image-to-video",
-                            "wan-alpha",
-                            "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video",
-                            "kling-video/ai-avatar/v2/pro", "kling-video/v2.6/pro/text-to-video", "kling-video/v2.6/pro/image-to-video", "kling-video/o1/image-to-video",
-                            "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
-                            "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
-                            "ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video", "ltxv-13b-098-distilled/image-to-video",
-                            "pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video", "pixverse/v5/image-to-video", "pixverse/v5/text-to-video",
-                            "one-to-all-animation/1.3b", "one-to-all-animation/14b",
-                            "lucy-edit/pro",
-                            "bytedance/seedance/v1.5/pro/text-to-video", "bytedance/seedance/v1.5/pro/image-to-video", "bytedance/omnihuman/v1.5",
-                            "seedvr/upscale/video",
-                            "editto",
-                            "creatify/aurora"];
-
                     case nameof(TrackPayload.AspectRatio):
                         return ["16:9", "9:16", "1:1"];
 
@@ -505,17 +525,6 @@ namespace FalAiPlugin
                 {
                     return ["auto", "transparent", "opaque"];
                 }
-
-                if (propertyName == nameof(ImageTrackPayload.Model))
-                {
-                    return ["qwen-image-2512", "qwen-image-edit-2511", 
-                        "imagen4/preview", "wan/v2.2-a14b/text-to-image", "hidream-i1-full",
-                        "wan-25-preview/text-to-image", "wan-25-preview/image-to-image",
-                        "bytedance/seedream/v4.5/text-to-image", "bytedance/seedream/v4/text-to-image", "bytedance/seedream/v4/edit",
-                        "gpt-image-1.5", "gpt-image-1.5/edit", "gpt-image-1-mini", "gpt-image-1-mini/edit",
-                        "ovis-image",
-                        "z-image/turbo"];
-                }
             }
             else
             {
@@ -583,7 +592,7 @@ namespace FalAiPlugin
                     }
                 }
             });*/
-        }
+            }
 
         public IPluginBase CreateNewInstance()
         {
@@ -963,7 +972,7 @@ namespace FalAiPlugin
                 return new TrackPayload() { Model = model };
             }
             return null;
-        }
+        }        
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
