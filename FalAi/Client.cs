@@ -88,7 +88,10 @@ namespace FalAiPlugin
         public string end_image_url { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? character_orientation { get; set; }
+        public string character_orientation { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? enhance_prompt { get; set; }
     }
 
     public class AudioRequest
@@ -172,10 +175,11 @@ namespace FalAiPlugin
                 // It's best to keep these here: use can change these from item settings
                 var baseUrl = connectionSettings.Url;
 
-                if (model.Contains("lucy-edit"))
+                if (model.Contains("lucy-"))
                 {
                     // Need to prop out the fal-ai
                     baseUrl = baseUrl.Replace("fal-ai", "decart");
+                    model = model.Replace("decart/", "");
                     request.sync_mode = false; // Set the sync mode to false, we like to get the response as cdn link
                 }
 
@@ -393,7 +397,7 @@ namespace FalAiPlugin
                 try
                 {
                     var modelSplit = model.Split('/');
-                    model = modelSplit[0];                    
+                    model = modelSplit[0];
 
                     var generationResp = await httpClient.GetAsync($"{model}/requests/{id}");
                     var respString = await generationResp.Content.ReadAsStringAsync();

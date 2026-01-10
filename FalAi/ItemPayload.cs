@@ -90,6 +90,12 @@ namespace FalAiPlugin
                     return propertyName is nameof(ImageSource) or nameof(VideoSource) or nameof(Prompt) or nameof(NegativePrompt);
                 }
 
+                if (tp.Model != null && tp.Model == "decart/lucy-restyle")
+                {
+                    // Only image source and video ref
+                    return propertyName is nameof(Prompt) or nameof(VideoSource);
+                }
+
                 if (tp.Model != null && tp.Model.Contains("motion-control"))
                 {
                     // Only image source and video ref

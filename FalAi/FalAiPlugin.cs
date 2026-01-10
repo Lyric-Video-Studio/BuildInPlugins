@@ -46,7 +46,11 @@ namespace FalAiPlugin
                 reg.prompt = (newIp.Prompt + " " + newTp.Prompt).Trim();
                 reg.negative_prompt = (newIp.NegativePrompt + " " + newTp.NegativePrompt).Trim();
                 //reg.aspect_ratio = newTp.AspectRatio;
-                reg.resolution = newTp.Resolution;
+
+                if (newIp.ShouldPropertyBeVisible(nameof(newTp.Resolution), newTp, newIp))
+                {
+                    reg.resolution = newTp.Resolution;
+                }                    
 
                 if (newTp.Model.StartsWith("wan"))
                 {
@@ -249,7 +253,7 @@ namespace FalAiPlugin
                     reg.num_frames = null;
                 }
 
-                if (!newTp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationSeedream), newTp, newIp))
+                if (newTp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationSeedream), newTp, newIp))
                 {
                     reg.duration = newIp.DurationSeedream;
                 }
@@ -269,6 +273,11 @@ namespace FalAiPlugin
                 if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.CharacterOrientation), newTp, newIp))
                 {
                     reg.character_orientation = newIp.CharacterOrientation;
+                }
+
+                if (!newTp.ShouldPropertyBeVisible(nameof(TrackPayload.EnhancePrompt), newTp, newIp))
+                {
+                    reg.enhance_prompt = newTp.EnhancePrompt;
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
@@ -435,7 +444,7 @@ namespace FalAiPlugin
                 output["Pixverse"] = ["pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video", "pixverse/v5/image-to-video", "pixverse/v5/text-to-video"];
                 output["Bytedance"] = ["bytedance/seedance/v1.5/pro/text-to-video", "bytedance/seedance/v1.5/pro/image-to-video", "bytedance/omnihuman/v1.5"];
                 output["Upscale"] = ["seedvr/upscale/video"];
-                output["Edit videos"] = ["lucy-edit/pro", "editto", "one-to-all-animation/1.3b", "one-to-all-animation/14b"];
+                output["Edit videos"] = ["lucy-edit/pro", "decart/lucy-restyle", "editto", "one-to-all-animation/1.3b", "one-to-all-animation/14b"];
                 output["Misc"] = ["creatify/aurora"];
                 return Task.FromResult(output);
             }

@@ -66,6 +66,8 @@ namespace FalAiPlugin
         [CustomName("Aspect ratio")]
         public string AspectRatioSora { get; internal set; } = "16:9";
 
+        public bool EnhancePrompt { get; set; }
+
         public ImageSourceContainer ImageSourceCont { get; set; } = new();
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
@@ -81,6 +83,12 @@ namespace FalAiPlugin
                 {
                     // Only image source and video ref
                     return propertyName is nameof(ImageSource) or nameof(Prompt) or nameof(NegativePrompt) or nameof(ResolutionWan);
+                }
+
+                if (tp.Model != null && tp.Model == "decart/lucy-restyle")
+                {
+                    // Only image source and video ref
+                    return propertyName is nameof(Prompt) or nameof(EnhancePrompt);
                 }
 
                 if (tp.Model != null && tp.Model.Contains("motion-control"))
