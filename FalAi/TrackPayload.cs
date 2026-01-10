@@ -83,6 +83,11 @@ namespace FalAiPlugin
                     return propertyName is nameof(ImageSource) or nameof(Prompt) or nameof(NegativePrompt) or nameof(ResolutionWan);
                 }
 
+                if (tp.Model != null && tp.Model.Contains("motion-control"))
+                {
+                    // Only image source and video ref
+                    return propertyName is nameof(ImageSource);
+                }
 
                 if (tp.Model != null && tp.Model.Contains("hailuo-2.3-fast") && propertyName is nameof(NegativePrompt) or nameof(AspectRatio) or nameof(AspectRatioSora) or nameof(AspectRatioWan26)
                     or nameof(ResolutionMinimax) or nameof(Resolution) or nameof(Seed) or nameof(ImageSourceContainer.AddReference))

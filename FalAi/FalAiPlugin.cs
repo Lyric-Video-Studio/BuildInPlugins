@@ -266,6 +266,11 @@ namespace FalAiPlugin
                     reg.duration = null;
                 }
 
+                if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.CharacterOrientation), newTp, newIp))
+                {
+                    reg.character_orientation = newIp.CharacterOrientation;
+                }
+
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
                     textualProgressAction, model, _ct);
                 return videoResp;
@@ -414,14 +419,17 @@ namespace FalAiPlugin
                 output["Minimax"] = ["minimax/hailuo-2.3-fast/standard/image-to-video", "minimax/hailuo-2.3-fast/pro/image-to-video",
                                     "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
                                     "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video"];
+
                 output["Wan"] = ["wan/v2.6/text-to-video", "wan/v2.6/image-to-video",
                                 "wan-25-preview/text-to-video", "wan-25-preview/image-to-video",
                                 "wan-alpha",
                                 "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video"];
 
                 output["KlingAi"] = ["kling-video/ai-avatar/v2/pro", "kling-video/v2.6/pro/text-to-video", "kling-video/v2.6/pro/image-to-video", "kling-video/o1/image-to-video",
+                            "kling-video/v2.6/pro/motion-control", "kling-video/v2.6/standard/motion-control", 
                             "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
-                            "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video"];
+                            "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", 
+                            "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video"];
 
                 output["Ltxv"] = ["ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video", "ltxv-13b-098-distilled/image-to-video"];
                 output["Pixverse"] = ["pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video", "pixverse/v5/image-to-video", "pixverse/v5/text-to-video"];
@@ -504,6 +512,8 @@ namespace FalAiPlugin
 
                     case nameof(TrackPayload.Style):
                         return ["anime", "3d_animation", "clay", "comic", "cyberpunk"];
+                    case nameof(ItemPayload.CharacterOrientation):
+                        return ["image", "video"];
 
                     default:
                         break;

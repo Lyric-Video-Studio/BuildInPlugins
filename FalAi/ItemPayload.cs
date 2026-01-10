@@ -67,6 +67,8 @@ namespace FalAiPlugin
             get; set;
         }
 
+        public string CharacterOrientation { get; set; } = "video";
+
         public ImageSourceContainer ImageSourceCont { get; set; } = new();
 
         public ItemPayload()
@@ -86,6 +88,12 @@ namespace FalAiPlugin
                 {
                     // Only image source and video ref
                     return propertyName is nameof(ImageSource) or nameof(VideoSource) or nameof(Prompt) or nameof(NegativePrompt);
+                }
+
+                if (tp.Model != null && tp.Model.Contains("motion-control"))
+                {
+                    // Only image source and video ref
+                    return propertyName is nameof(ImageSource) or nameof(VideoSource) or nameof(CharacterOrientation);
                 }
 
                 if (tp.Model != null && tp.Model.Contains("hailuo-2.3-fast") && propertyName is nameof(NegativePrompt) or nameof(Seed) or nameof(ImageSourceContainer.AddReference))
