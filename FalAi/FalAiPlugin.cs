@@ -43,8 +43,8 @@ namespace FalAiPlugin
 
                 // Also, when img2Vid
                 var reg = new VideoRequest();
-                reg.prompt = newIp.Prompt + " " + reg.prompt;
-                reg.negative_prompt = (newIp.NegativePrompt + " " + reg.negative_prompt).Trim();
+                reg.prompt = (newIp.Prompt + " " + newTp.Prompt).Trim();
+                reg.negative_prompt = (newIp.NegativePrompt + " " + newTp.NegativePrompt).Trim();
                 //reg.aspect_ratio = newTp.AspectRatio;
                 reg.resolution = newTp.Resolution;
 
@@ -261,6 +261,11 @@ namespace FalAiPlugin
                     reg.last_frame_url = null;
                 }
 
+                if(model.Contains("one-to-all-animation"))
+                {
+                    reg.duration = null;
+                }
+
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
                     textualProgressAction, model, _ct);
                 return videoResp;
@@ -419,7 +424,8 @@ namespace FalAiPlugin
                             "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video",
                             "ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video", "ltxv-13b-098-distilled/image-to-video",
-                            "pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video", "pixverse/v5/image-to-video", "pixverse/v5/text-to-video", "" +
+                            "pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video", "pixverse/v5/image-to-video", "pixverse/v5/text-to-video",
+                            "one-to-all-animation/1.3b", "one-to-all-animation/14b",
                             "lucy-edit/pro",
                             "bytedance/seedance/v1.5/pro/text-to-video", "bytedance/seedance/v1.5/pro/image-to-video", "bytedance/omnihuman/v1.5",
                             "seedvr/upscale/video",

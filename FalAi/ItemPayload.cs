@@ -82,6 +82,12 @@ namespace FalAiPlugin
                     return true;
                 }
 
+                if (tp.Model != null && tp.Model.Contains("one-to-all-animation"))
+                {
+                    // Only image source and video ref
+                    return propertyName is nameof(ImageSource) or nameof(VideoSource) or nameof(Prompt) or nameof(NegativePrompt);
+                }
+
                 if (tp.Model != null && tp.Model.Contains("hailuo-2.3-fast") && propertyName is nameof(NegativePrompt) or nameof(Seed) or nameof(ImageSourceContainer.AddReference))
                 {
                     return false;
