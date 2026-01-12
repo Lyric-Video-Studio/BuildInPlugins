@@ -445,7 +445,7 @@ namespace FalAiPlugin
                 output["Bytedance"] = ["bytedance/seedance/v1.5/pro/text-to-video", "bytedance/seedance/v1.5/pro/image-to-video", "bytedance/omnihuman/v1.5"];
                 output["Upscale"] = ["seedvr/upscale/video"];
                 output["Edit videos"] = ["lucy-edit/pro", "decart/lucy-restyle", "editto", "one-to-all-animation/1.3b", "one-to-all-animation/14b"];
-                output["Avatars"] = ["creatify/aurora", "stable-avatar", "veed/fabric-1.0"];
+                output["Avatars"] = ["creatify/aurora", "stable-avatar"];
                 return Task.FromResult(output);
             }
             else if(CurrentTrackType == IPluginBase.TrackType.Image && propertyName == nameof(ImageTrackPayload.Model))
