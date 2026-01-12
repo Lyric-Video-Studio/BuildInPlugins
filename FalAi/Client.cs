@@ -190,6 +190,12 @@ namespace FalAiPlugin
                     model = string.Join('/', model.Split('/').Skip(1));
                 }
 
+                if (model == "veed/fabric-1.0")
+                {
+                    baseUrl = baseUrl.Replace("fal-ai/", "veed/");
+                    model = string.Join('/', model.Split('/').Skip(1));
+                }
+
                 httpClient.BaseAddress = new Uri(baseUrl);
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Key {connectionSettings.AccessToken}");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");

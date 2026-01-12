@@ -85,6 +85,18 @@ namespace FalAiPlugin
                     return propertyName is nameof(ImageSource) or nameof(Prompt) or nameof(NegativePrompt) or nameof(ResolutionWan);
                 }
 
+                if (tp.Model != null && (tp.Model == "veed/fabric-1.0"))
+                {
+                    // Only image source and video ref
+                    return propertyName is nameof(ImageSource) or nameof(ResolutionLtx);
+                }
+
+                if (tp.Model != null && (tp.Model == "stable-avatar"))
+                {
+                    // Only image source and video ref
+                    return propertyName is nameof(ImageSource) or nameof(Prompt);
+                }
+
                 if (tp.Model != null && tp.Model == "decart/lucy-restyle")
                 {
                     // Only image source and video ref
