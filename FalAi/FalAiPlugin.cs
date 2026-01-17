@@ -253,7 +253,7 @@ namespace FalAiPlugin
                     reg.num_frames = null;
                 }
 
-                if (newTp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationSeedream), newTp, newIp))
+                if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationSeedream), newTp, newIp))
                 {
                     reg.duration = newIp.DurationSeedream;
                 }
