@@ -5,7 +5,7 @@ namespace ElevenLabsPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class ElevenLabsPlugin : IAudioPlugin, ISaveAndRefresh, ITextualProgressIndication, ISaveConnectionSettings, ICancellableGeneration
+    public class ElevenLabsPlugin : IAudioPlugin, ISaveAndRefresh, ITextualProgressIndication, ISaveConnectionSettings
     {
         public string UniqueName { get => "ElevenLabsPlugin"; }
         public string DisplayName { get => "ElevenLabs"; }
@@ -156,6 +156,11 @@ namespace ElevenLabsPlugin
 
                 _voideNameIdDict["(none)"] = Guid.Empty.ToString();
 
+                if(_voideNameIdDict.Count == 1 && _connectionSettings != null && !string.IsNullOrEmpty(_connectionSettings.AccessToken))
+                {
+                    _ = RefreshVoiceListAsync().ConfigureAwait(false);
+                }
+
                 return _voideNameIdDict.Keys.Order().ToArray();
             }
 
@@ -175,7 +180,7 @@ namespace ElevenLabsPlugin
                     {
                         var voiceName = voice.name.Trim() + $" ({voice.labels.accent}, {voice.labels.age}, {voice.labels.gender}, {voice.labels.use_case})";
                         newStoredVoices += $"{voiceName};{voice.voice_id};{voice.preview_url}\n";
-                        _voideNameIdDict[voiceName] = voice.voice_id + (voice.labels);
+                        _voideNameIdDict[voiceName] = voice.voice_id;
                         _voicePathIdDict[voiceName] = voice.preview_url;
                     });
                     offset++;
@@ -350,13 +355,6 @@ namespace ElevenLabsPlugin
         public object ItemPayloadFromLyrics(string text)
         {
             return new ElevenLabsItemPayload() { Prompt = text };
-        }
-
-        private CancellationToken cancellationToken;
-
-        public void SetCancallationToken(CancellationToken cancellationToken)
-        {
-            this.cancellationToken = cancellationToken;
         }
 
         public void AppendToPayloadFromLyrics(string text, object payload)

@@ -112,6 +112,10 @@ namespace FalAiPlugin
                 {
                     // Only image source and video ref
                     return propertyName is nameof(ImageSource) or nameof(VideoSource) or nameof(CharacterOrientation);
+                } 
+                else if(propertyName is nameof(CharacterOrientation))
+                {
+                    return false;
                 }
 
                 if (tp.Model != null && tp.Model.Contains("hailuo-2.3-fast") && propertyName is nameof(NegativePrompt) or nameof(Seed) or nameof(ImageSourceContainer.AddReference))
