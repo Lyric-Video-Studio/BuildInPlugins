@@ -14,7 +14,7 @@ namespace FalAiPlugin
             get => model;
             set
             {
-                var notifi = IPayloadPropertyVisibility.UserInitiatedSet;
+                var notifi = IPayloadPropertyVisibility.UserInitiatedSet && model != value;
                 model = value;
 
                 if (notifi)
