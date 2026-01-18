@@ -197,17 +197,45 @@ namespace CroppedImagePlugin
 
                             newImg.Pixels = targetPixels;
 
-                            using var memStream = new MemoryStream();
-                            var codec = SKCodec.Create(newIp.Source);
-                            if (newImg.Encode(memStream, codec.EncodedFormat, 100))
+                            var rot = (RotateFinalOutput)newTp.SelectedRotation;
+                            var rotDeg = 0;
+                            switch (rot)
                             {
+                                case RotateFinalOutput.Left:
+                                    rotDeg = -90;
+                                    break;
+
+                                case RotateFinalOutput.Right:
+                                    rotDeg = 90;
+                                    break;
+                            }
+
+                            SKImage? rotated = rotDeg != 0 ? Rotate(newImg, rotDeg) : null;
+
+                            if (rotated != null)
+                            {
+                                using var memStream = new MemoryStream();
+                                var codec = SKCodec.Create(newIp.Source);
+                                using var data = rotated.Encode(codec.EncodedFormat, 100);
+                                data.SaveTo(memStream);
                                 memStream.Position = 0;
+                                rotated?.Dispose();
                                 return Task.FromResult(new ImageResponse { Image = Convert.ToBase64String(memStream.ToArray()), ImageFormat = Path.GetExtension(newIp.Source).Replace(".", ""), Success = true });
                             }
                             else
                             {
-                                return Task.FromResult(new ImageResponse { ErrorMsg = "Failed to encode bitmap data" });
-                            }
+                                using var memStream = new MemoryStream();
+                                var codec = SKCodec.Create(newIp.Source);
+                                if (newImg.Encode(memStream, codec.EncodedFormat, 100))
+                                {
+                                    memStream.Position = 0;
+                                    return Task.FromResult(new ImageResponse { Image = Convert.ToBase64String(memStream.ToArray()), ImageFormat = Path.GetExtension(newIp.Source).Replace(".", ""), Success = true });
+                                }
+                                else
+                                {
+                                    return Task.FromResult(new ImageResponse { ErrorMsg = "Failed to encode bitmap data" });
+                                }
+                            }                                
                         }
                     }
                 }
