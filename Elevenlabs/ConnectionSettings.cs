@@ -20,20 +20,7 @@ namespace ElevenLabsPlugin
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
         [IgnoreDynamicEdit]
-        public string Voices { get; set; }
-
-        private static Action refreshAction;
-
-        public void SetVoiceRefreshCallback(Action refresh)
-        {
-            refreshAction = refresh;
-        }
-
-        [CustomAction("Refresh voices")]
-        public void RefreshVoices()
-        {
-            refreshAction.Invoke();
-        }
+        public string Voices { get; set; }        
 
         public void OnDeserialized()
         {

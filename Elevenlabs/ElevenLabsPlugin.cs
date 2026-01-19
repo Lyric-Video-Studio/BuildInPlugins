@@ -5,7 +5,7 @@ namespace ElevenLabsPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class ElevenLabsPlugin : IAudioPlugin, ISaveAndRefresh, ITextualProgressIndication, ISaveConnectionSettings
+    public class ElevenLabsPlugin : IAudioPlugin, ISaveAndRefresh, ITextualProgressIndication, ISaveConnectionSettings, IDisposable
     {
         public string UniqueName { get => "ElevenLabsPlugin"; }
         public string DisplayName { get => "ElevenLabs"; }
@@ -27,6 +27,8 @@ namespace ElevenLabsPlugin
         private ConnectionSettings _connectionSettings = new ConnectionSettings();
 
         private static int _tasks = 0;
+
+        private IDisposable _refresVoicesDisposable;
 
         public async Task<AudioResponse> GetAudio(object trackPayload, object itemsPayload, string folderToSaveAudio)
         {
@@ -84,11 +86,6 @@ namespace ElevenLabsPlugin
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)
             {
                 _connectionSettings = s;
-                _connectionSettings.SetVoiceRefreshCallback(async () =>
-                {
-                    await RefreshVoiceListAsync();
-                    saveAndRefreshCallback?.Invoke(true);
-                });
                 _isInitialized = true;
                 return "";
             }
@@ -96,6 +93,19 @@ namespace ElevenLabsPlugin
             {
                 return "Connection settings object not valid";
             }
+        }
+
+        private ElevenLabsAudioTrackPayload SetInstanceSubs(ElevenLabsAudioTrackPayload at)
+        {
+            _refresVoicesDisposable?.Dispose();
+            _refresVoicesDisposable = null;
+            _refresVoicesDisposable = at.RefreshAction.Subscribe(async _ =>
+            {
+                skipNextRefresh = false;
+                await RefreshVoiceListAsync();
+                saveAndRefreshCallback?.Invoke(true);
+            });
+            return at;
         }
 
         public void CloseConnection()
@@ -156,7 +166,7 @@ namespace ElevenLabsPlugin
 
                 _voideNameIdDict["(none)"] = Guid.Empty.ToString();
 
-                if(_voideNameIdDict.Count == 1 && _connectionSettings != null && !string.IsNullOrEmpty(_connectionSettings.AccessToken))
+                if (_voideNameIdDict.Count == 1 && _connectionSettings != null && !string.IsNullOrEmpty(_connectionSettings.AccessToken))
                 {
                     _ = RefreshVoiceListAsync().ConfigureAwait(false);
                 }
@@ -167,39 +177,64 @@ namespace ElevenLabsPlugin
             return Array.Empty<string>();
         }
 
+        bool isRefreshingVoices = false;
+        bool skipNextRefresh = false;
+
+        private string voiceListError = "";
+
         private async Task RefreshVoiceListAsync()
         {
-            if (_connectionSettings != null && !string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            if (skipNextRefresh)
             {
-                var offset = 0;
-                var voiceResp = await ElevenLabsClient.GetVoices(_connectionSettings, "");
-                var newStoredVoices = "";
-                while (voiceResp != null && voiceResp.voices != null && voiceResp.voices.Count > 0)
+                return;
+            }
+            if (_connectionSettings != null && !string.IsNullOrEmpty(_connectionSettings.AccessToken) && !isRefreshingVoices)
+            {
+                try
                 {
-                    voiceResp.voices.ForEach(voice =>
+                    isRefreshingVoices = true;
+                    voiceListError = "";
+                    var offset = 0;
+                    var voiceResp = await ElevenLabsClient.GetVoices(_connectionSettings, "");
+                    var newStoredVoices = "";
+                    while (voiceResp != null && voiceResp.voices != null && voiceResp.voices.Count > 0)
                     {
-                        var voiceName = voice.name.Trim() + $" ({voice.labels.accent}, {voice.labels.age}, {voice.labels.gender}, {voice.labels.use_case})";
-                        newStoredVoices += $"{voiceName};{voice.voice_id};{voice.preview_url}\n";
-                        _voideNameIdDict[voiceName] = voice.voice_id;
-                        _voicePathIdDict[voiceName] = voice.preview_url;
-                    });
-                    offset++;
-                    voiceResp = await ElevenLabsClient.GetVoices(_connectionSettings, voiceResp.next_page_token);
+                        voiceResp.voices.ForEach(voice =>
+                        {
+                            var voiceName = voice.name.Trim() + $" ({voice.labels.accent}, {voice.labels.age}, {voice.labels.gender}, {voice.labels.use_case})";
+                            newStoredVoices += $"{voiceName};{voice.voice_id};{voice.preview_url}\n";
+                            _voideNameIdDict[voiceName] = voice.voice_id;
+                            _voicePathIdDict[voiceName] = voice.preview_url;
+                        });
+                        offset++;
+                        voiceResp = await ElevenLabsClient.GetVoices(_connectionSettings, voiceResp.next_page_token);
 
-                    if (!voiceResp.has_more)
-                    {
-                        break;
+                        if (!voiceResp.has_more)
+                        {
+                            break;
+                        }
                     }
-                }
 
-                _connectionSettings.Voices = newStoredVoices;
-                saveConnectionSettings.Invoke(_connectionSettings);
+                    _connectionSettings.Voices = newStoredVoices;
+                    saveConnectionSettings.Invoke(_connectionSettings);
+                }
+                catch (Exception ex)
+                {
+                    voiceListError = ex.Message;
+                    skipNextRefresh = true;
+                    throw;
+                }
+                finally
+                {
+                    isRefreshingVoices = false;
+                    saveAndRefreshCallback?.Invoke(true);
+                }
             }
         }
 
         public object DeserializePayload(string fileName)
         {
-            return JsonHelper.Deserialize<ElevenLabsAudioTrackPayload>(fileName);
+            return SetInstanceSubs(JsonHelper.Deserialize<ElevenLabsAudioTrackPayload>(fileName));
         }
 
         public IPluginBase CreateNewInstance()
@@ -243,7 +278,7 @@ namespace ElevenLabsPlugin
 
         public object ObjectToTrackPayload(JsonObject obj)
         {
-            return JsonHelper.ToExactType<ElevenLabsAudioTrackPayload>(obj);
+            return SetInstanceSubs(JsonHelper.ToExactType<ElevenLabsAudioTrackPayload>(obj) as ElevenLabsAudioTrackPayload);
         }
 
         public object ObjectToGeneralSettings(JsonObject obj)
@@ -266,7 +301,7 @@ namespace ElevenLabsPlugin
             switch (CurrentTrackType)
             {
                 case IPluginBase.TrackType.Audio:
-                    return new ElevenLabsAudioTrackPayload();
+                    return SetInstanceSubs(new ElevenLabsAudioTrackPayload());
 
                 default:
                     break;
@@ -292,7 +327,7 @@ namespace ElevenLabsPlugin
             switch (CurrentTrackType)
             {
                 case IPluginBase.TrackType.Audio:
-                    return JsonHelper.DeepCopy<ElevenLabsAudioTrackPayload>(obj);
+                    return SetInstanceSubs(JsonHelper.DeepCopy<ElevenLabsAudioTrackPayload>(obj));
 
                 default:
                     break;
@@ -323,6 +358,11 @@ namespace ElevenLabsPlugin
             if (payload is ElevenLabsItemPayload itemPl)
             {
                 return (!string.IsNullOrEmpty(itemPl.Prompt), "Prompt is empty");
+            }
+
+            if (!string.IsNullOrEmpty(voiceListError))
+            {
+                return (false, voiceListError);
             }
 
             return (true, "");
@@ -371,6 +411,11 @@ namespace ElevenLabsPlugin
             {
                 _connectionSettings.DeleteTokens();
             }
+        }
+
+        public void Dispose()
+        {
+            _refresVoicesDisposable?.Dispose();
         }
     }
 

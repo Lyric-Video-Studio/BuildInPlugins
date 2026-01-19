@@ -105,20 +105,13 @@ namespace ElevenLabsPlugin
         {
             using var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("xi-api-key", connectionSettings.AccessToken);
-            httpClient.BaseAddress = new Uri(connectionSettings.Url);
-            try
-            {
-                var nextPage = string.IsNullOrEmpty(offset) ? "" : $"&next_page_token={offset}";
-                var generationResp = await httpClient.GetAsync($"v2/voices?page_size={resultsPerPage}{nextPage}");
-                var respString = await generationResp.Content.ReadAsStringAsync();
-                var respSerialized = JsonHelper.DeserializeString<VoiceResponse>(respString);
-                return respSerialized;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine(ex);
-                return new VoiceResponse() { has_more = false };
-            }
+            httpClient.BaseAddress = new Uri(connectionSettings.Url);            
+            var nextPage = string.IsNullOrEmpty(offset) ? "" : $"&next_page_token={offset}";
+            var generationResp = await httpClient.GetAsync($"v2/voices?page_size={resultsPerPage}{nextPage}");
+            generationResp.EnsureSuccessStatusCode();
+            var respString = await generationResp.Content.ReadAsStringAsync();
+            var respSerialized = JsonHelper.DeserializeString<VoiceResponse>(respString);
+            return respSerialized;       
         }
     }
 }

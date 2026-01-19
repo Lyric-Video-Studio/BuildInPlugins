@@ -26,4 +26,10 @@
       <ExcludeAssets>runtime</ExcludeAssets>
     </ProjectReference>
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Reactive">
+      <HintPath>..\Wan\bin\Release\net10.0\win-x64\System.Reactive.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>

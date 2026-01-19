@@ -1,5 +1,7 @@
 ﻿using PluginBase;
 using System.ComponentModel;
+using System.Reactive.Subjects;
+using System.Text.Json.Serialization;
 
 namespace ElevenLabsPlugin
 {
@@ -27,7 +29,11 @@ namespace ElevenLabsPlugin
 
         [Description("Gender of the speeker. Used on speech / narration only")]
         public string Gender { get => gender; set => gender = value; }*/
-
+        [CustomAction("Refresh voices", true)]
+        public void RefreshVoices()
+        {
+            RefreshAction.OnNext(true);
+        }
         public string VoiceId { get => voiceId; set => voiceId = value; }
 
         [Description("NOTE: Only available for subscribed users.")]
@@ -35,6 +41,9 @@ namespace ElevenLabsPlugin
 
         [Description("Music lenght in seconds, between 10 and 180")]
         public int Length { get; set; }
+
+        [JsonIgnore]
+        public Subject<bool> RefreshAction = new();        
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
