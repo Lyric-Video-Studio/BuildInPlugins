@@ -47,10 +47,15 @@ namespace FalAiPlugin
             {
                 if (propertyName == nameof(WidthPx) || propertyName == nameof(HeigthPx)) // TODO: Käyköhän tää kaikille??
                 {
-                    return !ip.Model.Contains("gpt-image-1.5");
+                    return !ip.Model.Contains("gpt-image-1.5") && !ip.Model.Contains("imagineart");
                 }
 
                 if (ip.Model.Contains("gpt", StringComparison.InvariantCultureIgnoreCase) && (propertyName is nameof(Seed) or nameof(NegativePrompt)))
+                {
+                    return false;
+                }
+
+                if (ip.Model.Contains("imagineart-1.5-", StringComparison.InvariantCultureIgnoreCase) && (propertyName is nameof(NegativePrompt)))
                 {
                     return false;
                 }
@@ -67,7 +72,7 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(SizeImagen4))
                 {
-                    return ip.Model == "imagen4/preview";
+                    return ip.Model == "imagen4/preview" || ip.Model.Contains("imagineart");
                 }
             }
             return true;

@@ -27,6 +27,11 @@ namespace FalAiPlugin
                     return false;
                 }
 
+                if (ip.Model.Contains("imagineart-1.5-", StringComparison.InvariantCultureIgnoreCase) && (propertyName is nameof(NegativePrompt)))
+                {
+                    return false;
+                }
+
                 if (propertyName == nameof(ImageSources))
                 {
                     return (ip.Model?.EndsWith("image-to-image") ?? false) || (ip.Model?.Contains("edit") ?? false);

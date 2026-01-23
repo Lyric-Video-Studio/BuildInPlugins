@@ -47,10 +47,10 @@ namespace FalAiPlugin
                 reg.negative_prompt = (newIp.NegativePrompt + " " + newTp.NegativePrompt).Trim();
                 //reg.aspect_ratio = newTp.AspectRatio;
 
-                if (newIp.ShouldPropertyBeVisible(nameof(newTp.Resolution), newTp, newIp))
+                if (newTp.ShouldPropertyBeVisible(nameof(newTp.Resolution), newTp, newIp))
                 {
                     reg.resolution = newTp.Resolution;
-                }                    
+                }
 
                 if (newTp.Model.StartsWith("wan"))
                 {
@@ -451,7 +451,7 @@ namespace FalAiPlugin
             else if(CurrentTrackType == IPluginBase.TrackType.Image && propertyName == nameof(ImageTrackPayload.Model))
             {
                 var output = new Dictionary<string, string[]>();
-                output["General"] = ["z-image/turbo", "ovis-image", "hidream-i1-full"];
+                output["General"] = ["z-image/turbo", "ovis-image", "hidream-i1-full", "glm-image", "imagineart-1.5-pro-preview/text-to-image"];
                 output["Qwen"] = ["qwen-image-2512", "qwen-image-edit-2511"];
                 output["Google"] = ["imagen4/preview"];
                 output["Wan"] = ["wan/v2.2-a14b/text-to-image", "wan-25-preview/text-to-image", "wan-25-preview/image-to-image"];

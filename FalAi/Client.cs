@@ -181,7 +181,7 @@ namespace FalAiPlugin
                     baseUrl = baseUrl.Replace("fal-ai", "decart");
                     model = model.Replace("decart/", "");
                     request.sync_mode = false; // Set the sync mode to false, we like to get the response as cdn link
-                }
+                }                
 
                 if (model.Contains("wan/v2.6"))
                 {
@@ -275,6 +275,12 @@ namespace FalAiPlugin
                     // Need to prop out the fal-ai
                     baseUrl = baseUrl.Replace("fal-ai/", "wan/");
                     model = string.Join('/', model.Split('/').Skip(1));
+                }
+
+                if (model.Contains("imagineart-"))
+                {
+                    // Need to prop out the fal-ai
+                    baseUrl = baseUrl.Replace("fal-ai", "imagineart");
                 }
 
                 httpClient.BaseAddress = new Uri(baseUrl);
