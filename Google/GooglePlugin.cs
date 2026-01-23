@@ -1,4 +1,5 @@
 ﻿using Mscc.GenerativeAI;
+using Mscc.GenerativeAI.Types;
 using PluginBase;
 using System.Text.Json.Nodes;
 
@@ -6,7 +7,7 @@ namespace GooglePlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class GooglePlugin : IImagePlugin, ICancellableGeneration
+    public class GooglePlugin : IImagePlugin, ICancellableGeneration, /*IVideoPlugin,*/ IImportFromImage
     {
         public const string PluginName = "GooglePluginBuildIn";
         public string UniqueName { get => PluginName; }
@@ -84,6 +85,52 @@ namespace GooglePlugin
             throw new Exception("Internal error");
         }
 
+        public async Task<VideoResponse> GetVideo(object trackPayload, object itemsPayload, string folderToSaveVideo)
+        {
+
+            if (trackPayload is VideoTrackPayload tp && itemsPayload is VideoItemPayload ip)
+            {
+                var effectiveImage = !string.IsNullOrEmpty(ip.ImageSource) ? ip.ImageSource : tp.ImageSource;
+
+                if (_generativeModel == null)
+                {
+                    _generativeModel = _googleAi.GenerativeModel(tp.Model);
+                }
+
+                var vidReg = new GenerateVideosRequest((ip.Prompt + " " + tp.Prompt).Trim());
+
+                if (!string.IsNullOrEmpty(effectiveImage))
+                {
+                    var imageBytes = await File.ReadAllBytesAsync(effectiveImage);
+                    var mimeType = Path.GetExtension(effectiveImage).ToLower() switch
+                    {
+                        ".jpg" or ".jpeg" => "image/jpeg",
+                        ".png" => "image/png",
+                        _ => throw new NotSupportedException("Unsupported image format.")
+                    };
+
+                    vidReg.Instances.FirstOrDefault()!.Image = new Image() { ImageBytes = imageBytes, MimeType = mimeType };
+                }
+
+                
+                vidReg.Parameters = new GenerateVideosConfig()
+                {
+                    AspectRatio = tp.Size,
+                    DurationSeconds = 8,
+                    Resolution = tp.Resolution,
+                    NegativePrompt = (ip.NegativePrompt + " " + tp.NegativePrompt).Trim()
+                };
+
+                var res = await _generativeModel.GenerateVideos(vidReg);
+                var vid = res.GeneratedVideos.FirstOrDefault();
+                var path = Path.Combine(folderToSaveVideo, $"{Guid.NewGuid()}.mp4");
+                File.WriteAllBytes(path, vid.Video.VideoBytes);
+                return new VideoResponse() { Fps = 24, VideoFile = path, Success = true };
+            }
+            throw new Exception("Internal error");
+            
+        }
+
         private (string img, string format) ExtractImageDataBase64(GenerateContentResponse response)
         {
             var imageStrings = new List<string>();
@@ -142,14 +189,35 @@ namespace GooglePlugin
                 return Array.Empty<string>();
             }
 
-            if (propertyName == nameof(ImageTrackPayload.Size))
+            if (CurrentTrackType == IPluginBase.TrackType.Image)
             {
-                return ["1K", "2K", "4K"];
-            }
+                if (propertyName == nameof(ImageTrackPayload.Size))
+                {
+                    return ["1K", "2K", "4K"];
+                }
 
-            if (propertyName == nameof(ImageTrackPayload.Model))
+                if (propertyName == nameof(ImageTrackPayload.Model))
+                {
+                    return ["gemini-3-pro-image-preview", "gemini-2.5-flash-image"];
+                }
+            }
+            else if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
-                return ["gemini-3-pro-image-preview", "gemini-2.5-flash-image"];
+                if (propertyName == nameof(VideoTrackPayload.Model))
+                {
+                    return ["veo-3.1-fast-generate-preview", "veo-3.1-generate-preview"];
+                }
+
+                if (propertyName == nameof(VideoTrackPayload.Size))
+                {
+                    return [ImageAspectRatio.Ratio16x9.ToString(), ImageAspectRatio.Ratio9x16.ToString()];
+                }
+
+                if (propertyName == nameof(VideoTrackPayload.Resolution))
+                {
+                    return ["720p", "1080p", "4k"];
+                }
+
             }
 
             return Array.Empty<string>();
@@ -163,7 +231,7 @@ namespace GooglePlugin
                     return JsonHelper.Deserialize<ImageTrackPayload>(fileName);
 
                 case IPluginBase.TrackType.Video:
-                    break;
+                    return JsonHelper.Deserialize<VideoTrackPayload>(fileName);
 
                 case IPluginBase.TrackType.Audio:
                     break;
@@ -199,7 +267,7 @@ namespace GooglePlugin
                     return new ImageItemPayload() { Prompt = text };
 
                 case IPluginBase.TrackType.Video:
-                    break;
+                    return new VideoItemPayload() { Prompt = text };
 
                 case IPluginBase.TrackType.Audio:
                     break;
@@ -218,7 +286,7 @@ namespace GooglePlugin
                     return JsonHelper.ToExactType<ImageItemPayload>(obj);
 
                 case IPluginBase.TrackType.Video:
-                    break;
+                    return JsonHelper.ToExactType<VideoItemPayload>(obj);
 
                 case IPluginBase.TrackType.Audio:
                     break;
@@ -238,7 +306,7 @@ namespace GooglePlugin
                     return JsonHelper.ToExactType<ImageTrackPayload>(obj);
 
                 case IPluginBase.TrackType.Video:
-                    break;
+                    return JsonHelper.ToExactType<VideoTrackPayload>(obj);
 
                 case IPluginBase.TrackType.Audio:
                     break;
@@ -262,6 +330,11 @@ namespace GooglePlugin
                 return ip.Prompt;
             }
 
+            if (itemPayload is VideoItemPayload vi)
+            {
+                return vi.Prompt;
+            }
+
             return "";
         }
 
@@ -273,7 +346,7 @@ namespace GooglePlugin
                     return new ImageTrackPayload();
 
                 case IPluginBase.TrackType.Video:
-                    break;
+                    return new VideoTrackPayload();
 
                 default:
                     break;
@@ -289,7 +362,7 @@ namespace GooglePlugin
                     return new ImageItemPayload();
 
                 case IPluginBase.TrackType.Video:
-                    break;
+                    return new VideoItemPayload(); ;
 
                 default:
                     break;
@@ -305,7 +378,7 @@ namespace GooglePlugin
                     return JsonHelper.DeepCopy<ImageTrackPayload>(obj);
 
                 case IPluginBase.TrackType.Video:
-                    break;
+                    return JsonHelper.DeepCopy<VideoTrackPayload>(obj); ;
 
                 default:
                     break;
@@ -321,7 +394,7 @@ namespace GooglePlugin
                     return JsonHelper.DeepCopy<ImageItemPayload>(obj);
 
                 case IPluginBase.TrackType.Video:
-                    break;
+                    return JsonHelper.DeepCopy<VideoItemPayload>(obj);
 
                 default:
                     break;
@@ -351,6 +424,10 @@ namespace GooglePlugin
                     return (true, "");
 
                 case IPluginBase.TrackType.Video:
+                    if (payload is VideoItemPayload vi && string.IsNullOrEmpty(vi.Prompt))
+                    {
+                        return (false, "Prompt empty");
+                    }
                     return (true, "");
 
                 case IPluginBase.TrackType.Audio:
@@ -367,6 +444,11 @@ namespace GooglePlugin
             if (trackPayload is ImageTrackPayload ip && itemPayload is ImageItemPayload tp)
             {
                 return new List<string> { ip.ImageSource, tp.ImageSource };
+            }
+
+            if (trackPayload is VideoTrackPayload vi && itemPayload is VideoItemPayload vi2)
+            {
+                return new List<string> { vi.ImageSource, vi2.ImageSource };
             }
             return new List<string>();
         }
@@ -388,6 +470,22 @@ namespace GooglePlugin
                     }
                 }
             }
+
+            if (trackPayload is ImageTrackPayload vi && itemPayload is ImageItemPayload vi2)
+            {
+                for (int i = 0; i < originalPath.Count; i++)
+                {
+                    if (originalPath[i] == vi.ImageSource)
+                    {
+                        vi.ImageSource = newPath[i];
+                    }
+
+                    if (originalPath[i] == vi2.ImageSource)
+                    {
+                        vi2.ImageSource = newPath[i];
+                    }
+                }
+            }
         }
 
         private CancellationToken ct;
@@ -403,6 +501,11 @@ namespace GooglePlugin
             {
                 ip.Prompt = text;
             }
+
+            if (payload is VideoItemPayload vi)
+            {
+                vi.Prompt = text;
+            }
         }
 
         public void UserDataDeleteRequested()
@@ -411,6 +514,21 @@ namespace GooglePlugin
             {
                 _connectionSettings.DeleteTokens();
             }
+        }
+
+        public object ItemPayloadFromImageSource(string imgSource)
+        {
+            if (CurrentTrackType == IPluginBase.TrackType.Image)
+            {
+                return new ImageItemPayload() { ImageSource = imgSource };
+            }
+
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            {
+                return new VideoItemPayload() { ImageSource = imgSource };
+            }
+
+            return null;
         }
     }
 
