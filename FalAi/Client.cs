@@ -200,6 +200,7 @@ namespace FalAiPlugin
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Key {connectionSettings.AccessToken}");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("x-app-fal-disable-fallbacks", "true");
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
@@ -286,7 +287,8 @@ namespace FalAiPlugin
                 httpClient.BaseAddress = new Uri(baseUrl);
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Key {connectionSettings.AccessToken}");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");                
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("x-app-fal-disable-fallbacks", "true");
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
