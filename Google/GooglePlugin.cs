@@ -6,7 +6,7 @@ namespace GooglePlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class GooglePlugin : IImagePlugin, ICancellableGeneration/*, IVideoPlugin,*/ IImportFromImage
+    public class GooglePlugin : IImagePlugin, ICancellableGeneration,/*, IVideoPlugin,*/ IImportFromImage
     {
         public const string PluginName = "GooglePluginBuildIn";
         public string UniqueName { get => PluginName; }
