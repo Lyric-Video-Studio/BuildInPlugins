@@ -1,5 +1,4 @@
 ﻿using Mscc.GenerativeAI;
-using Mscc.GenerativeAI.Types;
 using PluginBase;
 using System.Text.Json.Nodes;
 
@@ -7,7 +6,7 @@ namespace GooglePlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class GooglePlugin : IImagePlugin, ICancellableGeneration, /*IVideoPlugin,*/ IImportFromImage
+    public class GooglePlugin : IImagePlugin, ICancellableGeneration/*, IVideoPlugin,*/ IImportFromImage
     {
         public const string PluginName = "GooglePluginBuildIn";
         public string UniqueName { get => PluginName; }
@@ -115,7 +114,7 @@ namespace GooglePlugin
                 
                 vidReg.Parameters = new GenerateVideosConfig()
                 {
-                    AspectRatio = tp.Size,
+                    //AspectRatio = tp.Size,
                     DurationSeconds = 8,
                     Resolution = tp.Resolution,
                     NegativePrompt = (ip.NegativePrompt + " " + tp.NegativePrompt).Trim()
@@ -208,10 +207,10 @@ namespace GooglePlugin
                     return ["veo-3.1-fast-generate-preview", "veo-3.1-generate-preview"];
                 }
 
-                if (propertyName == nameof(VideoTrackPayload.Size))
+                /*if (propertyName == nameof(VideoTrackPayload.Size))
                 {
                     return [ImageAspectRatio.Ratio16x9.ToString(), ImageAspectRatio.Ratio9x16.ToString()];
-                }
+                }*/
 
                 if (propertyName == nameof(VideoTrackPayload.Resolution))
                 {

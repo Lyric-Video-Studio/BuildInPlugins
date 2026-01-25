@@ -1,5 +1,4 @@
-﻿using Mscc.GenerativeAI.Types;
-using PluginBase;
+﻿using PluginBase;
 
 namespace GooglePlugin
 {
@@ -8,7 +7,7 @@ namespace GooglePlugin
         public string Model { get; set; } = "veo-3.1-fast-generate-preview";
         public string Prompt { get; set; }
         public string NegativePrompt { get; set; }
-        public ImageAspectRatio Size { get; set; } = ImageAspectRatio.Ratio16x9;
+        //public ImageAspectRatio Size { get; set; } = ImageAspectRatio.Ratio16x9;
 
         public string Resolution { get; set; } = "1080p";
 
