@@ -185,7 +185,7 @@ namespace FalAiPlugin
                     return tp.Model.Contains("last", StringComparison.CurrentCultureIgnoreCase) || tp.Model.Contains("kling-video/o1", StringComparison.CurrentCultureIgnoreCase);
                 }
 
-                if (propertyName == nameof(ImageSourceCont))
+                if (propertyName == nameof(ImageSourceCont) || propertyName == nameof(ImageSourceContainer.AddReference))
                 {
                     return tp.Model.Contains("veo3.1/reference-to-video", StringComparison.CurrentCultureIgnoreCase);
                 }

@@ -161,7 +161,7 @@ namespace FalAiPlugin
                     }
                 }
 
-                if (propertyName == nameof(ImageSourceCont))
+                if (propertyName == nameof(ImageSourceCont) ||  propertyName == nameof(ImageSourceContainer.AddReference))
                 {
                     return tp.Model.Contains("veo3.1/reference-to-video", StringComparison.CurrentCultureIgnoreCase);
                 }
