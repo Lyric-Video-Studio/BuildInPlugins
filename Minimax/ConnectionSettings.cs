@@ -48,19 +48,6 @@ namespace MinimaxPlugin
             }
         }
 
-        [CustomAction("Refresh text-to-speech voices")]
-        public void RefreshVOices()
-        {
-            voiceRefresh.Invoke();
-        }
-
-        private Action voiceRefresh;
-
-        internal void SetVoiceRefreshCallback(Action voiceRefresh)
-        {
-            this.voiceRefresh = voiceRefresh;
-        }
-
         internal void DeleteTokens()
         {
             SecureStorageWrapper.SecStorage.Delete(accessTokenKey);

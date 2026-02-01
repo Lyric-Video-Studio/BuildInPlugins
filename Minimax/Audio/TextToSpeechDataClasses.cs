@@ -1,13 +1,16 @@
 ﻿using PluginBase;
 using System.ComponentModel.DataAnnotations;
+using System.Reactive.Subjects;
 using System.Text.Json.Serialization;
 
 namespace MinimaxPlugin.Audio
 {
     public class MusicRequest
     {
+        public const string MusicModel = "music-2.5";
+
         [JsonPropertyName("model")]
-        public string Model { get; set; } = "music-1.5";
+        public string Model { get; set; } = MusicModel;
 
         [JsonPropertyName("lyrics")]
         public string Lyrics { get; set; } = "";
@@ -93,6 +96,14 @@ namespace MinimaxPlugin.Audio
         [IgnoreDynamicEdit]
         public string OutputFormat { get; set; } = "hex";
 
+        public Subject<bool> UpdateVoices { get; } = new Subject<bool>();
+
+        [CustomAction("Refresh voices")]
+        public void RefreshVoces()
+        {
+            UpdateVoices.OnNext(true);
+        }
+
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             if (trackPayload is T2ARequest tp)
@@ -103,7 +114,7 @@ namespace MinimaxPlugin.Audio
                     propertyName == nameof(VoiceSetting.Pitch) ||
                     propertyName == nameof(VoiceSetting.Emotion) || propertyName == nameof(T2ARequest.LanguageBoost))
                 {
-                    return tp.Model != "music-1.5";
+                    return tp.Model != MusicRequest.MusicModel;
                 }
             }
 
@@ -147,6 +158,7 @@ namespace MinimaxPlugin.Audio
         /// Emotion of the speech
         /// </summary>
         [JsonPropertyName("emotion")]
+        [PropertyComboOptions(["happy", "sad", "angry", "fearful", "disgusted", "surprised", "calm", "calm", "fluent", "whisper"])]
         public string Emotion { get; set; } = "happy";
     }
 

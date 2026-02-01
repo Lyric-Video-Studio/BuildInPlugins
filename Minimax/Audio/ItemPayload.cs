@@ -15,11 +15,11 @@ namespace MinimaxPlugin.Audio
             {
                 if (propertyName == nameof(ItemPayload.Text))
                 {
-                    return tp.Model != "music-1.5";
+                    return tp.Model != MusicRequest.MusicModel;
                 }
                 else if (propertyName == nameof(ItemPayload.Prompt) || propertyName == nameof(ItemPayload.Lyrics))
                 {
-                    return tp.Model == "music-1.5";
+                    return tp.Model == MusicRequest.MusicModel;
                 }
             }
 

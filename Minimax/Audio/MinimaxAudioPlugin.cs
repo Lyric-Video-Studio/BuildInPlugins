@@ -6,11 +6,11 @@ namespace MinimaxPlugin.Audio
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class MinimaxAudioPlugin : IAudioPlugin, ISaveConnectionSettings, ISaveAndRefresh, IValidateBothPayloads
+    public class MinimaxAudioPlugin : IAudioPlugin, ISaveConnectionSettings, ISaveAndRefresh, IValidateBothPayloads, IDisposable
     {
         public const string PluginName = "MinimaxAudioBuildIn";
         public string UniqueName { get => PluginName; }
-        public string DisplayName { get => "Minimax text to speech"; }
+        public string DisplayName { get => "Minimax (TTS & Music)"; }
 
         public object GeneralDefaultSettings => new ConnectionSettings();
 
@@ -30,6 +30,8 @@ namespace MinimaxPlugin.Audio
 
         public static int CurrentTasks = 0;
 
+        IDisposable _dis;
+
         public object DefaultPayloadForVideoItem()
         {
             return new ItemPayload();
@@ -37,12 +39,12 @@ namespace MinimaxPlugin.Audio
 
         public object DefaultPayloadForVideoTrack()
         {
-            return new T2ARequest();
+            return SetInstSubs(new T2ARequest());
         }
 
         public async Task<AudioResponse> GetAudio(object trackPayload, object itemsPayload, string folderToSaveAudio)
         {
-            using var httpClient = new HttpClient();
+            using var httpClient = new HttpClient() { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
             httpClient.DefaultRequestHeaders.Remove("accept");
 
             // It's best to keep these here: use can change these from item settings
@@ -61,7 +63,7 @@ namespace MinimaxPlugin.Audio
 
                 try
                 {
-                    if (tp.Model == "music-1.5")
+                    if (tp.Model == MusicRequest.MusicModel)
                     {
                         var musicRequest = new MusicRequest()
                         {
@@ -87,7 +89,7 @@ namespace MinimaxPlugin.Audio
 
                 var endpoint = "v1/t2a_v2";
 
-                if (tp.Model == "music-1.5")
+                if (tp.Model == MusicRequest.MusicModel)
                 {
                     endpoint = "v1/music_generation";
                 }
@@ -138,14 +140,6 @@ namespace MinimaxPlugin.Audio
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)
             {
                 _connectionSettings = s;
-                _connectionSettings.SetVoiceRefreshCallback(async () =>
-                {
-                    await RefreshVoiceListAsync();
-                    if (saveAndRefreshCallback != null)
-                    {
-                        saveAndRefreshCallback.Invoke(true);
-                    }
-                });
                 _isInitialized = !string.IsNullOrEmpty(s.AccessToken);
                 return "";
             }
@@ -204,7 +198,7 @@ namespace MinimaxPlugin.Audio
 
             if (propertyName == nameof(T2ARequest.Model))
             {
-                return ["speech-2.5-hd-preview", "speech-2.5-turbo-preview", "speech-02-hd", "speech-01-turbo", "speech-01-hd", "speech-01-turbo", "music-1.5"];
+                return ["speech-2.8-hd", "speech-2.8-turbo", "speech-02-hd", MusicRequest.MusicModel];
             }
 
             if (propertyName == nameof(VoiceSetting.VoiceId))
@@ -235,11 +229,6 @@ namespace MinimaxPlugin.Audio
                 }
 
                 return _connectionSettings.SpeechVoices.ToArray();
-            }
-
-            if (propertyName == nameof(VoiceSetting.Emotion))
-            {
-                return ["happy", "sad", "angry", "fearful", "disgusted", "surprised", "neutral"];
             }
 
             if (propertyName == nameof(AudioSetting.SampleRate))
@@ -273,7 +262,7 @@ namespace MinimaxPlugin.Audio
 
         public object DeserializePayload(string fileName)
         {
-            return JsonHelper.Deserialize<T2ARequest>(fileName);
+            return SetInstSubs(JsonHelper.Deserialize<T2ARequest>(fileName));
         }
 
         public IPluginBase CreateNewInstance()
@@ -326,7 +315,7 @@ namespace MinimaxPlugin.Audio
 
         public object ObjectToTrackPayload(JsonObject obj)
         {
-            return JsonHelper.ToExactType<T2ARequest>(obj);
+            return SetInstSubs(JsonHelper.ToExactType<T2ARequest>(obj) as T2ARequest);
         }
 
         public object ObjectToGeneralSettings(JsonObject obj)
@@ -345,7 +334,7 @@ namespace MinimaxPlugin.Audio
 
         public object DefaultPayloadForTrack()
         {
-            return new T2ARequest();
+            return SetInstSubs(new T2ARequest());
         }
 
         public object DefaultPayloadForItem()
@@ -353,9 +342,18 @@ namespace MinimaxPlugin.Audio
             return new ItemPayload();
         }
 
+        private T2ARequest SetInstSubs(T2ARequest reg)
+        {
+            _dis = reg.UpdateVoices.Subscribe(_ =>
+            {
+                RefreshVoiceListAsync().ConfigureAwait(false);
+            });
+            return reg;
+        }
+
         public object CopyPayloadForTrack(object obj)
         {
-            return JsonHelper.DeepCopy<T2ARequest>(obj);
+            return SetInstSubs(JsonHelper.DeepCopy<T2ARequest>(obj));
         }
 
         public object CopyPayloadForItem(object obj)
@@ -404,7 +402,7 @@ namespace MinimaxPlugin.Audio
         {
             if (trackPaylod is T2ARequest tp && itemPayload is ItemPayload ip)
             {
-                if (tp.Model == "music-1.5")
+                if (tp.Model == MusicRequest.MusicModel)
                 {
                     if (!string.IsNullOrEmpty(ip.Lyrics) && ip.Lyrics.Replace("[intro]", "").Replace("[verse]", "").Replace("[chorus]", "").Replace("[bridge]", "").Replace("[outro]", "").Length > 600)
                     {
@@ -440,6 +438,11 @@ namespace MinimaxPlugin.Audio
             {
                 _connectionSettings.DeleteTokens();
             }
+        }
+
+        public void Dispose()
+        {
+            _dis?.Dispose();
         }
     }
 
