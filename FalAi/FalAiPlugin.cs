@@ -150,7 +150,7 @@ namespace FalAiPlugin
                     reg.duration = newIp.DurationVeo;
                 }
 
-                if (newTp.Model.Contains("pixverse/v5.5"))
+                if (newTp.Model.Contains("pixverse"))
                 {
                     reg.generate_audio_switch = newTp.GenerateAudio;
                 }
@@ -278,6 +278,16 @@ namespace FalAiPlugin
                 if (!newTp.ShouldPropertyBeVisible(nameof(TrackPayload.EnhancePrompt), newTp, newIp))
                 {
                     reg.enhance_prompt = newTp.EnhancePrompt;
+                }
+
+                if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationPixverse56), newTp, newIp))
+                {
+                    reg.duration = newIp.DurationPixverse56;
+                }
+
+                if(newTp.WanFlash && newTp.ShouldPropertyBeVisible(nameof(TrackPayload.WanFlash), newTp, newIp))
+                {
+                    model += "/flash";
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
@@ -441,7 +451,8 @@ namespace FalAiPlugin
                             "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video"];
 
                 output["Ltxv"] = ["ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video", "ltxv-13b-098-distilled/image-to-video"];
-                output["Pixverse"] = ["pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video", "pixverse/v5/image-to-video", "pixverse/v5/text-to-video"];
+                output["Pixverse"] = ["pixverse/v5.6/text-to-video", "pixverse/v5.6/image-to-video", 
+                    "pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video"];
                 output["Bytedance"] = ["bytedance/seedance/v1.5/pro/text-to-video", "bytedance/seedance/v1.5/pro/image-to-video", "bytedance/omnihuman/v1.5"];
                 output["Upscale"] = ["seedvr/upscale/video"];
                 output["Edit videos"] = ["lucy-edit/pro", "decart/lucy-restyle", "editto", "one-to-all-animation/1.3b", "one-to-all-animation/14b"];

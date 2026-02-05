@@ -68,6 +68,9 @@ namespace FalAiPlugin
 
         public bool EnhancePrompt { get; set; }
 
+        [CustomName("Flash (50% cheaper)")]
+        public bool WanFlash { get; set; }
+
         public ImageSourceContainer ImageSourceCont { get; set; } = new();
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
@@ -78,6 +81,18 @@ namespace FalAiPlugin
                 {
                     return true;
                 }
+
+                if (tp.Model != null && tp.Model.StartsWith("pixverse/v5.6") && propertyName.StartsWith("Aspect"))
+                {
+                    // Only image source and video ref
+                    return false;
+                }
+
+                if (propertyName == nameof(WanFlash))
+                {
+                    return tp.Model != null && tp.Model.StartsWith("wan/v2.6");
+                }
+
 
                 if (tp.Model != null && tp.Model.Contains("one-to-all-animation"))
                 {
@@ -199,7 +214,7 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(GenerateAudio))
                 {
-                    return Model.StartsWith("veo") || Model.StartsWith("ltxv-2") || Model.Contains("kling-video/v2.6/pro") || Model.Contains("pixverse/v5.5/");
+                    return Model.StartsWith("veo") || Model.StartsWith("ltxv-2") || Model.Contains("kling-video/v2.6/pro") || Model.Contains("pixverse");
                 }
 
                 if (propertyName == nameof(Style))

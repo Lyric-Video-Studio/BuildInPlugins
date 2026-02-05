@@ -33,6 +33,11 @@ namespace FalAiPlugin
 
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
+        [PropertyComboOptions(["5", "8", "10"])]
+        public string DurationPixverse56 { get; set; } = "5";
+
+        [Description("Duration of the video in seconds")]
+        [CustomName("Duration")]
         public string DurationVeo { get; set; } = "8s";
 
         [Description("Duration of the video in seconds")]
@@ -84,6 +89,11 @@ namespace FalAiPlugin
                     return true;
                 }
 
+                if (propertyName == nameof(DurationPixverse56))
+                {
+                    return tp.Model != null && tp.Model.StartsWith("pixverse/v5.6");
+                }
+                
                 if (tp.Model != null && tp.Model.Contains("one-to-all-animation"))
                 {
                     // Only image source and video ref
@@ -250,7 +260,7 @@ namespace FalAiPlugin
 
                 if (propertyName == nameof(DurationPixverse))
                 {
-                    return tp.Model.StartsWith("pixverse");
+                    return tp.Model.StartsWith("pixverse/5.5");
                 }
 
                 if (propertyName == nameof(ImageSource))
