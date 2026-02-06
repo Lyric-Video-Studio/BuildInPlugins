@@ -82,6 +82,11 @@ namespace FalAiPlugin
                     return true;
                 }
 
+                if (tp.Model != null && tp.model.StartsWith("bytedance/dreamactor/v2"))
+                {
+                    return propertyName is nameof(ImageSource);
+                }
+
                 if (tp.Model != null && tp.Model.StartsWith("pixverse/v5.6") && propertyName.StartsWith("Aspect"))
                 {
                     // Only image source and video ref
@@ -92,7 +97,6 @@ namespace FalAiPlugin
                 {
                     return tp.Model != null && tp.Model.StartsWith("wan/v2.6");
                 }
-
 
                 if (tp.Model != null && tp.Model.Contains("one-to-all-animation"))
                 {

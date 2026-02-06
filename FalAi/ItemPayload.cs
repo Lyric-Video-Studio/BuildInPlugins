@@ -89,6 +89,11 @@ namespace FalAiPlugin
                     return true;
                 }
 
+                if (tp.Model != null && tp.Model.StartsWith("bytedance/dreamactor/v2"))
+                {
+                    return propertyName is nameof(ImageSource) or nameof(VideoSource);
+                }
+
                 if (propertyName == nameof(DurationPixverse56))
                 {
                     return tp.Model != null && tp.Model.StartsWith("pixverse/v5.6");
@@ -153,7 +158,7 @@ namespace FalAiPlugin
                     {
                         return true;
                     }
-                    return propertyName == nameof(Prompt) || propertyName == nameof(NegativePrompt) || propertyName == nameof(DurationWan26) || propertyName == nameof(Seed);
+                    return propertyName == nameof(Prompt) || propertyName == nameof(NegativePrompt) || propertyName == nameof(DurationWan26) || propertyName == nameof(Seed) || propertyName == nameof(AudioSource);
                 }
                 else if (propertyName == nameof(DurationWan26))
                 {

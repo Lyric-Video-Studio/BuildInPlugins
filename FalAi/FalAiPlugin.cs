@@ -453,7 +453,7 @@ namespace FalAiPlugin
                 output["Ltxv"] = ["ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video", "ltxv-13b-098-distilled/image-to-video"];
                 output["Pixverse"] = ["pixverse/v5.6/text-to-video", "pixverse/v5.6/image-to-video", 
                     "pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video"];
-                output["Bytedance"] = ["bytedance/seedance/v1.5/pro/text-to-video", "bytedance/seedance/v1.5/pro/image-to-video", "bytedance/omnihuman/v1.5"];
+                output["Bytedance"] = ["bytedance/dreamactor/v2", "bytedance/seedance/v1.5/pro/text-to-video", "bytedance/seedance/v1.5/pro/image-to-video", "bytedance/omnihuman/v1.5"];
                 output["Upscale"] = ["seedvr/upscale/video"];
                 output["Edit videos"] = ["lucy-edit/pro", "decart/lucy-restyle", "editto", "one-to-all-animation/1.3b", "one-to-all-animation/14b"];
                 output["Misc"] = ["creatify/aurora"];

@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
 
 namespace CroppedImagePlugin
 {
@@ -100,6 +99,8 @@ namespace CroppedImagePlugin
                     fullCrop = new Border();
                     fullCrop.BorderBrush = new SolidColorBrush(Color.FromRgb(0, 0, 0));
                     fullCrop.BorderThickness = new Thickness(2);
+                    fullCrop.Background = new SolidColorBrush(Color.FromArgb( 10, 0, 0, 0));
+                    fullCrop.PointerPressed += PointerGestureRecognizer_PointerPressed;
                     cropCanvas.Children.Insert(0, fullCrop);
                 }
 
@@ -269,6 +270,8 @@ namespace CroppedImagePlugin
             visualizationBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(150, 0, 0, 0));
             visualizationBorder.Width = tp.Width * ScaleMultiplier;
             visualizationBorder.Height = tp.Height * ScaleMultiplier;
+            visualizationBorder.Background = new SolidColorBrush(Color.FromArgb(10, 0, 0, 0));
+            visualizationBorder.PointerPressed += PointerGestureRecognizer_PointerPressed;
 
             Canvas.SetLeft(visualizationBorder, Canvas.GetLeft(topLeft));
             Canvas.SetTop(visualizationBorder, Canvas.GetTop(topLeft));
