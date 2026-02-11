@@ -1,6 +1,5 @@
 ﻿using PluginBase;
 using System.ComponentModel;
-using System.Reactive.Subjects;
 using System.Text.Json.Serialization;
 
 namespace ElevenLabsPlugin
@@ -43,7 +42,7 @@ namespace ElevenLabsPlugin
         public int Length { get; set; }
 
         [JsonIgnore]
-        public Subject<bool> RefreshAction = new();        
+        public System.Reactive.Subjects.Subject<bool> RefreshAction = new();        
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {

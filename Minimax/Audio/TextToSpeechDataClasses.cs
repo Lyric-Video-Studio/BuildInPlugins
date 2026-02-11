@@ -1,6 +1,5 @@
 ﻿using PluginBase;
 using System.ComponentModel.DataAnnotations;
-using System.Reactive.Subjects;
 using System.Text.Json.Serialization;
 
 namespace MinimaxPlugin.Audio
@@ -96,7 +95,7 @@ namespace MinimaxPlugin.Audio
         [IgnoreDynamicEdit]
         public string OutputFormat { get; set; } = "hex";
 
-        public Subject<bool> UpdateVoices { get; } = new Subject<bool>();
+        public System.Reactive.Subjects.Subject<bool> UpdateVoices { get; } = new System.Reactive.Subjects.Subject<bool>();
 
         [CustomAction("Refresh voices")]
         public void RefreshVoces()

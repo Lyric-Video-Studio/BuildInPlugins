@@ -19,6 +19,7 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SkiaSharp" Version="3.119.0" />
+	<PackageReference Include="System.Reactive" Version="6.1.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,11 +27,5 @@
       <Private>false</Private>
       <ExcludeAssets>runtime</ExcludeAssets>
     </ProjectReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="System.Reactive">
-      <HintPath>..\..\..\..\nuget\system.reactive\6.0.1\lib\net6.0\System.Reactive.dll</HintPath>
-    </Reference>
   </ItemGroup>
 </Project>
