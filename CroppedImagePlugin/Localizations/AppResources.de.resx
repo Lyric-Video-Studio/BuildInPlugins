@@ -94,4 +94,20 @@
     <value>Umgekehrte Farben der Erntekontrolle</value>
     <comment>Original english: Invert crop control colors</comment>
   </data>
+  <data name="Rotate" xml:space="preserve">
+    <value>Drehen</value>
+    <comment>Original english: Rotate</comment>
+  </data>
+  <data name="RotateNone" xml:space="preserve">
+    <value>Keine</value>
+    <comment>Original english: None</comment>
+  </data>
+  <data name="RotateLeft" xml:space="preserve">
+    <value>Links</value>
+    <comment>Original english: Left</comment>
+  </data>
+  <data name="RotateRight" xml:space="preserve">
+    <value>Rechts</value>
+    <comment>Original english: Right</comment>
+  </data>
 </root>

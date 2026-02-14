@@ -97,4 +97,20 @@
     <value>Käänteinen väri rajaustyökaluun</value>
     <comment>Original english: Invert crop control colors</comment>
   </data>
+  <data name="Rotate" xml:space="preserve">
+    <value>Kierrä</value>
+    <comment>Original english: Rotate</comment>
+  </data>
+  <data name="RotateNone" xml:space="preserve">
+    <value>Ei mitään</value>
+    <comment>Original english: None</comment>
+  </data>
+  <data name="RotateLeft" xml:space="preserve">
+    <value>Vasen</value>
+    <comment>Original english: Left</comment>
+  </data>
+  <data name="RotateRight" xml:space="preserve">
+    <value>Oikea</value>
+    <comment>Original english: Right</comment>
+  </data>
 </root>
