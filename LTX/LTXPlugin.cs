@@ -377,6 +377,13 @@ namespace LTXPlugin
                 {
                     return (false, $"Only {TrackPayload.ResHd} is supported with audio source");
                 }
+
+                if (!string.IsNullOrEmpty(tp.AudioSource) || !string.IsNullOrEmpty(ip.AudioSource) && _contentUploader != null && _contentUploader.Backend == IContentUploader.ContentDeliveryBackends.Google )
+                {
+                    return (false, $"Google drive is known not to work with LTX, either report bug to LTX or use DropBOx");
+                }
+
+                // 
             }
 
             return (true, "");
