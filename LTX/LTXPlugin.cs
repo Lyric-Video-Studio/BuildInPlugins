@@ -65,8 +65,10 @@ namespace LTXPlugin
                     model = newTp.Model, 
                     prompt = (newIp.Prompt + " " + newTp.Prompt).Trim(),
                     duration = int.Parse(ItemPayload.DurationFastTypes[dur]), // This is safe for now: fast one has more
-                    camera_motion = actCameraMotio, 
-                    resolution = newTp.Resolution,
+                    camera_motion = actCameraMotio,
+                    resolution = newTp.Resolution, 
+                    image_uri = actImageSource, 
+                    audio_uri = actAudioSource
                 };
 
                 return await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, ct);
@@ -368,7 +370,12 @@ namespace LTXPlugin
 
                 if (tp.Model == TrackPayload.FastModel && ip.DurationFast25 >= 12 && tp.Resolution != TrackPayload.ResHd)
                 {
-                    return (false, "DUrations over 10 are not supported for this resolution");
+                    return (false, "Durations over 10 are not supported for this resolution");
+                }
+
+                if (!string.IsNullOrEmpty(tp.AudioSource) || !string.IsNullOrEmpty(ip.AudioSource) && tp.Resolution != TrackPayload.ResHd)
+                {
+                    return (false, $"Only {TrackPayload.ResHd} is supported with audio source");
                 }
             }
 
