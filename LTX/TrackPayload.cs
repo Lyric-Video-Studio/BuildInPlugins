@@ -24,7 +24,11 @@ namespace LTXPlugin
         public string AudioSource { get; set; }        
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
-        {    
+        {
+            if (trackPayload is TrackPayload tp3 && itemPayload is ItemPayload ip3 && (!string.IsNullOrEmpty(tp3.AudioSource) || !string.IsNullOrEmpty(ip3.AudioSource)))
+            {
+                return propertyName != nameof(Model);
+            }
             return true;
         }
     }

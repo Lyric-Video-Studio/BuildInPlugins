@@ -56,6 +56,17 @@ namespace LTXPlugin
 
                 var serialized = "";
 
+                var path = "text-to-video";
+                if (!string.IsNullOrEmpty(request.audio_uri))
+                {
+                    path = "audio-to-video";
+                    request.model = "ltx-2-pro";
+                }
+                else if (!string.IsNullOrEmpty(request.image_uri))
+                {
+                    path = "image-to-video";
+                }
+
                 try
                 {
                     serialized = JsonHelper.Serialize(request);
@@ -69,15 +80,7 @@ namespace LTXPlugin
                 var stringContent = new StringContent(serialized);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
-                var path = "text-to-video";
-                if (!string.IsNullOrEmpty(request.audio_uri))
-                {
-                    path = "audio-to-video";
-                } 
-                else if (!string.IsNullOrEmpty(request.image_uri))
-                {
-                    path = "image-to-video";
-                }
+                
 
                 var resp = await httpClient.PostAsync($"v1/{path}", stringContent, token);
 

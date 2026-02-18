@@ -42,6 +42,11 @@ namespace LTXPlugin
                 return tp2.Model != TrackPayload.FastModel;
             }
 
+            if (trackPayload is TrackPayload tp3 && itemPayload is ItemPayload ip3 && (!string.IsNullOrEmpty(tp3.AudioSource) || !string.IsNullOrEmpty(ip3.AudioSource)))
+            {
+                return propertyName != nameof(Duration) || propertyName != nameof(DurationFast25);
+            }
+
             return true;
         }
     }

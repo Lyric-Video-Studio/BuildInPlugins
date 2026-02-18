@@ -5,7 +5,7 @@ namespace LTXPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class LtxPlugin : IVideoPlugin, IImportFromImage, IRequestContentUploader, IValidateBothPayloads, ICancellableGeneration
+    public class LtxPlugin : IVideoPlugin, IImportFromImage, IValidateBothPayloads, ICancellableGeneration, IRequireMp3Converter
     {
         public string UniqueName { get => "LTXBuildIn"; }
         public string DisplayName { get => "LTX"; }
@@ -23,7 +23,6 @@ namespace LTXPlugin
         public string[] SettingsLinks => new[] { "https://ltx.io/", "https://console.ltx.video/api-keys/" };
 
         private ConnectionSettings _connectionSettings = new ConnectionSettings();
-        private IContentUploader _contentUploader;
 
         public IPluginBase.TrackType CurrentTrackType { get; set; }
 
@@ -40,8 +39,10 @@ namespace LTXPlugin
 
                 // Also, when img2Vid
 
-                var actAudioSource = await Upload(string.IsNullOrEmpty(newIp.AudioSource) ? newTp.AudioSource : newIp.AudioSource);
-                var actImageSource = await Upload(string.IsNullOrEmpty(newIp.ImageSource) ? newTp.ImageSource : newIp.ImageSource);
+                // 
+
+                var actAudioSource = CreateDataUri(_conv.ConvertToMp3(string.IsNullOrEmpty(newIp.AudioSource) ? newTp.AudioSource : newIp.AudioSource));
+                var actImageSource = CreateDataUri(string.IsNullOrEmpty(newIp.ImageSource) ? newTp.ImageSource : newIp.ImageSource);
 
                 string actCameraMotio = null;
                 try
@@ -80,26 +81,16 @@ namespace LTXPlugin
             }
         }
 
-        private async Task<string> Upload(string path)
+        private string CreateDataUri(string path)
         {
             if (string.IsNullOrEmpty(path))
             {
                 return null;
             }
-
-            var fileUpload = await _contentUploader.RequestContentUpload(path);
-            if (fileUpload.isLocalFile)
-            {
-                throw new Exception("File must be public url or you must apply your content delivery credentials in Settings-view");
-            }
-            else if (fileUpload.responseCode != System.Net.HttpStatusCode.OK)
-            {
-                throw new Exception($"Error uploading to content delivery: {fileUpload.responseCode}");
-            }
-            else
-            {
-                return fileUpload.uploadedUrl;
-            }
+            string mimeType = CommonConstants.GetMimeType(Path.GetExtension(path));
+            var b64 = Convert.ToBase64String(File.ReadAllBytes(path));
+            var data = $"data:{mimeType};base64,{b64}";
+            return data;
         }
         
         public async Task<string> Initialize(object settings)
@@ -215,11 +206,6 @@ namespace LTXPlugin
                     ip.Prompt += text;
                 }
             }
-        }
-
-        public void ContentUploaderProvided(IContentUploader uploader)
-        {
-            _contentUploader = uploader;
         }
 
         public object ObjectToItemPayload(JsonObject obj)
@@ -377,13 +363,6 @@ namespace LTXPlugin
                 {
                     return (false, $"Only {TrackPayload.ResHd} is supported with audio source");
                 }
-
-                if (!string.IsNullOrEmpty(tp.AudioSource) || !string.IsNullOrEmpty(ip.AudioSource) && _contentUploader != null && _contentUploader.Backend == IContentUploader.ContentDeliveryBackends.Google )
-                {
-                    return (false, $"Google drive is known not to work with LTX, either report bug to LTX or use DropBOx");
-                }
-
-                // 
             }
 
             return (true, "");
@@ -402,6 +381,12 @@ namespace LTXPlugin
         public void SetCancallationToken(CancellationToken cancellationToken)
         {
             ct = cancellationToken;
+        }
+
+        IMp3Converter _conv;
+        public void SetMp3Converter(IMp3Converter converter)
+        {
+            _conv = converter;
         }
     }
 
