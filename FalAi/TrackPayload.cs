@@ -82,6 +82,15 @@ namespace FalAiPlugin
                     return true;
                 }
 
+                if (tp.Model != null && tp.Model.Contains("kling-video/o3"))
+                {
+                    if (propertyName is nameof(ImageSource))
+                    {
+                        return tp.Model.Contains("image-to-video");
+                    }
+                    return propertyName is nameof(Prompt) or nameof(AspectRatio) or nameof(GenerateAudio) or nameof(NegativePrompt);
+                }
+
                 if (tp.Model != null && tp.model.StartsWith("bytedance/dreamactor/v2"))
                 {
                     return propertyName is nameof(ImageSource);

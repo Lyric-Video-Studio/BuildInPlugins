@@ -66,6 +66,10 @@ namespace FalAiPlugin
         [EnableFileDrop]
         public string LastFrame { get; set; }
 
+        [PropertyComboOptions(["3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"])]
+        [CustomName("Duration")]
+        public string DurationKlingO3 { get; set; } = "10";
+
         [EnableFileDrop]
         public string VideoSource
         {
@@ -87,6 +91,15 @@ namespace FalAiPlugin
                 if (propertyName == nameof(PollingId))
                 {
                     return true;
+                }
+
+                if (tp.Model != null && tp.Model.Contains("kling-video/o3"))
+                {
+                    if (propertyName is nameof(ImageSource) or nameof(LastFrame))
+                    {
+                        return tp.Model.Contains("image-to-video");
+                    }
+                    return propertyName is nameof(DurationKlingO3) or nameof(Prompt) or nameof(NegativePrompt);
                 }
 
                 if (tp.Model != null && tp.Model.StartsWith("bytedance/dreamactor/v2"))

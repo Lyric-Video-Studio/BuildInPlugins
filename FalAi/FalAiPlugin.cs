@@ -228,6 +228,14 @@ namespace FalAiPlugin
                     reg.last_frame_url = null;
                 }
 
+                if (model.Contains("kling-video/o3/", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    reg.image_url = reg.image_url;
+                    reg.end_image_url = reg.last_frame_url;
+                    reg.first_frame_url = null;
+                    reg.last_frame_url = null;
+                }
+
                 if (model == "creatify/aurora")
                 {
                     reg.resolution = "720p";
@@ -288,6 +296,11 @@ namespace FalAiPlugin
                 if(newTp.WanFlash && newTp.ShouldPropertyBeVisible(nameof(TrackPayload.WanFlash), newTp, newIp))
                 {
                     model += "/flash";
+                }
+
+                if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationKlingO3), newTp, newIp))
+                {
+                    reg.duration = newIp.DurationKlingO3;
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
@@ -444,7 +457,8 @@ namespace FalAiPlugin
                                 "wan-alpha",
                                 "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video"];
 
-                output["KlingAi"] = ["kling-video/ai-avatar/v2/pro", "kling-video/v2.6/pro/text-to-video", "kling-video/v2.6/pro/image-to-video", "kling-video/o1/image-to-video",
+                output["KlingAi"] = ["kling-video/o3/pro/text-to-video", "kling-video/o3/pro/image-to-video", 
+                            "kling-video/ai-avatar/v2/pro", "kling-video/v2.6/pro/text-to-video", "kling-video/v2.6/pro/image-to-video", "kling-video/o1/image-to-video",
                             "kling-video/v2.6/pro/motion-control", "kling-video/v2.6/standard/motion-control", 
                             "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
                             "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", 
@@ -647,6 +661,14 @@ namespace FalAiPlugin
                 if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
                 {
                     return (false, "Auth token empty!!!");
+                }                
+            }
+
+            if (payload is TrackPayload tp)
+            {
+                if (!string.IsNullOrEmpty(tp.Model) && tp.Model.StartsWith("kling-video/o3/pro"))
+                {
+                    return (false, "Warning, Kling 3 is expensive model, up to about 2.5e per 15sec video. USE WITH CAUTION");
                 }
             }
 
