@@ -4,8 +4,8 @@ namespace LTXPlugin
 {
     public class ItemPayload : IPayloadPropertyVisibility
     {
-        public static string[] MotionTypes = ["none", "dolly_in", "dolly_out", "dolly_left", "dolly_right", "jib_up", "jib_down", "static", "focus_shift"];
-        public static string[] DurationFastTypes = ["6", "8", "10", "12", "14", "16", "18", "20"];
+        public static string[] MotionTypes => ["none", "dolly_in", "dolly_out", "dolly_left", "dolly_right", "jib_up", "jib_down", "static", "focus_shift"];
+        public static string[] DurationFastTypes => ["6", "8", "10", "12", "14", "16", "18", "20"];
         public static string[] DurationTypes => DurationFastTypes.Take(3).ToArray();
 
         public string Prompt { get; set; }
