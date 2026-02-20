@@ -83,7 +83,7 @@ namespace RunwayMlPlugin
                 }
 
                 // Act2
-                if (newTp.Request.model == models[0])
+                if (newTp.Request.model == models[1])
                 {
                     var req = new Act2Request();
                     if (string.IsNullOrEmpty(newIp.VideoSource))
@@ -181,7 +181,7 @@ namespace RunwayMlPlugin
                         _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
                     return videoResp;
                 }
-                else if (newTp.Request.model == models[1])
+                else if (newTp.Request.model == models[2])
                 {
                     if (string.IsNullOrEmpty(newIp.VideoSource))
                     {
@@ -208,7 +208,7 @@ namespace RunwayMlPlugin
                         _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
                     return videoResp;
                 }
-                else if (newTp.Request.model == models[2]) // Aleph
+                else if (newTp.Request.model == models[3]) // Aleph
                 {
                     var actualVideoSource = string.IsNullOrEmpty(newIp.VideoSource) ? newTp.ReferenceVideo : newIp.VideoSource;
                     if (string.IsNullOrEmpty(actualVideoSource))
@@ -349,7 +349,7 @@ namespace RunwayMlPlugin
         {
         }
 
-        private static string[] models = ["act_two", "upscale_v1", "gen4_aleph", "gen4_turbo", "gen3a_turbo"]; // Remember, these are referenced by indexes!!!
+        private static string[] models = ["gen4.5", "act_two", "upscale_v1", "gen4_aleph", "gen4_turbo", "gen3a_turbo"]; // Remember, these are referenced by indexes!!!
         private static string[] ratios = ["1280:720", "720:1280", "1104:832", "832:1104", "960:960", "1584:672"];
 
         public async Task<string[]> SelectionOptionsForProperty(string propertyName)
@@ -428,7 +428,7 @@ namespace RunwayMlPlugin
 
             if (payload is TrackPayload tp)
             {
-                if (tp.Request.model == models[3])
+                if (tp.Request.model == models[4])
                 {
                     if (tp.Request.ratio != ratios[^1] && tp.Request.ratio != ratios[^2])
                     {
@@ -714,34 +714,34 @@ namespace RunwayMlPlugin
 
             if (trackPaylod is TrackPayload tpv && itemPayload is ItemPayload ipv)
             {
-                if (string.IsNullOrEmpty(ipv.ImageSource) && models.Skip(3).Contains(tpv.Request.model))
+                if (string.IsNullOrEmpty(ipv.ImageSource) && models.Skip(4).Contains(tpv.Request.model))
                 {
-                    return (false, $"Image source must not be empty (for models {string.Join(", ", models.Skip(3))})");
+                    return (false, $"Image source must not be empty (for models {string.Join(", ", models.Skip(4))})");
                 }
 
-                if (string.IsNullOrEmpty(ipv.VideoSource) && tpv.Request.model == models[1])
+                if (string.IsNullOrEmpty(ipv.VideoSource) && tpv.Request.model == models[2])
                 {
-                    return (false, $"Image source must not be empty (for model {models[1]})");
+                    return (false, $"Image source must not be empty (for model {models[2]})");
                 }
 
-                if (string.IsNullOrEmpty(ipv.Prompt) && string.IsNullOrEmpty(tpv.Request.promptText) && tpv.Request.model == models[2])
+                if (string.IsNullOrEmpty(ipv.Prompt) && string.IsNullOrEmpty(tpv.Request.promptText) && tpv.Request.model == models[3])
                 {
-                    return (false, $"Prompt must not be empty (for model {models[2]})");
+                    return (false, $"Prompt must not be empty (for model {models[3]})");
                 }
 
-                if ((string.IsNullOrEmpty(ipv.VideoSource) && string.IsNullOrEmpty(tpv.ReferenceVideo)) && tpv.Request.model == models[2])
+                if ((string.IsNullOrEmpty(ipv.VideoSource) && string.IsNullOrEmpty(tpv.ReferenceVideo)) && tpv.Request.model == models[3])
                 {
-                    return (false, $"Video source must not be empty (for model {models[2]})");
+                    return (false, $"Video source must not be empty (for model {models[3]})");
                 }
 
-                if (tpv.Request.model == models[0] && string.IsNullOrEmpty(tpv.ReferenceVideo) && string.IsNullOrEmpty(tpv.ReferenceImage) && string.IsNullOrEmpty(ipv.ReferenceImage))
+                if (tpv.Request.model == models[3] && string.IsNullOrEmpty(tpv.ReferenceVideo) && string.IsNullOrEmpty(tpv.ReferenceImage) && string.IsNullOrEmpty(ipv.ReferenceImage))
                 {
-                    return (false, $"Either reference video or image must be set (for model {models[0]})");
+                    return (false, $"Either reference video or image must be set (for model {models[2]})");
                 }
 
-                if (tpv.Request.model == models[0] && string.IsNullOrEmpty(ipv.VideoSource))
+                if (tpv.Request.model == models[2] && string.IsNullOrEmpty(ipv.VideoSource))
                 {
-                    return (false, $"Item payload is missing movement / reference video (for model {models[0]})");
+                    return (false, $"Item payload is missing movement / reference video (for model {models[2]})");
                 }
             }
 

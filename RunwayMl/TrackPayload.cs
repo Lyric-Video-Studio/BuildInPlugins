@@ -39,6 +39,11 @@ namespace RunwayMlPlugin
                 {
                     return tp.Request.model != "act_two" && tp.Request.model != "upscale_v1" && tp.Request.model != "gen4_aleph";
                 }
+
+                if (propertyName == nameof(Request.publicFigureThreshold))
+                {
+                    return tp.Request.model == "gen4.5";
+                }
             }
 
             return true;

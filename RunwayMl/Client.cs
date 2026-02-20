@@ -26,8 +26,11 @@ namespace RunwayMlPlugin
         [Description("Duration in seconds, not used in Act2")]
         public int duration { get => videoDuration; set => videoDuration = value; }
 
-        private string modelToUse = "gen4_turbo";
+        private string modelToUse = "gen4.5";
         public string model { get => modelToUse; set => modelToUse = value; }
+
+        [PropertyComboOptions(["auto", "low"])]
+        public string publicFigureThreshold { get; set; } = "low";
     }
 
     public class VideoUpscaleRequest
@@ -148,6 +151,12 @@ namespace RunwayMlPlugin
 
                     case Act2Request:
                         apiPath = "character_performance";
+                        break;
+                    case Request r:
+                        if (r.model == "gen4.5" && string.IsNullOrEmpty(r.promptImage))
+                        {
+                            apiPath = "text_to_video";
+                        }
                         break;
 
                     default:

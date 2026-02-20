@@ -85,7 +85,7 @@ namespace RunwayMlPlugin
                     return tp.Request.model == "act_two";
                 }
 
-                if (propertyName == nameof(References))
+                if (propertyName == nameof(References) || propertyName == nameof(AddReference))
                 {
                     return tp.Request.model == "gen4_aleph";
                 }
