@@ -480,7 +480,8 @@ namespace FalAiPlugin
                 output["Qwen"] = ["qwen-image-2512", "qwen-image-edit-2511"];
                 output["Google"] = ["imagen4/preview"];
                 output["Wan"] = ["wan/v2.2-a14b/text-to-image", "wan-25-preview/text-to-image", "wan-25-preview/image-to-image"];
-                output["Bytedance"] = ["bytedance/seedream/v4.5/text-to-image", "bytedance/seedream/v4/text-to-image", "bytedance/seedream/v4/edit"];
+                output["Bytedance"] = ["bytedance/seedream/v5/lite/text-to-image", "bytedance/seedream/v5/lite/edit", 
+                    "bytedance/seedream/v4.5/text-to-image", "bytedance/seedream/v4/text-to-image", "bytedance/seedream/v4/edit"];
                 output["OpenAi"] = ["gpt-image-1.5", "gpt-image-1.5/edit", "gpt-image-1-mini", "gpt-image-1-mini/edit"];
                 return Task.FromResult(output);
             }

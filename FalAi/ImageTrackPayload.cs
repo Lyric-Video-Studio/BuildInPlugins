@@ -65,7 +65,7 @@ namespace FalAiPlugin
                     return ip.Model.Contains("gpt-image-1.5", StringComparison.InvariantCultureIgnoreCase);
                 }
 
-                if (propertyName == nameof(ImageSource))
+                if (propertyName == nameof(ImageSource) || propertyName == nameof(ImageSourceContainer.AddReference))
                 {
                     return (ip.Model?.EndsWith("image-to-image") ?? false) || (ip.Model?.Contains("edit") ?? false);
                 }
