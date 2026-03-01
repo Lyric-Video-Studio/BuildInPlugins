@@ -1,5 +1,7 @@
-﻿using Mscc.GenerativeAI;
+﻿using Google.GenAI;
+using Google.GenAI.Types;
 using PluginBase;
+using System.Reflection;
 using System.Text.Json.Nodes;
 
 namespace GooglePlugin
@@ -37,22 +39,74 @@ namespace GooglePlugin
 
             if (trackPayload is ImageTrackPayload tp && itemsPayload is ImageItemPayload ip)
             {
-                if (_generativeModel == null)
-                {
-                    _generativeModel = _googleAi.GenerativeModel(tp.Model);
-                }
                 var effectiveImage = !string.IsNullOrEmpty(ip.ImageSource) ? ip.ImageSource : tp.ImageSource;
                 var prompt = (tp.Prompt + " " + ip.Prompt).Trim();
-                GenerationConfig? genConfig = null;
-                if (tp.Model == "gemini-3-pro-image-preview")
+                var getCOnfig = new GenerateContentConfig
                 {
-                    var imgSize = Enum.GetValues<ImageSize>().FirstOrDefault(s => s.ToString().EndsWith(tp.Size, StringComparison.InvariantCultureIgnoreCase));
+                    ThinkingConfig = new ThinkingConfig
+                    {
+                        ThinkingLevel = "MINIMAL"
+                    },
+                    ImageConfig = new ImageConfig
+                    {
+                        ImageSize = tp.Size                    
+                    },
+                    ResponseModalities = new List<string>
+                    {
+                        "IMAGE",
+                        "TEXT"
+                    }
+                };   
 
-                    genConfig = new GenerationConfig();
-                    genConfig.ImageConfig = new ImageConfig() { ImageSize = imgSize };
+                var contents = new List<Content>
+                {
+                    new Content
+                    {
+                        Role = "user",
+                        Parts = new List<Part>
+                        {
+                            new Part { Text = prompt },
+                        }
+                    },
+                };
+
+                if (!string.IsNullOrEmpty(effectiveImage))
+                {
+                    var imageBytes = await System.IO.File.ReadAllBytesAsync(effectiveImage);
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+                    contents.First().Parts.Add(new Part()
+                    {
+                        InlineData = new Blob
+                        {
+                            MimeType = CommonConstants.GetMimeType(Path.GetExtension(effectiveImage)),
+                            Data = imageBytes
+                        }
+                    });
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
                 }
 
-                if (string.IsNullOrEmpty(effectiveImage))
+                await foreach (var chunk in _googleAi.Models.GenerateContentStreamAsync(tp.Model, contents, getCOnfig))
+                {
+                    if (chunk.Candidates == null || chunk.Candidates.Count == 0 ||
+                        chunk.Candidates[0].Content?.Parts == null)
+                    {
+                        continue;
+                    }
+                    var part = chunk.Candidates[0].Content.Parts[0];
+                    if (part.InlineData?.Data != null)
+                    {
+                        var inlineData = part.InlineData;
+                        var dataBuffer = inlineData.Data;
+                        var fileExtension = GetFileExtension(inlineData.MimeType);
+                        return new ImageResponse() { Success = dataBuffer.Length > 0, Image = Convert.ToBase64String(dataBuffer), ImageFormat = $"{fileExtension}" };
+                    }
+                    else
+                    {
+                        Console.WriteLine(chunk);
+                    }
+                }
+
+                /*if (string.IsNullOrEmpty(effectiveImage))
                 {
                     var request = new GenerateContentRequest(prompt);
                     request.GenerationConfig = genConfig;
@@ -79,15 +133,27 @@ namespace GooglePlugin
                     var response = await _generativeModel.GenerateContent(parts, genConfig, cancellationToken: ct);
                     var imageData = ExtractImageDataBase64(response);
                     return new ImageResponse() { Success = !string.IsNullOrEmpty(imageData.img), Image = imageData.img, ImageFormat = $".{imageData.format}" };
-                }
+                }*/
             }
             throw new Exception("Internal error");
+        }
+
+        static string GetFileExtension(string mimeType)
+        {
+            return mimeType switch
+            {
+                "image/jpeg" => ".jpg",
+                "image/png" => ".png",
+                "audio/wav" => ".wav",
+                "audio/mpeg" => ".mp3",
+                _ => ".bin"
+            };
         }
 
         public async Task<VideoResponse> GetVideo(object trackPayload, object itemsPayload, string folderToSaveVideo)
         {
 
-            if (trackPayload is VideoTrackPayload tp && itemsPayload is VideoItemPayload ip)
+            /*if (trackPayload is VideoTrackPayload tp && itemsPayload is VideoItemPayload ip)
             {
                 var effectiveImage = !string.IsNullOrEmpty(ip.ImageSource) ? ip.ImageSource : tp.ImageSource;
 
@@ -125,12 +191,12 @@ namespace GooglePlugin
                 var path = Path.Combine(folderToSaveVideo, $"{Guid.NewGuid()}.mp4");
                 File.WriteAllBytes(path, vid.Video.VideoBytes);
                 return new VideoResponse() { Fps = 24, VideoFile = path, Success = true };
-            }
+            }*/
             throw new Exception("Internal error");
             
         }
 
-        private (string img, string format) ExtractImageDataBase64(GenerateContentResponse response)
+        /*private (string img, string format) ExtractImageDataBase64(GenerateContentResponse response)
         {
             var imageStrings = new List<string>();
             if (response.Candidates != null)
@@ -155,10 +221,9 @@ namespace GooglePlugin
                 }
             }
             return ("", "");
-        }
+        }*/
 
-        private GenerativeModel _generativeModel;
-        private GoogleAI _googleAi;
+        private Client _googleAi;
 
         public async Task<string> Initialize(object settings)
         {
@@ -166,9 +231,10 @@ namespace GooglePlugin
             {
                 _connectionSettings = s;
                 _isInitialized = !string.IsNullOrEmpty(s.AccessToken);
-                _googleAi = new GoogleAI(_connectionSettings.AccessToken);
-                _generativeModel?.Dispose();
-                _generativeModel = null;
+                _googleAi = new Client(
+                    apiKey: _connectionSettings.AccessToken
+                );
+
                 return "";
             }
             else
@@ -188,19 +254,7 @@ namespace GooglePlugin
                 return Array.Empty<string>();
             }
 
-            if (CurrentTrackType == IPluginBase.TrackType.Image)
-            {
-                if (propertyName == nameof(ImageTrackPayload.Size))
-                {
-                    return ["1K", "2K", "4K"];
-                }
-
-                if (propertyName == nameof(ImageTrackPayload.Model))
-                {
-                    return ["gemini-3-pro-image-preview", "gemini-2.5-flash-image"];
-                }
-            }
-            else if (CurrentTrackType == IPluginBase.TrackType.Video)
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 if (propertyName == nameof(VideoTrackPayload.Model))
                 {
