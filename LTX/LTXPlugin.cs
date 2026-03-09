@@ -57,7 +57,15 @@ namespace LTXPlugin
 
                 }
 
+                
                 var dur = newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationFast25), newTp, newIp) ? newIp.DurationFast25 : newIp.Duration;
+
+                var actReso = newTp.Resolution;
+
+                if (newTp.ShouldPropertyBeVisible(nameof(TrackPayload.Resolution23), newTp, newIp))
+                {
+                    actReso = newTp.Resolution23;
+                }
 
                 var reg = new Request()
                 {
@@ -67,7 +75,7 @@ namespace LTXPlugin
                     prompt = (newIp.Prompt + " " + newTp.Prompt).Trim(),
                     duration = int.Parse(ItemPayload.DurationFastTypes[dur]), // This is safe for now: fast one has more
                     camera_motion = actCameraMotio,
-                    resolution = newTp.Resolution, 
+                    resolution = actReso, 
                     image_uri = actImageSource, 
                     audio_uri = actAudioSource
                 };
