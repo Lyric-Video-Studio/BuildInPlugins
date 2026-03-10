@@ -76,6 +76,7 @@ namespace FalAiPlugin
             get; set;
         }
 
+        [PropertyComboOptions(["image", "video"])]
         public string CharacterOrientation { get; set; } = "video";
 
         public ImageSourceContainer ImageSourceCont { get; set; } = new();

@@ -113,6 +113,11 @@ namespace FalAiPlugin
                     return propertyName is nameof(ImageSource) or nameof(Prompt) or nameof(NegativePrompt) or nameof(ResolutionWan);
                 }
 
+                if (tp.Model != null && tp.Model.Contains("motion-control") && propertyName is nameof(ImageSource))
+                {
+                    return true;
+                }
+
                 if (tp.Model != null && (tp.Model == "veed/fabric-1.0"))
                 {
                     // Only image source and video ref

@@ -457,7 +457,7 @@ namespace FalAiPlugin
                                 "wan-alpha",
                                 "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video"];
 
-                output["KlingAi"] = ["kling-video/o3/pro/text-to-video", "kling-video/o3/pro/image-to-video", 
+                output["KlingAi"] = ["kling-video/o3/pro/text-to-video", "kling-video/o3/pro/image-to-video", "kling-video/v3/pro/motion-control",
                             "kling-video/ai-avatar/v2/pro", "kling-video/v2.6/pro/text-to-video", "kling-video/v2.6/pro/image-to-video", "kling-video/o1/image-to-video",
                             "kling-video/v2.6/pro/motion-control", "kling-video/v2.6/standard/motion-control", 
                             "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
@@ -546,9 +546,6 @@ namespace FalAiPlugin
 
                     case nameof(TrackPayload.Style):
                         return ["anime", "3d_animation", "clay", "comic", "cyberpunk"];
-                    case nameof(ItemPayload.CharacterOrientation):
-                        return ["image", "video"];
-
                     default:
                         break;
                 }
