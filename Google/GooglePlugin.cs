@@ -8,7 +8,7 @@ namespace GooglePlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class GooglePlugin : IImagePlugin, ICancellableGeneration,/*, IVideoPlugin,*/ IImportFromImage
+    public class GooglePlugin : IImagePlugin, ICancellableGeneration, IVideoPlugin, IImportFromImage
     {
         public const string PluginName = "GooglePluginBuildIn";
         public string UniqueName { get => PluginName; }
@@ -105,35 +105,6 @@ namespace GooglePlugin
                         Console.WriteLine(chunk);
                     }
                 }
-
-                /*if (string.IsNullOrEmpty(effectiveImage))
-                {
-                    var request = new GenerateContentRequest(prompt);
-                    request.GenerationConfig = genConfig;
-                    var response = await _generativeModel.GenerateContent(request, cancellationToken: ct);
-                    var imageData = ExtractImageDataBase64(response);
-                    return new ImageResponse() { Success = !string.IsNullOrEmpty(imageData.img), Image = imageData.img, ImageFormat = $".{imageData.format}" };
-                }
-                else
-                {
-                    var imageBytes = await File.ReadAllBytesAsync(effectiveImage);
-                    var mimeType = Path.GetExtension(effectiveImage).ToLower() switch
-                    {
-                        ".jpg" or ".jpeg" => "image/jpeg",
-                        ".png" => "image/png",
-                        _ => throw new NotSupportedException("Unsupported image format.")
-                    };
-
-                    var parts = new List<IPart>
-                    {
-                        new TextData { Text = prompt },
-                        new InlineData { MimeType = mimeType, Data = Convert.ToBase64String(imageBytes) }
-                    };
-
-                    var response = await _generativeModel.GenerateContent(parts, genConfig, cancellationToken: ct);
-                    var imageData = ExtractImageDataBase64(response);
-                    return new ImageResponse() { Success = !string.IsNullOrEmpty(imageData.img), Image = imageData.img, ImageFormat = $".{imageData.format}" };
-                }*/
             }
             throw new Exception("Internal error");
         }
@@ -153,45 +124,67 @@ namespace GooglePlugin
         public async Task<VideoResponse> GetVideo(object trackPayload, object itemsPayload, string folderToSaveVideo)
         {
 
-            /*if (trackPayload is VideoTrackPayload tp && itemsPayload is VideoItemPayload ip)
+            if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            {
+                return new VideoResponse { Success = false, ErrorMsg = "Uninitialized" };
+            }
+
+            if (trackPayload is VideoTrackPayload tp && itemsPayload is VideoItemPayload ip)
             {
                 var effectiveImage = !string.IsNullOrEmpty(ip.ImageSource) ? ip.ImageSource : tp.ImageSource;
-
-                if (_generativeModel == null)
+                var prompt = (tp.Prompt + " " + ip.Prompt).Trim();
+                var getCOnfig = new GenerateVideosConfig
                 {
-                    _generativeModel = _googleAi.GenerativeModel(tp.Model);
-                }
+                    PersonGeneration = "allow_adult", 
+                    AspectRatio = tp.AspectRatio, 
+                    DurationSeconds = int.Parse(ip.Duration), 
+                    Resolution = tp.Resolution
+                };                   
 
-                var vidReg = new GenerateVideosRequest((ip.Prompt + " " + tp.Prompt).Trim());
+                var source = new GenerateVideosSource
+                {
+                    Prompt = prompt
+                };
 
                 if (!string.IsNullOrEmpty(effectiveImage))
                 {
-                    var imageBytes = await File.ReadAllBytesAsync(effectiveImage);
-                    var mimeType = Path.GetExtension(effectiveImage).ToLower() switch
-                    {
-                        ".jpg" or ".jpeg" => "image/jpeg",
-                        ".png" => "image/png",
-                        _ => throw new NotSupportedException("Unsupported image format.")
-                    };
-
-                    vidReg.Instances.FirstOrDefault()!.Image = new Image() { ImageBytes = imageBytes, MimeType = mimeType };
+                    source.Image = Image.FromFile(effectiveImage);
                 }
 
-                
-                vidReg.Parameters = new GenerateVideosConfig()
-                {
-                    //AspectRatio = tp.Size,
-                    DurationSeconds = 8,
-                    Resolution = tp.Resolution,
-                    NegativePrompt = (ip.NegativePrompt + " " + tp.NegativePrompt).Trim()
-                };
+                var res = await _googleAi.Models.GenerateVideosAsync(tp.Model, source, getCOnfig);
 
-                var res = await _generativeModel.GenerateVideos(vidReg);
-                var vid = res.GeneratedVideos.FirstOrDefault();
-                var path = Path.Combine(folderToSaveVideo, $"{Guid.NewGuid()}.mp4");
-                File.WriteAllBytes(path, vid.Video.VideoBytes);
-                return new VideoResponse() { Fps = 24, VideoFile = path, Success = true };
-            }*/
+                while (res.Done != true)
+                {
+                    try
+                    {
+                        await Task.Delay(5000);
+                        res = await _googleAi.Operations.GetAsync(res, null);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        Console.WriteLine("Task was cancelled while waiting.");
+                        break;
+                    }
+                }
+
+                if (res.Response?.GeneratedVideos?.Count == 0 || res.Response?.GeneratedVideos == null)
+                {
+                    return new VideoResponse { Success = false, ErrorMsg = "failed to generate video" };
+                }
+
+                // Download the video file.
+                for (var i = 0; i < res.Response.GeneratedVideos.Count; i++)
+                {
+                    var targetFile = Path.Combine(folderToSaveVideo, $"{Guid.NewGuid()}.mp4");
+                    await _googleAi.Files.DownloadToFileAsync(
+                        generatedVideo: res.Response.GeneratedVideos[i],
+                        outputPath: targetFile
+                    );
+                    // Current fps is not selectable
+                    return new VideoResponse() { Success = true, Fps = 24, VideoFile = targetFile };
+                }
+
+            }
             throw new Exception("Internal error");
             
         }
@@ -252,25 +245,6 @@ namespace GooglePlugin
             if (_connectionSettings == null)
             {
                 return Array.Empty<string>();
-            }
-
-            if (CurrentTrackType == IPluginBase.TrackType.Video)
-            {
-                if (propertyName == nameof(VideoTrackPayload.Model))
-                {
-                    return ["veo-3.1-fast-generate-preview", "veo-3.1-generate-preview"];
-                }
-
-                /*if (propertyName == nameof(VideoTrackPayload.Size))
-                {
-                    return [ImageAspectRatio.Ratio16x9.ToString(), ImageAspectRatio.Ratio9x16.ToString()];
-                }*/
-
-                if (propertyName == nameof(VideoTrackPayload.Resolution))
-                {
-                    return ["720p", "1080p", "4k"];
-                }
-
             }
 
             return Array.Empty<string>();

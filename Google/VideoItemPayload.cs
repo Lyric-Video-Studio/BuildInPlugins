@@ -5,7 +5,9 @@ namespace GooglePlugin
     public class VideoItemPayload
     {
         public string Prompt { get; set; }
-        public string NegativePrompt { get; set; }
+
+        [PropertyComboOptions(["4", "6", "8"])]
+        public string Duration { get; set; } = "8";
 
         [EnableFileDrop]
         public string ImageSource { get; set; }
