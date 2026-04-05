@@ -4,7 +4,7 @@ namespace GooglePlugin
 {
     public class VideoTrackPayload : IPayloadPropertyVisibility
     {
-        [PropertyComboOptions(["veo-3.1-fast-generate-preview", "veo-3.1-generate-preview"])]
+        [PropertyComboOptions(["veo-3.1-fast-generate-preview", "veo-3.1-generate-preview", "veo-3.1-lite-generate-preview"])]
         public string Model { get; set; } = "veo-3.1-fast-generate-preview";
         public string Prompt { get; set; }
 
