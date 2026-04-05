@@ -25,6 +25,11 @@ namespace FalAiPlugin
 
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
+        [PropertyComboOptions(["2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"])]
+        public int DurationWan27 { get; set; } = 10;
+
+        [Description("Duration of the video in seconds")]
+        [CustomName("Duration")]
         public string DurationMinimax { get; set; } = "6";
 
         [Description("Duration of the video in seconds")]
@@ -94,6 +99,11 @@ namespace FalAiPlugin
                     return true;
                 }
 
+                if (propertyName != null && propertyName.StartsWith("duration", StringComparison.InvariantCultureIgnoreCase) && tp.Model.Contains("wan/v2.7/"))
+                {
+                    return propertyName == nameof(DurationWan27);
+                }
+
                 if (tp.Model != null && tp.Model.Contains("kling-video/o3"))
                 {
                     if (propertyName is nameof(ImageSource) or nameof(LastFrame))
@@ -137,6 +147,12 @@ namespace FalAiPlugin
                     return propertyName is nameof(Prompt) or nameof(VideoSource);
                 }
 
+                if (tp.Model != null && tp.Model.Contains("edit") && propertyName is nameof(VideoSource))
+                {
+                    // Only image source and video ref
+                    return true;
+                }
+
                 if (tp.Model != null && tp.Model.Contains("motion-control"))
                 {
                     // Only image source and video ref
@@ -150,6 +166,11 @@ namespace FalAiPlugin
                 if (tp.Model != null && tp.Model.Contains("hailuo-2.3-fast") && propertyName is nameof(NegativePrompt) or nameof(Seed) or nameof(ImageSourceContainer.AddReference))
                 {
                     return false;
+                }
+
+                if (tp.Model != null && tp.Model.Contains("wan/v2.7/image-to-video") && propertyName is nameof(LastFrame) or nameof(ImageSource) or nameof(AudioSource))
+                {
+                    return true;
                 }
 
                 if (tp.Model != null && tp.Model.Contains("bytedance/seedance"))

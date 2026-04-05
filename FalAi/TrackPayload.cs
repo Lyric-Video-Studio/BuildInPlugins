@@ -157,13 +157,19 @@ namespace FalAiPlugin
                     return propertyName is nameof(AspectRatioWan26) or nameof(Resolution) or nameof(GenerateAudio) or nameof(ImageSource) or nameof(Prompt);
                 }
 
-                if (tp.Model != null && tp.Model.StartsWith("wan/v2.6/", StringComparison.InvariantCultureIgnoreCase))
+                if (tp.Model != null && (tp.Model.StartsWith("wan/v2.6/", StringComparison.InvariantCultureIgnoreCase) || tp.Model.StartsWith("wan/v2.7/", StringComparison.InvariantCultureIgnoreCase)))
                 {
-                    if (tp.Model.Contains("image", StringComparison.InvariantCultureIgnoreCase) && propertyName == nameof(ImageSource))
+                    if ((tp.Model.Contains("image", StringComparison.InvariantCultureIgnoreCase) || 
+                        tp.Model.Contains("reference", StringComparison.InvariantCultureIgnoreCase)) && propertyName == nameof(ImageSource))
                     {
                         return true;
                     }
-                    return propertyName == nameof(Prompt) || propertyName == nameof(NegativePrompt) || propertyName == nameof(Resolution) || propertyName == nameof(Seed);
+                    return propertyName == nameof(Prompt) || propertyName == nameof(NegativePrompt) || propertyName == nameof(Resolution) || propertyName == nameof(Seed) || propertyName == nameof(AspectRatioWan26);
+                }
+
+                if (tp.Model != null && (tp.Model.StartsWith("wan/v2.7/", StringComparison.InvariantCultureIgnoreCase) && propertyName.StartsWith("resolution", StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    return propertyName == nameof(Resolution);
                 }
 
                 if (tp.Model == "editto")

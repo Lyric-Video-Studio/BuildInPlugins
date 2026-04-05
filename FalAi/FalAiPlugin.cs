@@ -236,6 +236,14 @@ namespace FalAiPlugin
                     reg.last_frame_url = null;
                 }
 
+                if (model.Contains("wan/v2.7/image-to-video", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    reg.image_url = reg.image_url;
+                    reg.end_image_url = reg.last_frame_url;
+                    reg.first_frame_url = null;
+                    reg.last_frame_url = null;
+                }
+
                 if (model == "creatify/aurora")
                 {
                     reg.resolution = "720p";
@@ -264,6 +272,12 @@ namespace FalAiPlugin
                 if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationSeedream), newTp, newIp))
                 {
                     reg.duration = newIp.DurationSeedream;
+                }
+
+                if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationWan27), newTp, newIp))
+                {
+                    reg.duration = null;
+                    reg.durationInt = newIp.DurationWan27;
                 }
 
                 if (model.Contains("seedance/v1.5/pro/image-to-video") && reg.last_frame_url != null && !string.IsNullOrEmpty(reg.last_frame_url))
@@ -452,7 +466,8 @@ namespace FalAiPlugin
                                     "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
                                     "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video"];
 
-                output["Wan"] = ["wan/v2.6/text-to-video", "wan/v2.6/image-to-video",
+                output["Wan"] = ["wan/v2.7/text-to-video", "wan/v2.7/image-to-video", "wan/v2.7/reference-to-video", "wan/v2.7/edit-video",  
+                                "wan/v2.6/text-to-video", "wan/v2.6/image-to-video",
                                 "wan-25-preview/text-to-video", "wan-25-preview/image-to-video",
                                 "wan-alpha",
                                 "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video"];

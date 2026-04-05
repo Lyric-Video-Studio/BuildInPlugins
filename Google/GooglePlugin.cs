@@ -135,11 +135,11 @@ namespace GooglePlugin
                 var prompt = (tp.Prompt + " " + ip.Prompt).Trim();
                 var getCOnfig = new GenerateVideosConfig
                 {
-                    PersonGeneration = "allow_adult", 
+                    PersonGeneration = tp.Model.Contains("lite") ? null : "allow_adult", 
                     AspectRatio = tp.AspectRatio, 
                     DurationSeconds = int.Parse(ip.Duration), 
                     Resolution = tp.Resolution
-                };                   
+                };
 
                 var source = new GenerateVideosSource
                 {
