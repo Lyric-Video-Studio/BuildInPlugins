@@ -123,9 +123,13 @@ namespace FalAiPlugin
                     return tp.Model != null && tp.Model.StartsWith("pixverse/v5.6");
                 }
                 
-                if (tp.Model != null && tp.Model.Contains("one-to-all-animation"))
+                if (tp.Model != null && (tp.Model.Contains("one-to-all-animation") || tp.Model.Contains("wan/v2.7/")))
                 {
                     // Only image source and video ref
+                    if (tp.Model.Contains("wan/v2.7/") && propertyName != null && propertyName.StartsWith("duration", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return false;
+                    }
                     return propertyName is nameof(ImageSource) or nameof(VideoSource) or nameof(Prompt) or nameof(NegativePrompt);
                 }
 

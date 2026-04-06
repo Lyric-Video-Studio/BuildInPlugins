@@ -484,7 +484,8 @@ namespace FalAiPlugin
                     "pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video"];
                 output["Bytedance"] = ["bytedance/dreamactor/v2", "bytedance/seedance/v1.5/pro/text-to-video", "bytedance/seedance/v1.5/pro/image-to-video", "bytedance/omnihuman/v1.5"];
                 output["Upscale"] = ["seedvr/upscale/video"];
-                output["Edit videos"] = ["lucy-edit/pro", "decart/lucy-restyle", "editto", "one-to-all-animation/1.3b", "one-to-all-animation/14b"];
+                output["Lip sync"] = ["wan/v2.7/image-to-video", "bytedance/omnihuman/v1.5"];
+                output["Edit videos"] = ["wan/v2.7/reference-to-video", "lucy-edit/pro", "decart/lucy-restyle", "editto", "one-to-all-animation/1.3b", "one-to-all-animation/14b"];
                 output["Misc"] = ["creatify/aurora"];
                 return Task.FromResult(output);
             }
