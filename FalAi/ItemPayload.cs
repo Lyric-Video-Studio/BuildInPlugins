@@ -123,7 +123,7 @@ namespace FalAiPlugin
                         return false;
                     } 
 
-                    return propertyName == nameof(DurationWan27);
+                    return propertyName == nameof(DurationWan27) && !tp.Model.Contains("wan/v2.7/reference-to-video");
                 }
 
                 if (tp.Model != null && tp.Model.Contains("kling-video/o3"))
