@@ -95,6 +95,15 @@ namespace FalAiPlugin
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? reference_image_url { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? reference_video_url { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string[] reference_image_urls { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string> reference_video_urls { get; set; }
     }
 
     public class AudioRequest
@@ -170,6 +179,7 @@ namespace FalAiPlugin
         public async Task<VideoResponse> GetVideo(VideoRequest request, string folderToSave, ConnectionSettings connectionSettings,
             ItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, string model, CancellationToken ct)
         {
+            ct.ThrowIfCancellationRequested();
             try
             {
                 using var httpClient = new HttpClient();

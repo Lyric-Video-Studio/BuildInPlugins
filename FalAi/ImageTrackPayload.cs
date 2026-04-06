@@ -73,7 +73,7 @@ namespace FalAiPlugin
                 if (propertyName == nameof(SizeImagen4))
                 {
                     return ip.Model == "imagen4/preview" || ip.Model.Contains("imagineart");
-                }
+                }                
             }
             return true;
         }
@@ -100,6 +100,42 @@ namespace FalAiPlugin
         public void AddReference()
         {
             ImageSources.Add(new ImageSourceItem());
+        }
+
+        // TODO: This might be bit problematic if same names in child classes
+        public static bool IsImageRefName(string name)
+        {
+            return name is nameof(AddReference) or nameof(ImageSourceItem.FileSource) or nameof(ImageSourceItem.Remove);
+        }
+    }
+
+    public class VideoSourceContainer
+    {
+        public static event EventHandler RemoveReference;
+
+        public ObservableCollection<ImageSourceItem> VideoSources { get; set; } = new();
+
+        public VideoSourceContainer()
+        {
+            ImageSourceItem.RemoveReference += (s, e) =>
+            {
+                if (s is ImageSourceItem r)
+                {
+                    VideoSources.Remove(r);
+                }
+            };
+        }
+
+        // TODO: This might be bit problematic if same names in child classes
+        public static bool IsVideoRefName(string name)
+        {
+            return name is nameof(AddVideoReference) or nameof(ImageSourceItem.FileSource) or nameof(ImageSourceItem.Remove);
+        }
+
+        [CustomAction("Add video reference")]
+        public void AddVideoReference()
+        {
+            VideoSources.Add(new ImageSourceItem());
         }
     }
 

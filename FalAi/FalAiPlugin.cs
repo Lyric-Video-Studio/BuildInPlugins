@@ -188,6 +188,21 @@ namespace FalAiPlugin
                     }
                 }
 
+                foreach (var img in newIp.VideoSourceCont.VideoSources)
+                {
+                    if (reg.reference_video_urls == null)
+                    {
+                        reg.reference_video_urls = new List<string>();
+                    }
+
+                    var res = await UploadSource(img.FileSource);
+
+                    if (!string.IsNullOrEmpty(res.VideoFile))
+                    {
+                        reg.reference_video_urls.Add(res.VideoFile);
+                    }
+                }
+
                 tempRes1 = await UploadSource(newIp.FirstFrame);
 
                 if (tempRes1.Success)
@@ -280,6 +295,12 @@ namespace FalAiPlugin
                     reg.durationInt = newIp.DurationWan27;
                 }
 
+                if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationWan27Shorter), newTp, newIp))
+                {
+                    reg.duration = null;
+                    reg.durationInt = newIp.DurationWan27Shorter;
+                }
+
                 if (model.Contains("seedance/v1.5/pro/image-to-video") && reg.last_frame_url != null && !string.IsNullOrEmpty(reg.last_frame_url))
                 {
                     reg.end_image_url = reg.last_frame_url;
@@ -315,6 +336,18 @@ namespace FalAiPlugin
                 if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationKlingO3), newTp, newIp))
                 {
                     reg.duration = newIp.DurationKlingO3;
+                }
+
+                if (newTp.Model.Contains("wan/v2.7/", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    reg.reference_image_url = reg.image_url;
+                    reg.reference_video_url = reg.video_url;
+
+                    reg.reference_image_urls = reg.image_urls?.ToArray();
+                    reg.image_urls = null;
+
+                    reg.image_url = null;
+                    reg.video_url = null;
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
@@ -485,7 +518,7 @@ namespace FalAiPlugin
                 output["Bytedance"] = ["bytedance/dreamactor/v2", "bytedance/seedance/v1.5/pro/text-to-video", "bytedance/seedance/v1.5/pro/image-to-video", "bytedance/omnihuman/v1.5"];
                 output["Upscale"] = ["seedvr/upscale/video"];
                 output["Lip sync"] = ["wan/v2.7/image-to-video", "bytedance/omnihuman/v1.5"];
-                output["Edit videos"] = ["wan/v2.7/reference-to-video", "lucy-edit/pro", "decart/lucy-restyle", "editto", "one-to-all-animation/1.3b", "one-to-all-animation/14b"];
+                output["Edit videos"] = ["wan/v2.7/edit-video", "lucy-edit/pro", "decart/lucy-restyle", "editto", "one-to-all-animation/1.3b", "one-to-all-animation/14b"];
                 output["Misc"] = ["creatify/aurora"];
                 return Task.FromResult(output);
             }

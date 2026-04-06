@@ -148,6 +148,11 @@ namespace FalAiPlugin
                     return false;
                 }
 
+                if (tp.Model != null && tp.Model.Contains("wan/v2.7/reference-to-video") && propertyName is nameof(ImageSource))
+                {
+                    return false;
+                }
+
                 if (tp.Model != null && tp.Model.Contains("bytedance/seedance"))
                 {
                     if (propertyName is nameof(ImageSource))
@@ -159,11 +164,16 @@ namespace FalAiPlugin
 
                 if (tp.Model != null && (tp.Model.StartsWith("wan/v2.6/", StringComparison.InvariantCultureIgnoreCase) || tp.Model.StartsWith("wan/v2.7/", StringComparison.InvariantCultureIgnoreCase)))
                 {
-                    if ((tp.Model.Contains("image", StringComparison.InvariantCultureIgnoreCase) || 
-                        tp.Model.Contains("reference", StringComparison.InvariantCultureIgnoreCase)) && propertyName == nameof(ImageSource))
+                    if (tp.Model.Contains("image", StringComparison.InvariantCultureIgnoreCase) && propertyName == nameof(ImageSource))
                     {
-                        return true;
+                        return !tp.Model.Contains("wan/v2.7/reference-to-video");
                     }
+
+                    if (propertyName == nameof(ImageSourceCont) || ImageSourceContainer.IsImageRefName(propertyName))
+                    {
+                        return tp.Model.Contains("wan/v2.7/reference-to-video", StringComparison.CurrentCultureIgnoreCase);
+                    }
+
                     return propertyName == nameof(Prompt) || propertyName == nameof(NegativePrompt) || propertyName == nameof(Resolution) || propertyName == nameof(Seed) || propertyName == nameof(AspectRatioWan26);
                 }
 
@@ -200,7 +210,7 @@ namespace FalAiPlugin
                     }
                 }
 
-                if (propertyName == nameof(ImageSourceCont) ||  propertyName == nameof(ImageSourceContainer.AddReference))
+                if (propertyName == nameof(ImageSourceCont) || ImageSourceContainer.IsImageRefName(propertyName))
                 {
                     return tp.Model.Contains("veo3.1/reference-to-video", StringComparison.CurrentCultureIgnoreCase);
                 }

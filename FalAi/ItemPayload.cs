@@ -30,6 +30,11 @@ namespace FalAiPlugin
 
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
+        [PropertyComboOptions(["2", "3", "4", "5", "6", "7", "8", "9", "10"])]
+        public int DurationWan27Shorter { get; set; } = 10;
+
+        [Description("Duration of the video in seconds")]
+        [CustomName("Duration")]
         public string DurationMinimax { get; set; } = "6";
 
         [Description("Duration of the video in seconds")]
@@ -85,6 +90,7 @@ namespace FalAiPlugin
         public string CharacterOrientation { get; set; } = "video";
 
         public ImageSourceContainer ImageSourceCont { get; set; } = new();
+        public VideoSourceContainer VideoSourceCont { get; set; } = new();
 
         public ItemPayload()
         {
@@ -99,8 +105,24 @@ namespace FalAiPlugin
                     return true;
                 }
 
+                if (tp.Model != null && tp.Model.Contains("wan/v2.7/reference-to-video") && propertyName is nameof(ImageSource) or nameof(VideoSource))
+                {
+                    return false;
+                }
+
+                if (tp.Model != null && tp.Model.Contains("wan/v2.7/reference-to-video") && (ImageSourceContainer.IsImageRefName(propertyName) || VideoSourceContainer.IsVideoRefName(propertyName) || 
+                    propertyName == nameof(ItemPayload.Seed) || propertyName == nameof(DurationWan27Shorter)))
+                {
+                    return true;
+                }
+
                 if (propertyName != null && propertyName.StartsWith("duration", StringComparison.InvariantCultureIgnoreCase) && tp.Model.Contains("wan/v2.7/"))
                 {
+                    if (tp.Model.Contains("wan/v2.7/edit-video") && propertyName != null && propertyName.StartsWith("duration", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return false;
+                    } 
+
                     return propertyName == nameof(DurationWan27);
                 }
 
@@ -123,13 +145,8 @@ namespace FalAiPlugin
                     return tp.Model != null && tp.Model.StartsWith("pixverse/v5.6");
                 }
                 
-                if (tp.Model != null && (tp.Model.Contains("one-to-all-animation") || tp.Model.Contains("wan/v2.7/")))
-                {
-                    // Only image source and video ref
-                    if (tp.Model.Contains("wan/v2.7/") && propertyName != null && propertyName.StartsWith("duration", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        return false;
-                    }
+                if (tp.Model != null && tp.Model.Contains("one-to-all-animation"))
+                {                    
                     return propertyName is nameof(ImageSource) or nameof(VideoSource) or nameof(Prompt) or nameof(NegativePrompt);
                 }
 
@@ -347,6 +364,11 @@ namespace FalAiPlugin
                 if (tp.Model.StartsWith("kling-video/v2.6/") && propertyName == nameof(Seed))
                 {
                     return false;
+                }
+
+                if (propertyName == nameof(VideoSourceContainer.AddVideoReference))
+                {
+                    return tp.Model.StartsWith("wan/v2.7/reference-to-video");
                 }
             }
 
