@@ -28,10 +28,17 @@ namespace FalAiPlugin
 
         public string NegativePrompt { get; set; }
         public int Seed { get; set; }
+
+        [PropertyComboOptions(["16:9", "9:16", "1:1"])]
         public string AspectRatio { get; set; } = "16:9";
 
         [CustomName("AspectRatio")]
+        [PropertyComboOptions(["16:9", "9:16", "1:1", "4:3", "3:4"])]
         public string AspectRatioWan26 { get; set; } = "16:9";
+
+        [CustomName("AspectRatio")]
+        [PropertyComboOptions(["16:9", "9:16", "1:1", "4:3", "3:4", "2:3", "3:2", "21:9"])]
+        public string AspectRatioPixverse6 { get; set; } = "16:9";
 
         [CustomName("Resolution")]
         public string ResolutionMinimax { get; set; } = "768P";
@@ -58,13 +65,13 @@ namespace FalAiPlugin
 
         public bool GenerateAudio { get; set; }
 
+        [Description("Enable multi-clip generation with dynamic camera changes")]
+        public bool GenerateMultiClip { get; set; }
+
         public string Style { get; set; }
 
         [EnableFileDrop]
         public string ImageSource { get; set; }
-
-        [CustomName("Aspect ratio")]
-        public string AspectRatioSora { get; internal set; } = "16:9";
 
         public bool EnhancePrompt { get; set; }
 
@@ -80,6 +87,15 @@ namespace FalAiPlugin
                 if (propertyName == nameof(Model))
                 {
                     return true;
+                }
+
+                if (propertyName == nameof(AspectRatioPixverse6))
+                {
+                    return model != null && tp.Model.StartsWith("pixverse/v6");
+                } 
+                else if (tp.Model.StartsWith("pixverse/v6") && propertyName.StartsWith("Aspect"))
+                {
+                    return false;
                 }
 
                 if (tp.Model != null && tp.Model.Contains("kling-video/o3"))
@@ -142,7 +158,7 @@ namespace FalAiPlugin
                     return propertyName is nameof(ImageSource);
                 }
 
-                if (tp.Model != null && tp.Model.Contains("hailuo-2.3-fast") && propertyName is nameof(NegativePrompt) or nameof(AspectRatio) or nameof(AspectRatioSora) or nameof(AspectRatioWan26)
+                if (tp.Model != null && tp.Model.Contains("hailuo-2.3-fast") && propertyName is nameof(NegativePrompt) or nameof(AspectRatio) or nameof(AspectRatioWan26)
                     or nameof(ResolutionMinimax) or nameof(Resolution) or nameof(Seed) or nameof(ImageSourceContainer.AddReference))
                 {
                     return false;
@@ -151,6 +167,11 @@ namespace FalAiPlugin
                 if (tp.Model != null && tp.Model.Contains("wan/v2.7/reference-to-video") && propertyName is nameof(ImageSource))
                 {
                     return false;
+                }
+
+                if (tp.Model != null && tp.Model.Contains("pixverse/v5.6") && propertyName.StartsWith("Aspect"))
+                {
+                    return propertyName is nameof(AspectRatioWan26);
                 }
 
                 if (tp.Model != null && tp.Model.Contains("bytedance/seedance"))
@@ -214,20 +235,6 @@ namespace FalAiPlugin
                 {
                     return tp.Model.Contains("veo3.1/reference-to-video", StringComparison.CurrentCultureIgnoreCase);
                 }
-                if (propertyName == nameof(AspectRatioSora))
-                {
-                    return tp.Model.Contains("sora", StringComparison.CurrentCultureIgnoreCase);
-                }
-
-                if (propertyName == nameof(AspectRatio) && tp.Model.Contains("sora", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    return false;
-                }
-
-                if (tp.Model.Contains("sora", StringComparison.CurrentCultureIgnoreCase) && (propertyName == nameof(NegativePrompt)))
-                {
-                    return false;
-                }
 
                 if (tp.Model.Contains("upscale"))
                 {
@@ -249,6 +256,11 @@ namespace FalAiPlugin
                 if (propertyName == nameof(GenerateAudio))
                 {
                     return Model.StartsWith("veo") || Model.StartsWith("ltxv-2") || Model.Contains("kling-video/v2.6/pro") || Model.Contains("pixverse");
+                }
+
+                if (propertyName == nameof(GenerateMultiClip))
+                {
+                    return Model.Contains("pixverse/v6");
                 }
 
                 if (propertyName == nameof(Style))

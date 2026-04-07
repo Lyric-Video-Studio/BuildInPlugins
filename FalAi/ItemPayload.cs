@@ -116,6 +116,11 @@ namespace FalAiPlugin
                     return true;
                 }
 
+                if (propertyName != null && propertyName.StartsWith("duration", StringComparison.InvariantCultureIgnoreCase) && tp.Model.Contains("pixverse/v6"))
+                {
+                    return propertyName == nameof(DurationWan27);
+                }
+
                 if (propertyName != null && propertyName.StartsWith("duration", StringComparison.InvariantCultureIgnoreCase) && tp.Model.Contains("wan/v2.7/"))
                 {
                     if (tp.Model.Contains("wan/v2.7/edit-video") && propertyName != null && propertyName.StartsWith("duration", StringComparison.InvariantCultureIgnoreCase))
@@ -140,11 +145,15 @@ namespace FalAiPlugin
                     return propertyName is nameof(ImageSource) or nameof(VideoSource);
                 }
 
-                if (propertyName == nameof(DurationPixverse56))
+                if (propertyName != null && propertyName.StartsWith("duration", StringComparison.InvariantCultureIgnoreCase) && tp.Model.StartsWith("pixverse/v5.6"))
                 {
-                    return tp.Model != null && tp.Model.StartsWith("pixverse/v5.6");
+                    return propertyName == nameof(DurationPixverse56);
                 }
-                
+                else if (propertyName != null && propertyName.StartsWith("duration", StringComparison.InvariantCultureIgnoreCase) && tp.Model.StartsWith("pixverse"))
+                {
+                    return propertyName == nameof(DurationPixverse);
+                }
+
                 if (tp.Model != null && tp.Model.Contains("one-to-all-animation"))
                 {                    
                     return propertyName is nameof(ImageSource) or nameof(VideoSource) or nameof(Prompt) or nameof(NegativePrompt);

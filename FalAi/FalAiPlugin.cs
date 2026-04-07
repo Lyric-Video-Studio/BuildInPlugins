@@ -153,20 +153,10 @@ namespace FalAiPlugin
                 if (newTp.Model.Contains("pixverse"))
                 {
                     reg.generate_audio_switch = newTp.GenerateAudio;
+                    reg.generate_multi_clip_switch = newTp.GenerateMultiClip;
                 }
 
                 var model = newTp.Model;
-
-                if (newTp.Model.Contains("sora", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    reg.duration = null;
-                    reg.durationInt = newIp.DurationSora;
-                    reg.aspect_ratio = newTp.AspectRatioSora;
-                    if (reg.resolution == "1080p")
-                    {
-                        model += "/pro";
-                    }
-                }
 
                 if (model.Contains("upscale"))
                 {
@@ -265,6 +255,11 @@ namespace FalAiPlugin
                 }
 
                 if (newTp.ShouldPropertyBeVisible(nameof(TrackPayload.AspectRatioWan26), newTp, newIp))
+                {
+                    reg.aspect_ratio = newTp.AspectRatioWan26;
+                }
+
+                if (newTp.ShouldPropertyBeVisible(nameof(TrackPayload.AspectRatioPixverse6), newTp, newIp))
                 {
                     reg.aspect_ratio = newTp.AspectRatioWan26;
                 }
@@ -492,7 +487,6 @@ namespace FalAiPlugin
             if (CurrentTrackType == IPluginBase.TrackType.Video && propertyName == nameof(TrackPayload.Model))
             {
                 var output = new Dictionary<string, string[]>();
-                output["openAi"] = ["sora-2/text-to-video", "sora-2/image-to-video"];
                 output["Google"] = ["veo3.1", "veo3.1/fast", "veo3.1/image-to-video", "veo3.1/fast/image-to-video", "veo3.1/reference-to-video", "veo3.1/first-last-frame-to-video",
                                     "veo3", "veo3/fast", "veo3/image-to-video", "veo3/fast/image-to-video"];
                 output["Minimax"] = ["minimax/hailuo-2.3-fast/standard/image-to-video", "minimax/hailuo-2.3-fast/pro/image-to-video",
@@ -513,8 +507,7 @@ namespace FalAiPlugin
                             "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video"];
 
                 output["Ltxv"] = ["ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video", "ltxv-13b-098-distilled/image-to-video"];
-                output["Pixverse"] = ["pixverse/v5.6/text-to-video", "pixverse/v5.6/image-to-video", 
-                    "pixverse/v5.5/text-to-video", "pixverse/v5.5/image-to-video"];
+                output["Pixverse"] = ["pixverse/v6/text-to-video", "pixverse/v6/image-to-video", "pixverse/v5.6/text-to-video", "pixverse/v5.6/image-to-video"];
                 output["Bytedance"] = ["bytedance/dreamactor/v2", "bytedance/seedance/v1.5/pro/text-to-video", "bytedance/seedance/v1.5/pro/image-to-video", "bytedance/omnihuman/v1.5"];
                 output["Upscale"] = ["seedvr/upscale/video"];
                 output["Lip sync"] = ["wan/v2.7/image-to-video", "bytedance/omnihuman/v1.5"];
@@ -543,15 +536,6 @@ namespace FalAiPlugin
             {
                 switch (propertyName)
                 {
-                    case nameof(TrackPayload.AspectRatio):
-                        return ["16:9", "9:16", "1:1"];
-
-                    case nameof(TrackPayload.AspectRatioWan26):
-                        return ["16:9", "9:16", "1:1", "4:3", "3:4"];
-
-                    case nameof(TrackPayload.AspectRatioSora):
-                        return ["16:9", "9:16"];
-
                     case nameof(TrackPayload.Resolution):
                         return ["1080p", "720p"];
 
@@ -584,9 +568,6 @@ namespace FalAiPlugin
 
                     case nameof(ItemPayload.DurationLtx2):
                         return ["6", "8", "10"];
-
-                    case nameof(ItemPayload.DurationSora):
-                        return ["4", "8", "12"];
 
                     case nameof(ItemPayload.DurationWan26):
                         return ["5", "10", "15"];
