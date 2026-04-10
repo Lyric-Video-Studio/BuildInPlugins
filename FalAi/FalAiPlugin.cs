@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls;
+using FalAiPlugin.ModelVisibilityHandlers;
 using PluginBase;
 using System.Linq;
 using System.Text.Json.Nodes;
@@ -29,6 +30,13 @@ namespace FalAiPlugin
         private IContentUploader _contentUploader;
 
         public IPluginBase.TrackType CurrentTrackType { get; set; }
+
+        public static List<ModelVisibilityHandlerBase> VisibilityHandlers = new List<ModelVisibilityHandlerBase>() 
+        { 
+            new Seedance2T2VHandler(), 
+            new Seedance2I2VHandler(), 
+            new Seedance2R2VHandler()
+        };
 
         public async Task<VideoResponse> GetVideo(object trackPayload, object itemsPayload, string folderToSaveVideo)
         {
@@ -170,7 +178,7 @@ namespace FalAiPlugin
                         reg.image_urls = new List<string>();
                     }
 
-                    var res = await UploadSource(img.FileSource);
+                    var res = await UploadSource(img.ImageFile);
 
                     if (!string.IsNullOrEmpty(res.VideoFile))
                     {
@@ -185,11 +193,26 @@ namespace FalAiPlugin
                         reg.reference_video_urls = new List<string>();
                     }
 
-                    var res = await UploadSource(img.FileSource);
+                    var res = await UploadSource(img.VideoFile);
 
                     if (!string.IsNullOrEmpty(res.VideoFile))
                     {
                         reg.reference_video_urls.Add(res.VideoFile);
+                    }
+                }
+
+                foreach (var img in newIp.AudioSourceCont.AudioSources)
+                {
+                    if (reg.audio_urls == null)
+                    {
+                        reg.audio_urls = new List<string>();
+                    }
+
+                    var res = await UploadSource(img.AudioFile);
+
+                    if (!string.IsNullOrEmpty(res.VideoFile))
+                    {
+                        reg.audio_urls.Add(res.VideoFile);
                     }
                 }
 
@@ -296,6 +319,11 @@ namespace FalAiPlugin
                     reg.durationInt = newIp.DurationWan27Shorter;
                 }
 
+                if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationSeedream20), newTp, newIp))
+                {
+                    reg.duration = newIp.DurationSeedream20;
+                }
+
                 if (model.Contains("seedance/v1.5/pro/image-to-video") && reg.last_frame_url != null && !string.IsNullOrEmpty(reg.last_frame_url))
                 {
                     reg.end_image_url = reg.last_frame_url;
@@ -345,8 +373,13 @@ namespace FalAiPlugin
                     reg.video_url = null;
                 }
 
+                if (FalAiImgToVidPlugin.VisibilityHandlers.FirstOrDefault(f => f.ModelPath == newTp.Model) is ModelVisibilityHandlerBase mb)
+                {
+                    mb.ConvertRequest(reg);
+                }
+
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
-                    textualProgressAction, model, _ct);
+                textualProgressAction, model, _ct);
                 return videoResp;
             }
             else
@@ -413,7 +446,7 @@ namespace FalAiPlugin
                         imageReg.image_urls = new List<string>();
                     }
 
-                    var res = await UploadSource(img.FileSource);
+                    var res = await UploadSource(img.ImageFile);
 
                     if (!string.IsNullOrEmpty(res.VideoFile))
                     {
@@ -513,6 +546,28 @@ namespace FalAiPlugin
                 output["Lip sync"] = ["wan/v2.7/image-to-video", "bytedance/omnihuman/v1.5"];
                 output["Edit videos"] = ["wan/v2.7/edit-video", "lucy-edit/pro", "decart/lucy-restyle", "editto", "one-to-all-animation/1.3b", "one-to-all-animation/14b"];
                 output["Misc"] = ["creatify/aurora"];
+
+                VisibilityHandlers.ForEach(f =>
+                {
+                    void AppendModel(string parent)
+                    {
+                        if (!output.TryGetValue(parent, out var currentModels))
+                        {
+                            currentModels = [];
+                        }
+
+                        currentModels = [f.ModelPath, .. currentModels];
+                        output[parent] = currentModels;
+                    }
+
+                    AppendModel(f.ModelCategory);
+
+                    if (!string.IsNullOrEmpty(f.ModelAlternativeCategory))
+                    {
+                        AppendModel(f.ModelAlternativeCategory);
+                    }
+                });
+
                 return Task.FromResult(output);
             }
             else if(CurrentTrackType == IPluginBase.TrackType.Image && propertyName == nameof(ImageTrackPayload.Model))
@@ -697,6 +752,11 @@ namespace FalAiPlugin
                 if (!string.IsNullOrEmpty(tp.Model) && tp.Model.StartsWith("kling-video/o3/pro"))
                 {
                     return (false, "Warning, Kling 3 is expensive model, up to about 2.5e per 15sec video. USE WITH CAUTION");
+                }
+
+                if (tp.Model == "bytedance/seedance-2.0/text-to-video")
+                {
+                    return (false, "Warning, Good luck trying to generate video with this model, this is restricted to point of being completely useless XD");
                 }
             }
 

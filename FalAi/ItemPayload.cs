@@ -1,4 +1,5 @@
-﻿using PluginBase;
+﻿using FalAiPlugin.ModelVisibilityHandlers;
+using PluginBase;
 using System.ComponentModel;
 
 namespace FalAiPlugin
@@ -56,6 +57,11 @@ namespace FalAiPlugin
 
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
+        [PropertyComboOptions(["auto", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"])]
+        public string DurationSeedream20 { get; set; } = "12";
+
+        [Description("Duration of the video in seconds")]
+        [CustomName("Duration")]
         public int DurationLtx2 { get; set; } = 6;
 
         [Description("Duration of the video in seconds")]
@@ -92,6 +98,8 @@ namespace FalAiPlugin
         public ImageSourceContainer ImageSourceCont { get; set; } = new();
         public VideoSourceContainer VideoSourceCont { get; set; } = new();
 
+        public AudioSourceContainer AudioSourceCont { get; set; } = new();
+
         public ItemPayload()
         {
         }
@@ -103,6 +111,15 @@ namespace FalAiPlugin
                 if (propertyName == nameof(PollingId))
                 {
                     return true;
+                }
+
+                if (FalAiImgToVidPlugin.VisibilityHandlers.FirstOrDefault(f => f.ModelPath == tp.Model) is ModelVisibilityHandlerBase mb)
+                {
+                    return mb.ShouldItemPropertyBeVisible(propertyName, trackPayload, itemPayload);
+                }
+                else if(propertyName is nameof(DurationSeedream20)) // hide new properties here
+                {
+                    return false;
                 }
 
                 if (tp.Model != null && tp.Model.Contains("wan/v2.7/reference-to-video") && propertyName is nameof(ImageSource) or nameof(VideoSource))
@@ -381,7 +398,7 @@ namespace FalAiPlugin
                 }
             }
 
-            return true;
+            return propertyName == nameof(TrackPayload.Prompt);
         }
     }
 }

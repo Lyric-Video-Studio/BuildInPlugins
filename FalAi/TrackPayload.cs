@@ -1,4 +1,5 @@
-﻿using PluginBase;
+﻿using FalAiPlugin.ModelVisibilityHandlers;
+using PluginBase;
 using System.ComponentModel;
 
 namespace FalAiPlugin
@@ -87,6 +88,11 @@ namespace FalAiPlugin
                 if (propertyName == nameof(Model))
                 {
                     return true;
+                }
+
+                if (FalAiImgToVidPlugin.VisibilityHandlers.FirstOrDefault(f => f.ModelPath == tp.Model) is ModelVisibilityHandlerBase mb)
+                {
+                    return mb.ShouldTrackPropertyBeVisible(propertyName, trackPayload, itemPayload);
                 }
 
                 if (propertyName == nameof(AspectRatioPixverse6))
@@ -380,7 +386,7 @@ namespace FalAiPlugin
                 }
             }
 
-            return true;
+            return propertyName == nameof(TrackPayload.Prompt);
         }
     }
 }

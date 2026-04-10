@@ -107,6 +107,9 @@ namespace FalAiPlugin
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<string> reference_video_urls { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string> audio_urls { get; set; }
     }
 
     public class AudioRequest
@@ -203,6 +206,13 @@ namespace FalAiPlugin
                 {
                     // Need to prop out the fal-ai
                     baseUrl = baseUrl.Replace("fal-ai/", "wan/");
+                    model = string.Join('/', model.Split('/').Skip(1));
+                }
+
+                if (model.Contains("bytedance/seedance-2.0"))
+                {
+                    // Need to prop out the fal-ai
+                    baseUrl = baseUrl.Replace("fal-ai/", "bytedance/");
                     model = string.Join('/', model.Split('/').Skip(1));
                 }
 

@@ -96,7 +96,7 @@ namespace FalAiPlugin
             };
         }
 
-        [CustomAction("Add reference")]
+        [CustomAction("Add image reference")]
         public void AddReference()
         {
             ImageSources.Add(new ImageSourceItem());
@@ -105,7 +105,7 @@ namespace FalAiPlugin
         // TODO: This might be bit problematic if same names in child classes
         public static bool IsImageRefName(string name)
         {
-            return name is nameof(AddReference) or nameof(ImageSourceItem.FileSource) or nameof(ImageSourceItem.Remove);
+            return name is nameof(AddReference) or nameof(ImageSourceItem.ImageFile) or nameof(ImageSourceItem.RemoveImage);
         }
     }
 
@@ -113,13 +113,13 @@ namespace FalAiPlugin
     {
         public static event EventHandler RemoveReference;
 
-        public ObservableCollection<ImageSourceItem> VideoSources { get; set; } = new();
+        public ObservableCollection<VideoSourceItem> VideoSources { get; set; } = new();
 
         public VideoSourceContainer()
         {
-            ImageSourceItem.RemoveReference += (s, e) =>
+            VideoSourceItem.RemoveReference += (s, e) =>
             {
-                if (s is ImageSourceItem r)
+                if (s is VideoSourceItem r)
                 {
                     VideoSources.Remove(r);
                 }
@@ -129,13 +129,42 @@ namespace FalAiPlugin
         // TODO: This might be bit problematic if same names in child classes
         public static bool IsVideoRefName(string name)
         {
-            return name is nameof(AddVideoReference) or nameof(ImageSourceItem.FileSource) or nameof(ImageSourceItem.Remove);
+            return name is nameof(AddVideoReference) or nameof(VideoSourceItem.VideoFile) or nameof(VideoSourceItem.RemoveVideo);
         }
 
         [CustomAction("Add video reference")]
         public void AddVideoReference()
         {
-            VideoSources.Add(new ImageSourceItem());
+            VideoSources.Add(new VideoSourceItem());
+        }
+    }
+
+    public class AudioSourceContainer
+    {
+        public static event EventHandler RemoveReference;
+
+        public ObservableCollection<AudioSourceItem> AudioSources { get; set; } = new();
+
+        public AudioSourceContainer()
+        {
+            AudioSourceItem.RemoveReference += (s, e) =>
+            {
+                if (s is AudioSourceItem r)
+                {
+                    AudioSources.Remove(r);
+                }
+            };
+        }
+
+        public static bool IsAudioRefName(string name)
+        {
+            return name is nameof(AddAudioReference) or nameof(AudioSourceItem.AudioFile) or nameof(AudioSourceItem.RemoveAudio);
+        }
+
+        [CustomAction("Add audio reference")]
+        public void AddAudioReference()
+        {
+            AudioSources.Add(new AudioSourceItem());
         }
     }
 
@@ -144,10 +173,38 @@ namespace FalAiPlugin
         public static event EventHandler RemoveReference;
 
         [EnableFileDrop]
-        public string FileSource { get; set; }
+        public string ImageFile { get; set; }
 
         [CustomAction("Remove")]
-        public void Remove()
+        public void RemoveImage()
+        {
+            RemoveReference?.Invoke(this, null);
+        }
+    }
+
+    public class VideoSourceItem
+    {
+        public static event EventHandler RemoveReference;
+
+        [EnableFileDrop]
+        public string VideoFile { get; set; }
+
+        [CustomAction("Remove")]
+        public void RemoveVideo()
+        {
+            RemoveReference?.Invoke(this, null);
+        }
+    }
+
+    public class AudioSourceItem
+    {
+        public static event EventHandler RemoveReference;
+
+        [EnableFileDrop]
+        public string AudioFile { get; set; }
+
+        [CustomAction("Remove")]
+        public void RemoveAudio()
         {
             RemoveReference?.Invoke(this, null);
         }
