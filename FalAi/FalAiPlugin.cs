@@ -551,9 +551,7 @@ namespace FalAiPlugin
             {
                 var output = new Dictionary<string, string[]>();
                 output["Google"] = ["veo3.1", "veo3.1/fast", "veo3.1/image-to-video", "veo3.1/fast/image-to-video", "veo3.1/reference-to-video", "veo3.1/first-last-frame-to-video"];
-                output["Minimax"] = ["minimax/hailuo-2.3-fast/standard/image-to-video", "minimax/hailuo-2.3-fast/pro/image-to-video",
-                                    "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
-                                    "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video"];
+                output["Minimax"] = ["minimax/hailuo-2.3-fast/standard/image-to-video", "minimax/hailuo-2.3-fast/pro/image-to-video"];
 
                 output["Wan"] = ["wan/v2.7/text-to-video", "wan/v2.7/image-to-video", "wan/v2.7/reference-to-video", "wan/v2.7/edit-video",  
                                 "wan/v2.6/text-to-video", "wan/v2.6/image-to-video",

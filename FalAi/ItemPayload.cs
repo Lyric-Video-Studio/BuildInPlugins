@@ -306,11 +306,6 @@ namespace FalAiPlugin
                     return propertyName == nameof(ImageSource) || propertyName == nameof(AudioSource) || propertyName == nameof(PollingId);
                 }
 
-                if (propertyName == nameof(DurationVeo))
-                {
-                    return tp.Model.StartsWith("veo");
-                }
-
                 if (tp.Model.StartsWith("lucy-edit"))
                 {
                     switch (propertyName)

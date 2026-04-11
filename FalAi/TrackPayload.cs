@@ -130,7 +130,7 @@ namespace FalAiPlugin
                     return propertyName is nameof(ImageSource);
                 }
 
-                if (tp.Model != null && tp.Model.StartsWith("pixverse/v5.6") && propertyName.StartsWith("Aspect"))
+                if (tp.Model != null && tp.Model.StartsWith("pixverse/v5.6/image") && propertyName.StartsWith("Aspect"))
                 {
                     // Only image source and video ref
                     return false;
@@ -176,8 +176,8 @@ namespace FalAiPlugin
                     return propertyName is nameof(ImageSource);
                 }
 
-                if (tp.Model != null && tp.Model.Contains("hailuo-2.3-fast") && propertyName is nameof(NegativePrompt) or nameof(AspectRatio) or nameof(AspectRatioWan26)
-                    or nameof(ResolutionMinimax) or nameof(Resolution) or nameof(Seed) or nameof(ImageSourceContainer.AddReference))
+                if (tp.Model != null && tp.Model.Contains("hailuo-2.3-fast") && (propertyName is nameof(NegativePrompt) or nameof(AspectRatio) or nameof(AspectRatioWan26)
+                    or nameof(ResolutionMinimax) or nameof(Resolution) or nameof(Seed) or nameof(ImageSourceContainer.AddReference)))
                 {
                     return false;
                 }

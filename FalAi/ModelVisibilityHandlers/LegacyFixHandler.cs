@@ -10,6 +10,11 @@ namespace FalAiPlugin.ModelVisibilityHandlers
         {
             if (trackPayload is TrackPayload tp && tp.Model != null)
             {
+                if (tp.Model.Contains("pixverse/v5.6") && (propertyName is nameof(tp.Resolution) or nameof(tp.NegativePrompt)))
+                {
+                    return true;
+                }
+
                 if (tp.Model.Contains("veo3.1"))
                 {
                     if ((tp.Model == "veo3.1" || tp.Model == "veo3.1/fast" || tp.Model == "veo3.1/reference-to-video") && propertyName.StartsWith("Aspect"))
