@@ -49,6 +49,7 @@ namespace FalAiPlugin
 
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
+        [PropertyComboOptions(["4s", "6s", "8s"])]
         public string DurationVeo { get; set; } = "8s";
 
         [Description("Duration of the video in seconds")]
@@ -63,10 +64,6 @@ namespace FalAiPlugin
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
         public int DurationLtx2 { get; set; } = 6;
-
-        [Description("Duration of the video in seconds")]
-        [CustomName("Duration")]
-        public int DurationSora { get; set; } = 4;
 
         [EnableFileDrop]
         public string ImageSource { get; set; }
@@ -292,16 +289,6 @@ namespace FalAiPlugin
                     return tp.Model.Contains("ltxv-2", StringComparison.CurrentCultureIgnoreCase);
                 }
 
-                if (propertyName == nameof(DurationSora))
-                {
-                    return tp.Model.Contains("sora", StringComparison.CurrentCultureIgnoreCase);
-                }
-
-                if (tp.Model.Contains("sora", StringComparison.CurrentCultureIgnoreCase) && (propertyName == nameof(Duration) || propertyName == nameof(NegativePrompt)))
-                {
-                    return false;
-                }
-
                 if (tp.Model.Contains("upscale"))
                 {
                     // In upscale, there's really not a lot of things to edit
@@ -398,7 +385,7 @@ namespace FalAiPlugin
                 }
             }
 
-            return propertyName == nameof(TrackPayload.Prompt);
+            return propertyName == nameof(TrackPayload.Prompt) || LegacyFixHandler.ShouldVideoItemPropertyBeVisible(propertyName, trackPayload, itemPayload);
         }
     }
 }

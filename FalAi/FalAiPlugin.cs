@@ -34,7 +34,7 @@ namespace FalAiPlugin
         public static List<ModelVisibilityHandlerBase> VisibilityHandlers = new List<ModelVisibilityHandlerBase>() 
         { 
             new Seedance2T2VHandler(), 
-            new Seedance2I2VHandler(), 
+            new Seedance2Handler(), 
             new Seedance2R2VHandler()
         };
 
@@ -101,6 +101,11 @@ namespace FalAiPlugin
                 {
                     reg.resolution = newTp.ResolutionMinimax;
                     reg.duration = newIp.DurationMinimax;
+                }
+
+                if (newTp.ShouldPropertyBeVisible(nameof(newTp.ResolutionWan), newTp, newIp))
+                {
+                    reg.resolution = newTp.ResolutionWan;
                 }
 
                 if (newTp.ShouldPropertyBeVisible(nameof(newTp.ResolutionWan), newTp, newIp))
@@ -287,6 +292,26 @@ namespace FalAiPlugin
                     reg.aspect_ratio = newTp.AspectRatioWan26;
                 }
 
+                if (newTp.ShouldPropertyBeVisible(nameof(TrackPayload.AspectRatioVeo31), newTp, newIp))
+                {
+                    reg.aspect_ratio = newTp.AspectRatioVeo31;
+                }
+
+                if (newTp.ShouldPropertyBeVisible(nameof(TrackPayload.AspectRatioVeo31T2V), newTp, newIp))
+                {
+                    reg.aspect_ratio = newTp.AspectRatioVeo31T2V;
+                }                
+
+                if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationVeo), newTp, newIp))
+                {
+                    reg.duration = newIp.DurationVeo;
+                }
+
+                if (newTp.ShouldPropertyBeVisible(nameof(TrackPayload.ResolutionVeo31), newTp, newIp))
+                {
+                    reg.resolution = newTp.ResolutionVeo31;
+                }
+
                 if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationWan26), newTp, newIp))
                 {
                     reg.duration = newIp.DurationWan26;
@@ -371,6 +396,11 @@ namespace FalAiPlugin
 
                     reg.image_url = null;
                     reg.video_url = null;
+                }
+
+                if (newTp.Model == "veo3.1/reference-to-video")
+                {
+                    reg.duration = null;
                 }
 
                 if (FalAiImgToVidPlugin.VisibilityHandlers.FirstOrDefault(f => f.ModelPath == newTp.Model) is ModelVisibilityHandlerBase mb)
@@ -520,8 +550,7 @@ namespace FalAiPlugin
             if (CurrentTrackType == IPluginBase.TrackType.Video && propertyName == nameof(TrackPayload.Model))
             {
                 var output = new Dictionary<string, string[]>();
-                output["Google"] = ["veo3.1", "veo3.1/fast", "veo3.1/image-to-video", "veo3.1/fast/image-to-video", "veo3.1/reference-to-video", "veo3.1/first-last-frame-to-video",
-                                    "veo3", "veo3/fast", "veo3/image-to-video", "veo3/fast/image-to-video"];
+                output["Google"] = ["veo3.1", "veo3.1/fast", "veo3.1/image-to-video", "veo3.1/fast/image-to-video", "veo3.1/reference-to-video", "veo3.1/first-last-frame-to-video"];
                 output["Minimax"] = ["minimax/hailuo-2.3-fast/standard/image-to-video", "minimax/hailuo-2.3-fast/pro/image-to-video",
                                     "minimax/hailuo-02-fast/image-to-video", "minimax/hailuo-02/pro/image-to-video", "minimax/hailuo-02/pro/text-to-video",
                                     "minimax/hailuo-02/standard/image-to-video", "minimax/hailuo-02/standard/text-to-video"];
@@ -529,17 +558,14 @@ namespace FalAiPlugin
                 output["Wan"] = ["wan/v2.7/text-to-video", "wan/v2.7/image-to-video", "wan/v2.7/reference-to-video", "wan/v2.7/edit-video",  
                                 "wan/v2.6/text-to-video", "wan/v2.6/image-to-video",
                                 "wan-25-preview/text-to-video", "wan-25-preview/image-to-video",
-                                "wan-alpha",
-                                "wan/v2.2-a14b/image-to-video", "wan/v2.2-a14b/text-to-video", "wan/v2.2-14b/speech-to-video"];
+                                "wan-alpha"];
 
                 output["KlingAi"] = ["kling-video/o3/pro/text-to-video", "kling-video/o3/pro/image-to-video", "kling-video/v3/pro/motion-control",
                             "kling-video/ai-avatar/v2/pro", "kling-video/v2.6/pro/text-to-video", "kling-video/v2.6/pro/image-to-video", "kling-video/o1/image-to-video",
                             "kling-video/v2.6/pro/motion-control", "kling-video/v2.6/standard/motion-control", 
-                            "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video",
-                            "kling-video/v2.1/master/image-to-video", "kling-video/v2.1/master/text-to-video", 
-                            "kling-video/v2.1/pro/image-to-video", "kling-video/v2.1/standard/image-to-video"];
+                            "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video"];
 
-                output["Ltxv"] = ["ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video", "ltxv-13b-098-distilled/image-to-video"];
+                output["Ltxv"] = ["ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video"];
                 output["Pixverse"] = ["pixverse/v6/text-to-video", "pixverse/v6/image-to-video", "pixverse/v5.6/text-to-video", "pixverse/v5.6/image-to-video"];
                 output["Bytedance"] = ["bytedance/dreamactor/v2", "bytedance/seedance/v1.5/pro/text-to-video", "bytedance/seedance/v1.5/pro/image-to-video", "bytedance/omnihuman/v1.5"];
                 output["Upscale"] = ["seedvr/upscale/video"];
@@ -617,9 +643,6 @@ namespace FalAiPlugin
 
                     case nameof(ItemPayload.DurationPixverse):
                         return ["5", "8"];
-
-                    case nameof(ItemPayload.DurationVeo):
-                        return ["8s"];
 
                     case nameof(ItemPayload.DurationLtx2):
                         return ["6", "8", "10"];

@@ -33,6 +33,14 @@ namespace FalAiPlugin
         [PropertyComboOptions(["16:9", "9:16", "1:1"])]
         public string AspectRatio { get; set; } = "16:9";
 
+        [PropertyComboOptions(["auto", "16:9", "9:16"])]
+        [CustomName("AspectRatio")]
+        public string AspectRatioVeo31 { get; set; } = "16:9";
+
+        [PropertyComboOptions(["16:9", "9:16"])]
+        [CustomName("AspectRatio")]
+        public string AspectRatioVeo31T2V { get; set; } = "16:9";
+
         [CustomName("AspectRatio")]
         [PropertyComboOptions(["16:9", "9:16", "1:1", "4:3", "3:4"])]
         public string AspectRatioWan26 { get; set; } = "16:9";
@@ -54,6 +62,10 @@ namespace FalAiPlugin
         public string ResolutionLtx2 { get; set; } = "1080p";
 
         public string Resolution { get; set; } = "1080p";
+
+        [CustomName("Resolution")]
+        [PropertyComboOptions(["720p", "1080p", "4k"])]
+        public string ResolutionVeo31 { get; set; } = "1080p";
 
         [Description("Number of frames to generate. Must be between 80 to 120")]
         public int NumberOfFrames { get; set; } = 80;
@@ -254,11 +266,6 @@ namespace FalAiPlugin
                     return propertyName == nameof(Model) || propertyName == nameof(ImageSource);
                 }
 
-                if (propertyName == nameof(ImageSource))
-                {
-                    return false;
-                }
-
                 if (propertyName == nameof(GenerateAudio))
                 {
                     return Model.StartsWith("veo") || Model.StartsWith("ltxv-2") || Model.Contains("kling-video/v2.6/pro") || Model.Contains("pixverse");
@@ -386,7 +393,7 @@ namespace FalAiPlugin
                 }
             }
 
-            return propertyName == nameof(TrackPayload.Prompt);
+            return propertyName == nameof(TrackPayload.Prompt) || LegacyFixHandler.ShouldVideoTrackPropertyBeVisible(propertyName, trackPayload, itemPayload);
         }
     }
 }
