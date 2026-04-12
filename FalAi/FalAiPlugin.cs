@@ -698,7 +698,7 @@ namespace FalAiPlugin
         {
         }
 
-        private void SetupConnections(TrackPayload tp)
+        private TrackPayload SetupConnections(TrackPayload tp)
         {
             tp.ModelChanged += (s, e) =>
             {
@@ -709,9 +709,10 @@ namespace FalAiPlugin
                     GetPricingForModel(tp.Model);
                 }
             };
+            return tp;
         }
 
-        private void SetupConnections(ImageTrackPayload tp)
+        private ImageTrackPayload SetupConnections(ImageTrackPayload tp)
         {
             tp.ModelChanged += (s, e) =>
             {
@@ -722,6 +723,7 @@ namespace FalAiPlugin
                     GetPricingForModel(tp.Model);
                 }
             };
+            return tp;
         }
 
         private void GetPricingForModel(string model)
@@ -868,17 +870,13 @@ namespace FalAiPlugin
         {
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
-                var tp = JsonHelper.ToExactType<TrackPayload>(obj);
-                SetupConnections((TrackPayload)tp);
-                return tp;
+                return SetupConnections(JsonHelper.ToExactType<TrackPayload>(obj) as TrackPayload);
             }
             else if (CurrentTrackType == IPluginBase.TrackType.Audio)
             {
                 return JsonHelper.ToExactType<AudioTrackPayload>(obj);
             }
-            var tp1 = JsonHelper.ToExactType<ImageTrackPayload>(obj);
-            SetupConnections((ImageTrackPayload)tp1);
-            return tp1;
+            return SetupConnections(JsonHelper.ToExactType<ImageTrackPayload>(obj) as ImageTrackPayload);            
         }
 
         public object ObjectToGeneralSettings(JsonObject obj)
@@ -910,14 +908,10 @@ namespace FalAiPlugin
             switch (CurrentTrackType)
             {
                 case IPluginBase.TrackType.Video:
-                    var tp = new TrackPayload();
-                    SetupConnections(tp);
-                    return tp;
+                    return SetupConnections(new TrackPayload());
 
-                case IPluginBase.TrackType.Image:
-                    var tp1 = new ImageTrackPayload();
-                    SetupConnections(tp1);
-                    return tp1;
+                case IPluginBase.TrackType.Image:  
+                    return SetupConnections(new ImageTrackPayload());
 
                 case IPluginBase.TrackType.Audio:
                     return new AudioTrackPayload();
