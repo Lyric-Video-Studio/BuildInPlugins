@@ -6,7 +6,7 @@ using static System.Net.WebRequestMethods;
 namespace MuApiPlugin
 {
 #pragma warning disable CS1998
-    public class MuApiVideoPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IValidateBothPayloads, ICancellableGeneration, ITextualProgressIndication
+    public class MuApiVideoPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IValidateBothPayloads, ICancellableGeneration, ITextualProgressIndication, ITrackPayloadFromModel
     {
         public string UniqueName => "MuApiBuildIn";
 
@@ -300,6 +300,11 @@ namespace MuApiPlugin
                 _saveAndRefreshCallback?.Invoke(false);                
             };
             return tp;
+        }
+
+        public object TrackPayloadFromModel(string model)
+        {
+            return SetupConnections(new TrackPayload() { Model = model });
         }
     }
 #pragma warning restore CS1998

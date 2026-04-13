@@ -40,7 +40,8 @@ name: .NET Core Desktop
 
 on:
   push:
-    branches: [ "main" ]
+    tags:
+      - 'v*' # Triggers on tags like v1.0.0
   pull_request:
     branches: [ "main" ]
 
@@ -72,7 +73,7 @@ jobs:
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
 
     # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
     - name: Setup MSBuild.exe
@@ -116,8 +117,47 @@ jobs:
     - name: Publish RunwayMl
       run: dotnet publish .\RunwayMl\RunwayMlPlugin.csproj -c Release -o publish
 
+    - name: Publish 11Labs
+      run: dotnet publish .\Elevenlabs\ElevenLabsPlugin.csproj -c Release -o publish
+
+    - name: Publish FalAi
+      run: dotnet publish .\FalAi\FalAiPlugin.csproj -c Release -o publish
+
+    - name: Publish Google
+      run: dotnet publish .\Google\GooglePlugin.csproj -c Release -o publish
+
+    - name: Publish LTX
+      run: dotnet publish .\LTX\LTXPlugin.csproj -c Release -o publish
+
+    - name: Publish MuApi
+      run: dotnet publish .\MuApi\MuApiPlugin.csproj -c Release -o publish
+
+    - name: Publish MusicGpt
+      run: dotnet publish .\MusicGpt\MusicGptPlugin.csproj -c Release -o publish
+
+    - name: Publish MistralAI
+      run: dotnet publish .\MistralAI\MistralAiTxtToImgPlugin.csproj -c Release -o publish
+
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: Plugins
         path: .\publish\
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: release-artifacts
+          path: publish/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: publish/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
