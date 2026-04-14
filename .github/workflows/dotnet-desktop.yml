@@ -84,59 +84,8 @@ jobs:
     #  run: dotnet test
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
-    - name: Publish A1111 Img2Img
-      run: dotnet publish .\A1111Img2ImgPlugin\A1111Img2ImgPlugin.csproj -c Release -o publish
-
-    - name: Publish A1111 Txt2Img
-      run: dotnet publish .\A1111TxtToImgPlugin\A1111TxtToImgPlugin.csproj -c Release -o publish
-
-    - name: Image cropper
-      run: dotnet publish .\CroppedImagePlugin\CroppedImagePlugin.csproj -c Release -o publish
-
-    - name: Publish OpenAi txt2Img
-      run: dotnet publish .\OpenAiTxtToImgPlugin\OpenAiTxtToImgPlugin.csproj -c Release -o publish
-
-    - name: Publish Stability.ai img2vid
-      run: dotnet publish .\StabilityAiImgToVidPlugin\StabilityAiImgToVidPlugin.csproj -c Release -o publish
-
-    - name: Publish Stability.ai txt2img
-      run: dotnet publish .\StabilityAiTxtToImgPlugin\StabilityAiTxtToImgPlugin.csproj -c Release -o publish
-
-    - name: Publish LumaAi
-      run: dotnet publish .\LumaAiDreamMachine\LumaAiDreamMachinePlugin.csproj -c Release -o publish
-
-    - name: Publish BFL
-      run: dotnet publish .\Bfl\BflAiTxtToImgPlugin.csproj -c Release -o publish
-
-    #- name: Publish Kling
-    #  run: dotnet publish .\KlingAi\KlingAiPlugin.csproj -c Release -o publish
-
-    - name: Publish Minimax
-      run: dotnet publish .\Minimax\MinimaxPlugin.csproj -c Release -o publish
-
-    - name: Publish RunwayMl
-      run: dotnet publish .\RunwayMl\RunwayMlPlugin.csproj -c Release -o publish
-
-    - name: Publish 11Labs
-      run: dotnet publish .\Elevenlabs\ElevenLabsPlugin.csproj -c Release -o publish
-
-    - name: Publish FalAi
-      run: dotnet publish .\FalAi\FalAiPlugin.csproj -c Release -o publish
-
-    - name: Publish Google
-      run: dotnet publish .\Google\GooglePlugin.csproj -c Release -o publish
-
-    - name: Publish LTX
-      run: dotnet publish .\LTX\LTXPlugin.csproj -c Release -o publish
-
-    - name: Publish MuApi
-      run: dotnet publish .\MuApi\MuApiPlugin.csproj -c Release -o publish
-
-    - name: Publish MusicGpt
-      run: dotnet publish .\MusicGpt\MusicGptPlugin.csproj -c Release -o publish
-
-    - name: Publish MistralAI
-      run: dotnet publish .\MistralAI\MistralAiTxtToImgPlugin.csproj -c Release -o publish
+    - name: Publish all
+      run: publish.bat publish    
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -149,7 +98,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: release-artifacts
           path: publish/
