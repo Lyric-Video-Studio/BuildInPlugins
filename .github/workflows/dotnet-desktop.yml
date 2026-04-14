@@ -88,9 +88,10 @@ jobs:
       run: .\publish.bat publish
       
     - name: Zip artifacts
+      shell: pwsh
       run: |
         cd publish
-        zip -r ../plugins.zip ./
+        Compress-Archive -Path ./* -DestinationPath ./plugins.zip
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
