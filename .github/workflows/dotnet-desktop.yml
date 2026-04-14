@@ -85,7 +85,7 @@ jobs:
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Publish all
-      run: publish.bat publish    
+      run: .\publish.bat publish    
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
