@@ -85,13 +85,18 @@ jobs:
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Publish all
-      run: .\publish.bat publish    
+      run: .\publish.bat publish
+      
+    - name: Zip artifacts
+      run: |
+        cd publish
+        zip -r ../plugins.zip ./
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: Plugins
-        path: .\publish\
+        path: .\publish\plugins.zip
 
   release:
     needs: build
