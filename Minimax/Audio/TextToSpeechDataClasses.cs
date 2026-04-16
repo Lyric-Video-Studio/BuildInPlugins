@@ -1,4 +1,5 @@
 ﻿using PluginBase;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -6,21 +7,39 @@ namespace MinimaxPlugin.Audio
 {
     public class MusicRequest
     {
-        public const string MusicModel = "music-2.5";
+        public const string MusicModel = "music-2.6";
+        public const string MusicCover = "music-cover";
+        public const string MusicModelFree = "music-2.6-free";
+        public const string MusicCoverFree = "music-cover-free";
 
         [JsonPropertyName("model")]
-        public string Model { get; set; } = MusicModel;
+        [IgnoreDynamicEdit]
+        public string Model { get; set; } = MusicModelFree;
 
         [JsonPropertyName("lyrics")]
+        [Description("Song lyrics, using \n to separate lines. Supports structure tags: [Intro], [Verse], [Pre Chorus], [Chorus], [Interlude], [Bridge], [Outro], [Post Chorus], [Transition], [Break], [Hook], [Build Up], [Inst], [Solo]")]
         public string Lyrics { get; set; } = "";
 
         [JsonPropertyName("prompt")]
+        [IgnoreDynamicEdit]
         public string Prompt { get; set; } = "";
+
+        [Description("Whether to automatically generate lyrics based on the prompt description. Only supported on music-2.6 / music-2.6-free")]
+        [JsonPropertyName("lyrics_optimizer")]
+        public bool LyricsOptimizer { get; set; }
+
+        [Description("Whether to generate instrumental music (no vocals). Only supported on music-2.6 / music-2.6-free.")]
+        [JsonPropertyName("is_instrumental")]
+        public bool IsInstrumental { get; set; }
+
+        [JsonPropertyName("audio_base64")]
+        public string Audio { get; set; }
 
         /// <summary>
         /// Audio setting for the output audio file.
         /// </summary>
         [JsonPropertyName("audio_setting")]
+        [IgnoreDynamicEdit]
         public AudioSetting AudioSetting { get; set; } = new AudioSetting();
 
         /// <summary>
@@ -29,6 +48,11 @@ namespace MinimaxPlugin.Audio
         [JsonPropertyName("output_format")]
         [IgnoreDynamicEdit]
         public string OutputFormat { get; set; } = "hex";
+
+        public static bool IsMusicModel(string model)
+        {
+            return model is MusicModel or MusicCover or MusicModelFree or MusicCoverFree;
+        }
     }
 
     /// <summary>
@@ -40,6 +64,7 @@ namespace MinimaxPlugin.Audio
         /// Desired model. Includes: speech-02-hd, speech-01-turbo, speech-01-hd, speech-01-turbo.
         /// </summary>
         [JsonPropertyName("model")]
+        [PropertyComboOptions(["speech-2.8-hd", "speech-2.8-turbo", "speech-2.6-hd", "speech-2.6-turbo", MusicRequest.MusicModel, MusicRequest.MusicCover, MusicRequest.MusicModelFree, MusicRequest.MusicCoverFree])]
         public string Model { get; set; } = "speech-02-hd";
 
         /// <summary>
@@ -47,6 +72,7 @@ namespace MinimaxPlugin.Audio
         /// </summary>
         [JsonPropertyName("text")]
         [IgnoreDynamicEdit]
+        [Description("The text to be converted into speech. Must be less than 10,000 characters.\r\n\r\n    For texts over 3,000 characters, streaming output is recommended.\r\n\r\n    Paragraph breaks should be marked with newline characters.\r\n\r\n    Pause control: You can customize speech pauses by adding markers in the form <#x#>, where x is the pause duration in seconds. Valid range: [0.01, 99.99], up to two decimal places. Pause markers must be placed between speakable text segments and cannot be used consecutively.\r\n\r\n    Interjection tags: Only supported when using speech-2.8-hd or speech-2.8-turbo models. Supported interjections: (laughs), (chuckle), (coughs), (clear-throat), (groans), (breath), (pant), (inhale), (exhale), (gasps), (sniffs), (sighs), (snorts), (burps), (lip-smacking), (humming), (hissing), (emm), (sneezes).\r\n")]
         public string Text { get; set; }
 
         /// <summary>
@@ -111,9 +137,11 @@ namespace MinimaxPlugin.Audio
                     propertyName == nameof(VoiceSetting.Speed) ||
                     propertyName == nameof(VoiceSetting.Volume) ||
                     propertyName == nameof(VoiceSetting.Pitch) ||
-                    propertyName == nameof(VoiceSetting.Emotion) || propertyName == nameof(T2ARequest.LanguageBoost))
+                    propertyName == nameof(VoiceSetting.Emotion) || 
+                    propertyName == nameof(T2ARequest.LanguageBoost) || 
+                    propertyName == nameof(T2ARequest.RefreshVoces))
                 {
-                    return tp.Model != MusicRequest.MusicModel;
+                    return !MusicRequest.IsMusicModel(tp.Model);
                 }
             }
 
@@ -143,7 +171,7 @@ namespace MinimaxPlugin.Audio
         /// Volume of the speech.
         /// </summary>
         [JsonPropertyName("vol")]
-        [Range(0, 1)]
+        [Range(0, 10)]
         public float Volume { get; set; } = 1.0f;
 
         /// <summary>
@@ -170,25 +198,22 @@ namespace MinimaxPlugin.Audio
         /// Sample rate of the audio.
         /// </summary>
         [JsonPropertyName("sample_rate")]
+        [PropertyComboOptions(["44100", "32000", "24000", "22050", "16000", "8000"])]
         public int SampleRate { get; set; } = 44100;
 
         /// <summary>
         /// Bitrate of the audio.
         /// </summary>
         [JsonPropertyName("bitrate")]
+        [PropertyComboOptions(["256000", "128000", "64000", "32000"])]
         public int Bitrate { get; set; } = 256000;
 
         /// <summary>
         /// Format of the audio (e.g., "mp3").
         /// </summary>
         [JsonPropertyName("format")]
+        [PropertyComboOptions(["mp3", "wav", "pcm"])]
         public string Format { get; set; } = "mp3";
-
-        /// <summary>
-        /// Number of audio channels.
-        /// </summary>
-        [JsonPropertyName("channel")]
-        public int Channel { get; set; } = 2;
     }
 
     /// <summary>

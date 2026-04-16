@@ -54,7 +54,7 @@ namespace MinimaxPlugin.Audio
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authority", "api.minimaxi.chat");
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
 
-            if (trackPayload is T2ARequest tp && itemsPayload is ItemPayload ip)
+            if (trackPayload is T2ARequest tp && itemsPayload is ItemPayload ip && JsonHelper.DeepCopy<ItemPayload>(ip) is ItemPayload newIp)
             {
                 tp.Text = ip.Text;
                 tp.TimberWeights = [new TimberWeight() { Weight = 1, VoiceId = tp.VoiceSetting.VoiceId }];
@@ -63,15 +63,18 @@ namespace MinimaxPlugin.Audio
 
                 try
                 {
-                    if (tp.Model == MusicRequest.MusicModel)
+                    if (MusicRequest.IsMusicModel(tp.Model))
                     {
-                        var musicRequest = new MusicRequest()
+                        newIp.MusicReq.Prompt = ip.Prompt;
+                        newIp.MusicReq.Model = tp.Model;
+                        newIp.MusicReq.AudioSetting = tp.AudioSetting;
+
+                        if(!string.IsNullOrEmpty(newIp.MusicReq.Audio) && File.Exists(newIp.MusicReq.Audio))
                         {
-                            AudioSetting = tp.AudioSetting,
-                            Lyrics = ip.Lyrics,
-                            Prompt = ip.Prompt
-                        };
-                        serialized = JsonHelper.Serialize(musicRequest);
+                            newIp.MusicReq.Audio = Convert.ToBase64String(await File.ReadAllBytesAsync(newIp.MusicReq.Audio));
+                        }
+
+                        serialized = JsonHelper.Serialize(newIp.MusicReq);
                     }
                     else
                     {
@@ -89,7 +92,7 @@ namespace MinimaxPlugin.Audio
 
                 var endpoint = "v1/t2a_v2";
 
-                if (tp.Model == MusicRequest.MusicModel)
+                if (MusicRequest.IsMusicModel(tp.Model))
                 {
                     endpoint = "v1/music_generation";
                 }
@@ -196,11 +199,6 @@ namespace MinimaxPlugin.Audio
                 return Array.Empty<string>();
             }
 
-            if (propertyName == nameof(T2ARequest.Model))
-            {
-                return ["speech-2.8-hd", "speech-2.8-turbo", "speech-02-hd", MusicRequest.MusicModel];
-            }
-
             if (propertyName == nameof(VoiceSetting.VoiceId))
             {
                 // TODO: Use voice api
@@ -229,26 +227,6 @@ namespace MinimaxPlugin.Audio
                 }
 
                 return _connectionSettings.SpeechVoices.ToArray();
-            }
-
-            if (propertyName == nameof(AudioSetting.SampleRate))
-            {
-                return ["44100", "32000", "24000", "22050", "16000", "8000"];
-            }
-
-            if (propertyName == nameof(AudioSetting.Bitrate))
-            {
-                return ["256000", "128000", "64000", "32000"];
-            }
-
-            if (propertyName == nameof(AudioSetting.Format))
-            {
-                return ["mp3", "pcm", "flac"];
-            }
-
-            if (propertyName == nameof(AudioSetting.Channel))
-            {
-                return ["2", "1"];
             }
 
             if (propertyName == nameof(T2ARequest.LanguageBoost))
@@ -402,18 +380,18 @@ namespace MinimaxPlugin.Audio
         {
             if (trackPaylod is T2ARequest tp && itemPayload is ItemPayload ip)
             {
-                if (tp.Model == MusicRequest.MusicModel)
+                if (MusicRequest.IsMusicModel(tp.Model))
                 {
-                    if (!string.IsNullOrEmpty(ip.Lyrics) && ip.Lyrics.Replace("[intro]", "").Replace("[verse]", "").Replace("[chorus]", "").Replace("[bridge]", "").Replace("[outro]", "").Length > 600)
+                    if (!string.IsNullOrEmpty(ip.MusicReq.Lyrics) && ip.MusicReq.Lyrics.Replace("[intro]", "").Replace("[verse]", "").Replace("[chorus]", "").Replace("[bridge]", "").Replace("[outro]", "").Length > 3500)
                     {
-                        return (false, "Lyrics too long, max 600 characters");
+                        return (false, "Lyrics too long, max 3500 characters");
                     }
 
                     if (!string.IsNullOrEmpty(ip.Prompt) && ip.Prompt.Length > 300)
                     {
-                        return (false, "Lyrics too long, max 600 characters");
+                        return (false, "Lyrics too long, max 300 characters");
                     }
-                    return (!string.IsNullOrEmpty(ip.Prompt) && !string.IsNullOrEmpty(ip.Lyrics), "Lyrics and prompt must be defined");
+                    return (!string.IsNullOrEmpty(ip.Prompt), "Prompt must be defined");
                 }
                 else
                 {
