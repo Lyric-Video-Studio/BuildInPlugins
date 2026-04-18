@@ -276,6 +276,17 @@ namespace FalAiPlugin
                     reg.first_frame_url = null;
                     reg.last_frame_url = null;
                 }
+                else if (newTp.Model.Contains("wan/v2.7/", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    reg.reference_image_url = reg.image_url;
+                    reg.reference_video_url = reg.video_url;
+
+                    reg.reference_image_urls = reg.image_urls?.ToArray();
+                    reg.image_urls = null;
+
+                    reg.image_url = null;
+                    reg.video_url = null;
+                }
 
                 if (model == "creatify/aurora")
                 {
@@ -384,19 +395,7 @@ namespace FalAiPlugin
                 if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationKlingO3), newTp, newIp))
                 {
                     reg.duration = newIp.DurationKlingO3;
-                }
-
-                if (newTp.Model.Contains("wan/v2.7/", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    reg.reference_image_url = reg.image_url;
-                    reg.reference_video_url = reg.video_url;
-
-                    reg.reference_image_urls = reg.image_urls?.ToArray();
-                    reg.image_urls = null;
-
-                    reg.image_url = null;
-                    reg.video_url = null;
-                }
+                }                
 
                 if (newTp.Model == "veo3.1/reference-to-video")
                 {

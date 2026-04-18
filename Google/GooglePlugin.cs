@@ -2,13 +2,14 @@
 using Google.GenAI.Types;
 using PluginBase;
 using System.Reflection;
+using System.Text;
 using System.Text.Json.Nodes;
 
 namespace GooglePlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class GooglePlugin : IImagePlugin, ICancellableGeneration, IVideoPlugin, IImportFromImage
+    public class GooglePlugin : IImagePlugin, IAudioPlugin, ICancellableGeneration, IVideoPlugin, IImportFromImage
     {
         public const string PluginName = "GooglePluginBuildIn";
         public string UniqueName { get => PluginName; }
@@ -92,7 +93,7 @@ namespace GooglePlugin
                     {
                         continue;
                     }
-                    var part = chunk.Candidates[0].Content.Parts[0];
+                    var part = chunk.Candidates[0].Content!.Parts![0];
                     if (part.InlineData?.Data != null)
                     {
                         var inlineData = part.InlineData;
@@ -107,6 +108,200 @@ namespace GooglePlugin
                 }
             }
             throw new Exception("Internal error");
+        }
+
+        public async Task<AudioResponse> GetAudio(object trackPayload, object itemsPayload, string folderToSaveAudio)
+        {
+            if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            {
+                return new AudioResponse { Success = false, ErrorMsg = "Uninitialized" };
+            }
+
+            if (trackPayload is GoogleAudioTrackPayload tp && itemsPayload is GoogleAudioItemPayload ip)
+            {
+                var prompt = (tp.Prompt + "\n" + ip.Prompt).Trim();
+                var contents = new List<Content>
+                {
+                    new Content
+                    {
+                        Role = "user",
+                        Parts = new List<Part>
+                        {
+                            new Part { Text = prompt },
+                        }
+                    },
+                };
+
+                var config = new GenerateContentConfig
+                {
+                    Temperature = tp.Temperature,
+                    ResponseModalities = new List<string> { "audio" },
+                    SpeechConfig = new SpeechConfig()
+                };
+
+                if (tp.MultiSpeaker)
+                {
+                    config.SpeechConfig.MultiSpeakerVoiceConfig = new MultiSpeakerVoiceConfig
+                    {
+                        SpeakerVoiceConfigs = new List<SpeakerVoiceConfig>
+                        {
+                            new SpeakerVoiceConfig
+                            {
+                                Speaker = string.IsNullOrWhiteSpace(tp.Speaker1Name) ? "Speaker 1" : tp.Speaker1Name,
+                                VoiceConfig = new VoiceConfig
+                                {
+                                    PrebuiltVoiceConfig = new PrebuiltVoiceConfig
+                                    {
+                                        VoiceName = tp.Speaker1Voice
+                                    }
+                                }
+                            },
+                            new SpeakerVoiceConfig
+                            {
+                                Speaker = string.IsNullOrWhiteSpace(tp.Speaker2Name) ? "Speaker 2" : tp.Speaker2Name,
+                                VoiceConfig = new VoiceConfig
+                                {
+                                    PrebuiltVoiceConfig = new PrebuiltVoiceConfig
+                                    {
+                                        VoiceName = tp.Speaker2Voice
+                                    }
+                                }
+                            },
+                        }
+                    };
+                }
+                else
+                {
+                    config.SpeechConfig.VoiceConfig = new VoiceConfig
+                    {
+                        PrebuiltVoiceConfig = new PrebuiltVoiceConfig
+                        {
+                            VoiceName = tp.Speaker1Voice
+                        }
+                    };
+                }
+
+                AudioFormatData? formatInfo = null;
+
+                try
+                {
+                    var response = await _googleAi.Models.GenerateContentAsync(tp.Model, contents, config, ct);
+                    if (response.Candidates == null || response.Candidates.Count == 0)
+                    {
+                        return new AudioResponse { Success = false, ErrorMsg = "No candidates were returned" };
+                    }
+
+                    var textResponse = new StringBuilder();
+                    var audioParts = new List<(byte[] Data, string MimeType)>();
+
+                    foreach (var candidate in response.Candidates)
+                    {
+                        var parts = candidate.Content?.Parts;
+                        if (parts == null)
+                        {
+                            continue;
+                        }
+
+                        foreach (var part in parts)
+                        {
+                            if (part.InlineData?.Data != null && part.InlineData.Data.Length > 0)
+                            {
+                                audioParts.Add((part.InlineData.Data, part.InlineData.MimeType ?? ""));
+                            }
+                            else if (!string.IsNullOrWhiteSpace(part.Text))
+                            {
+                                textResponse.AppendLine(part.Text);
+                            }
+                        }
+                    }
+
+                    if (audioParts.Count == 0)
+                    {
+                        var errorMsg = textResponse.Length > 0 ? textResponse.ToString().Trim() : "No audio data was returned";
+                        return new AudioResponse { Success = false, ErrorMsg = errorMsg };
+                    }
+
+                    var primaryAudio = audioParts[0];
+                    var mimeType = primaryAudio.MimeType;
+
+                    if (mimeType.StartsWith("audio/l", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var bitsPerSample = 16;
+                        var sampleRate = 24000;
+                        var channels = 1;
+                        var split = mimeType.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                        foreach (var item in split)
+                        {
+                            if (item.StartsWith("audio/l", StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (int.TryParse(item["audio/l".Length..], out var parsedBits))
+                                {
+                                    bitsPerSample = parsedBits;
+                                }
+                                continue;
+                            }
+
+                            var chOrRate = item.Split('=', 2, StringSplitOptions.TrimEntries);
+                            if (chOrRate.Length != 2)
+                            {
+                                continue;
+                            }
+
+                            switch (chOrRate[0])
+                            {
+                                case "rate":
+                                    if (int.TryParse(chOrRate[1], out var parsedRate))
+                                    {
+                                        sampleRate = parsedRate;
+                                    }
+                                    break;
+                                case "channels":
+                                    if (int.TryParse(chOrRate[1], out var parsedChannels))
+                                    {
+                                        channels = parsedChannels;
+                                    }
+                                    break;
+                            }
+                        }
+
+                        formatInfo = new AudioFormatData
+                        {
+                            Bitrate = bitsPerSample,
+                            AudioSampleRate = sampleRate,
+                            Channels = channels
+                        };
+                    }
+
+                    var fileExtension = GetFileExtension(mimeType);
+                    var targetFile = Path.Combine(folderToSaveAudio, $"{Guid.NewGuid()}{fileExtension}");
+                    await System.IO.File.WriteAllBytesAsync(targetFile, primaryAudio.Data, ct);
+
+                    var result = new AudioResponse
+                    {
+                        Success = true,
+                        AudioFile = targetFile,
+                        AudioFormat = fileExtension.TrimStart('.'),
+                        FormatInfo = formatInfo
+                    };
+
+                    if (audioParts.Count > 1)
+                    {
+                        var alternativeAudio = audioParts[1];
+                        var alternativeExtension = GetFileExtension(alternativeAudio.MimeType);
+                        var alternativeFile = Path.Combine(folderToSaveAudio, $"{Guid.NewGuid()}{alternativeExtension}");
+                        await System.IO.File.WriteAllBytesAsync(alternativeFile, alternativeAudio.Data, ct);
+                        result.AlternativeAudioFile = alternativeFile;
+                    }
+
+                    return result;
+                }
+                catch (OperationCanceledException)
+                {
+                    return new AudioResponse { Success = false, ErrorMsg = "Cancelled" };
+                }
+            }
+
+            return new AudioResponse { Success = false, ErrorMsg = "Track playoad or item payload object not valid" };
         }
 
         static string GetFileExtension(string mimeType)
@@ -261,7 +456,7 @@ namespace GooglePlugin
                     return JsonHelper.Deserialize<VideoTrackPayload>(fileName);
 
                 case IPluginBase.TrackType.Audio:
-                    break;
+                    return JsonHelper.Deserialize<GoogleAudioTrackPayload>(fileName);
 
                 default:
                     break;
@@ -297,7 +492,7 @@ namespace GooglePlugin
                     return new VideoItemPayload() { Prompt = text };
 
                 case IPluginBase.TrackType.Audio:
-                    break;
+                    return new GoogleAudioItemPayload() { Prompt = text };
 
                 default:
                     break;
@@ -316,7 +511,7 @@ namespace GooglePlugin
                     return JsonHelper.ToExactType<VideoItemPayload>(obj);
 
                 case IPluginBase.TrackType.Audio:
-                    break;
+                    return JsonHelper.ToExactType<GoogleAudioItemPayload>(obj);
 
                 default:
                     break;
@@ -336,7 +531,7 @@ namespace GooglePlugin
                     return JsonHelper.ToExactType<VideoTrackPayload>(obj);
 
                 case IPluginBase.TrackType.Audio:
-                    break;
+                    return JsonHelper.ToExactType<GoogleAudioTrackPayload>(obj);
 
                 default:
                     break;
@@ -362,6 +557,11 @@ namespace GooglePlugin
                 return vi.Prompt;
             }
 
+            if (itemPayload is GoogleAudioItemPayload ai)
+            {
+                return ai.Prompt;
+            }
+
             return "";
         }
 
@@ -374,6 +574,9 @@ namespace GooglePlugin
 
                 case IPluginBase.TrackType.Video:
                     return new VideoTrackPayload();
+
+                case IPluginBase.TrackType.Audio:
+                    return new GoogleAudioTrackPayload();
 
                 default:
                     break;
@@ -391,6 +594,9 @@ namespace GooglePlugin
                 case IPluginBase.TrackType.Video:
                     return new VideoItemPayload(); ;
 
+                case IPluginBase.TrackType.Audio:
+                    return new GoogleAudioItemPayload();
+
                 default:
                     break;
             }
@@ -407,6 +613,9 @@ namespace GooglePlugin
                 case IPluginBase.TrackType.Video:
                     return JsonHelper.DeepCopy<VideoTrackPayload>(obj); ;
 
+                case IPluginBase.TrackType.Audio:
+                    return JsonHelper.DeepCopy<GoogleAudioTrackPayload>(obj);
+
                 default:
                     break;
             }
@@ -422,6 +631,9 @@ namespace GooglePlugin
 
                 case IPluginBase.TrackType.Video:
                     return JsonHelper.DeepCopy<VideoItemPayload>(obj);
+
+                case IPluginBase.TrackType.Audio:
+                    return JsonHelper.DeepCopy<GoogleAudioItemPayload>(obj);
 
                 default:
                     break;
@@ -458,6 +670,10 @@ namespace GooglePlugin
                     return (true, "");
 
                 case IPluginBase.TrackType.Audio:
+                    if (payload is GoogleAudioItemPayload ai && string.IsNullOrWhiteSpace(ai.Prompt))
+                    {
+                        return (false, "Prompt empty");
+                    }
                     return (true, "");
 
                 default:
@@ -532,6 +748,11 @@ namespace GooglePlugin
             if (payload is VideoItemPayload vi)
             {
                 vi.Prompt = text;
+            }
+
+            if (payload is GoogleAudioItemPayload ai)
+            {
+                ai.Prompt = text;
             }
         }
 
