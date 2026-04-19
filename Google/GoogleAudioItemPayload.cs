@@ -7,6 +7,6 @@ namespace GooglePlugin
     {
         [Description("Text or multi-speaker script to synthesize")]
         [EditorColumnSpan(2)]
-        public string Prompt { get; set; } = "";
+        public string Prompt { get; set; } = "## Transcript: ";
     }
 }

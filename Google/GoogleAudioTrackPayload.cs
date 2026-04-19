@@ -9,7 +9,7 @@ namespace GooglePlugin
         public string Model { get; set; } = "gemini-3.1-flash-tts-preview";
 
         [Description("Shared instructions for the scene, tone, pronunciation or accent")]
-        public string Prompt { get; set; } = "";
+        public string Prompt { get; set; } = "## Scene: <insert scene here>. ## Sample Context <insert context here>.";
 
         public float Temperature { get; set; } = 1.0f;
 

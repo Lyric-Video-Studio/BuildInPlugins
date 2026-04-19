@@ -650,7 +650,7 @@ namespace GooglePlugin
 
             if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
             {
-                return (false, "Access key");
+                return (false, "Access key missing...");
             }
 
             switch (CurrentTrackType)
