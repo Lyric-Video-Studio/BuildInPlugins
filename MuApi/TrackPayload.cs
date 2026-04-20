@@ -9,7 +9,8 @@ namespace MuApiPlugin
         public event EventHandler ModelChanged;
         private string model = Seedance2TrackPayload.ModelT2V;
 
-        [PropertyComboOptions([Seedance2TrackPayload.ModelT2V, Seedance2TrackPayload.ModelI2V, Seedance2TrackPayload.ModelOmniRef])]
+        [PropertyComboOptions([Seedance2TrackPayload.ModelT2V, Seedance2TrackPayload.ModelI2V, Seedance2TrackPayload.ModelOmniRef, 
+            Seedance2TrackPayload.ModelT2V480p, Seedance2TrackPayload.ModelI2V480p])]
         public string Model
         {
             get => model;

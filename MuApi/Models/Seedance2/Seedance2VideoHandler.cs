@@ -11,19 +11,22 @@ namespace MuApiPlugin.Models.Seedance2
                 return new VideoResponse() { Success = false, ErrorMsg = "Uninitialized" };
             }
 
-            var allImageSources = CollectReferenceFiles(itemsPayload.ImageReferences.ImageSources.Select(i => i.ImageFile), 9);
+            var allImageSources = CollectReferenceFiles(itemsPayload.ImageReferences.ImageSources.Select(i => i.ImageFile)
+                .Concat(trackPayload.ImageReferences.ImageSources.Select(i => i.ImageFile)), 9);
             if (!allImageSources.Success)
             {
                 return new VideoResponse() { Success = false, ErrorMsg = allImageSources.Error };
             }
 
-            var allAudioSources = CollectReferenceFiles(itemsPayload.AudioReferences.AudioSources.Select(i => i.AudioFile), 3);
+            var allAudioSources = CollectReferenceFiles(itemsPayload.AudioReferences.AudioSources.Select(i => i.AudioFile)
+                .Concat(trackPayload.AudioReferences.AudioSources.Select(i => i.AudioFile)), 3);
             if (!allAudioSources.Success)
             {
                 return new VideoResponse() { Success = false, ErrorMsg = allAudioSources.Error };
             }
 
-            var allVideoSources = CollectReferenceFiles(itemsPayload.VideoReferences.VideoSources.Select(i => i.VideoFile), 3);
+            var allVideoSources = CollectReferenceFiles(itemsPayload.VideoReferences.VideoSources.Select(i => i.VideoFile)
+                .Concat(trackPayload.VideoReferences.VideoSources.Select(i => i.VideoFile)), 3);
             if (!allVideoSources.Success)
             {
                 return new VideoResponse() { Success = false, ErrorMsg = allAudioSources.Error };

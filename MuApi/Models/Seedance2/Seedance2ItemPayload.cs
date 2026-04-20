@@ -8,7 +8,7 @@ namespace MuApiPlugin.Models.Seedance2
         [Description("Generation id saved after submit. Leave it in place if you want the plugin to resume polling instead of creating a new request.")]
         public string PollingId { get; set; }
 
-        [Description("Item-level prompt suffix. Use @image1, @image2, @audio1 and similar tags to refer to the references below.")]
+        [Description("Item-level prompt suffix. Use @image1, @video1, @audio1 and similar tags to refer to the references below.")]
         [EditorWidth(360)]
         public string Prompt { get; set; }
 
@@ -23,13 +23,12 @@ namespace MuApiPlugin.Models.Seedance2
 
         public bool ShouldPropertyBeVisible(string propertyName, string model)
         {
-
-            if (model == Seedance2TrackPayload.ModelI2V  && (AudioReferenceContainer.IsAudioRefName(propertyName) || VideoReferenceContainer.IsVideoRefName(propertyName)))
+            if (model is Seedance2TrackPayload.ModelI2V or Seedance2TrackPayload.ModelI2V480p && (AudioReferenceContainer.IsAudioRefName(propertyName) || VideoReferenceContainer.IsVideoRefName(propertyName)))
             {
                 return false;
             }
 
-            if (model == Seedance2TrackPayload.ModelT2V && (AudioReferenceContainer.IsAudioRefName(propertyName) || ImageReferenceContainer.IsImageRefName(propertyName) || VideoReferenceContainer.IsVideoRefName(propertyName)))
+            if (model is Seedance2TrackPayload.ModelT2V or Seedance2TrackPayload.ModelT2V480p && (AudioReferenceContainer.IsAudioRefName(propertyName) || ImageReferenceContainer.IsImageRefName(propertyName) || VideoReferenceContainer.IsVideoRefName(propertyName)))
             {
                 return false;
             }
