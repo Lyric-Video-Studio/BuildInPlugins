@@ -119,6 +119,11 @@ namespace GooglePlugin
 
             if (trackPayload is GoogleAudioTrackPayload tp && itemsPayload is GoogleAudioItemPayload ip)
             {
+                if (GoogleAudioTrackPayload.IsLyriaModel(tp.Model))
+                {
+                    return await GetMusicAudio(tp, ip, folderToSaveAudio);
+                }
+
                 var prompt = (tp.Prompt + "\n" + ip.Prompt).Trim();
                 var contents = new List<Content>
                 {
@@ -302,6 +307,87 @@ namespace GooglePlugin
             }
 
             return new AudioResponse { Success = false, ErrorMsg = "Track playoad or item payload object not valid" };
+        }
+
+        private async Task<AudioResponse> GetMusicAudio(GoogleAudioTrackPayload tp, GoogleAudioItemPayload ip, string folderToSaveAudio)
+        {
+            var prompt = (tp.Prompt + "\n" + ip.Prompt).Trim();
+            var contents = new List<Content>
+            {
+                new Content
+                {
+                    Role = "user",
+                    Parts = new List<Part>
+                    {
+                        new Part { Text = prompt },
+                    }
+                },
+            };
+
+            var config = new GenerateContentConfig
+            {
+                ResponseModalities = new List<string> { "AUDIO", "TEXT" }
+            };
+
+            if (GoogleAudioTrackPayload.IsLyriaPro(tp.Model) && string.Equals(tp.MusicFormat, "wav", StringComparison.OrdinalIgnoreCase))
+            {
+                config.ResponseMimeType = "audio/wav";
+            }
+
+            try
+            {
+                var response = await _googleAi.Models.GenerateContentAsync(tp.Model, contents, config, ct);
+                if (response.Candidates == null || response.Candidates.Count == 0)
+                {
+                    return new AudioResponse { Success = false, ErrorMsg = "No candidates were returned" };
+                }
+
+                var textResponse = new StringBuilder();
+                (byte[] Data, string MimeType)? firstAudio = null;
+
+                foreach (var candidate in response.Candidates)
+                {
+                    var parts = candidate.Content?.Parts;
+                    if (parts == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var part in parts)
+                    {
+                        if (part.InlineData?.Data != null && part.InlineData.Data.Length > 0)
+                        {
+                            firstAudio ??= (part.InlineData.Data, part.InlineData.MimeType ?? "");
+                        }
+                        else if (!string.IsNullOrWhiteSpace(part.Text))
+                        {
+                            textResponse.AppendLine(part.Text);
+                        }
+                    }
+                }
+
+                if (!firstAudio.HasValue)
+                {
+                    var errorMsg = textResponse.Length > 0 ? textResponse.ToString().Trim() : "No audio data was returned";
+                    return new AudioResponse { Success = false, ErrorMsg = errorMsg };
+                }
+
+                var mimeType = firstAudio.Value.MimeType;
+                var fileExtension = GetFileExtension(mimeType);
+                var targetFile = Path.Combine(folderToSaveAudio, $"{Guid.NewGuid()}{fileExtension}");
+                await System.IO.File.WriteAllBytesAsync(targetFile, firstAudio.Value.Data, ct);
+
+                return new AudioResponse
+                {
+                    Success = true,
+                    AudioFile = targetFile,
+                    AudioFormat = fileExtension.TrimStart('.')
+                };
+            }
+            catch (OperationCanceledException)
+            {
+                return new AudioResponse { Success = false, ErrorMsg = "Cancelled" };
+            }
         }
 
         static string GetFileExtension(string mimeType)
