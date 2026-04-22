@@ -1,3 +1,4 @@
+using MuApiPlugin.Models.GptImage2;
 using MuApiPlugin.Models.Seedance2;
 using PluginBase;
 using System.Collections.ObjectModel;
@@ -44,7 +45,7 @@ namespace MuApiPlugin
                 }
             }
             return true;
-        }        
+        }
     }
 
     public class ImageReferenceContainer

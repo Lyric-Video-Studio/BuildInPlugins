@@ -16,6 +16,11 @@ namespace MuApiPlugin
         public List<string>  video_files { get; set; }
     }
 
+    public class ImageGenerationRequest
+    {
+        public string prompt { get; set; }
+    }
+
     internal class Client
     {
         private static readonly TimeSpan PollingDelay = TimeSpan.FromSeconds(10);
@@ -113,6 +118,59 @@ namespace MuApiPlugin
             }
         }
 
+        public async Task<ImageResponse> GetImage(ImageGenerationRequest request, string endpointPath,
+            ConnectionSettings connectionSettings, IMuApiPollingPayload originalItemPayload, Action<bool> saveAndRefreshCallback,
+            Action<string> textualProgressAction, CancellationToken cancellationToken)
+        {
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                using var httpClient = CreateApiClient(connectionSettings);
+
+                if (!string.IsNullOrWhiteSpace(originalItemPayload?.PollingId))
+                {
+                    return await PollImageResult(httpClient, originalItemPayload.PollingId, originalItemPayload, saveAndRefreshCallback, textualProgressAction, cancellationToken);
+                }
+
+                var serialized = JsonHelper.Serialize(request);
+                using var stringContent = new StringContent(serialized);
+                stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+                var response = await httpClient.PostAsync(endpointPath.TrimStart('/'), stringContent, cancellationToken);
+                var payload = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new ImageResponse() { Success = false, ErrorMsg = $"Error: {response.StatusCode}, details: {GetErrorMessage(payload)}" };
+                }
+
+                var node = JsonNode.Parse(payload);
+                var requestId = GetString(node, "data", "request_id") ?? GetString(node, "request_id");
+
+                if (string.IsNullOrEmpty(requestId))
+                {
+                    return new ImageResponse() { Success = false, ErrorMsg = "MuApi response did not contain a request_id." };
+                }
+
+                if (originalItemPayload != null)
+                {
+                    originalItemPayload.PollingId = requestId;
+                    saveAndRefreshCallback?.Invoke(true);
+                }
+
+                return await PollImageResult(httpClient, requestId, originalItemPayload, saveAndRefreshCallback, textualProgressAction, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return new ImageResponse() { Success = false, ErrorMsg = "User cancelled" };
+            }
+            catch (Exception ex)
+            {
+                return new ImageResponse() { Success = false, ErrorMsg = ex.Message };
+            }
+        }
+
         private static async Task<VideoResponse> PollVideoResult(HttpClient httpClient, string requestId, string folderToSave,
             IMuApiPollingPayload originalItemPayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, CancellationToken cancellationToken)
         {
@@ -153,6 +211,58 @@ namespace MuApiPlugin
                 if (status is "failed" or "error" or "cancelled" or "canceled")
                 {
                     return new VideoResponse() { Success = false, ErrorMsg = GetErrorMessage(payload) };
+                }
+
+                textualProgressAction?.Invoke(string.IsNullOrEmpty(status) ? "Processing" : status);
+                await Task.Delay(PollingDelay, cancellationToken);
+            }
+        }
+
+        private static async Task<ImageResponse> PollImageResult(HttpClient httpClient, string requestId,
+            IMuApiPollingPayload originalItemPayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var response = await httpClient.GetAsync($"predictions/{requestId}/result", cancellationToken);
+                var payload = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new ImageResponse() { Success = false, ErrorMsg = $"Polling failed: {response.StatusCode}, details: {GetErrorMessage(payload)}" };
+                }
+
+                var node = JsonNode.Parse(payload);
+                var status = (GetString(node, "data", "status") ?? GetString(node, "status") ?? "").ToLowerInvariant();
+
+                if (status is "completed" or "succeeded" or "success")
+                {
+                    var arrRes = node["outputs"] as JsonArray;
+                    var imageUrl = arrRes?[0]?.ToString();
+
+                    if (string.IsNullOrEmpty(imageUrl))
+                    {
+                        return new ImageResponse() { Success = false, ErrorMsg = "MuApi completed the request, but no image URL was returned." };
+                    }
+
+                    textualProgressAction?.Invoke("Downloading");
+                    var downloadBytes = await DownloadBytes(imageUrl, cancellationToken);
+                    var format = GetImageFormat(imageUrl);
+
+                    if (originalItemPayload != null)
+                    {
+                        originalItemPayload.PollingId = "";
+                        saveAndRefreshCallback?.Invoke(true);
+                    }
+
+                    textualProgressAction?.Invoke("");
+                    return new ImageResponse() { Success = true, Image = Convert.ToBase64String(downloadBytes), ImageFormat = format };
+                }
+
+                if (status is "failed" or "error" or "cancelled" or "canceled")
+                {
+                    return new ImageResponse() { Success = false, ErrorMsg = GetErrorMessage(payload) };
                 }
 
                 textualProgressAction?.Invoke(string.IsNullOrEmpty(status) ? "Processing" : status);
@@ -216,6 +326,17 @@ namespace MuApiPlugin
             }
 
             return current?.GetValue<string>();
+        }
+
+        private static string GetImageFormat(string url)
+        {
+            var extension = Path.GetExtension(url)?.TrimStart('.').ToLowerInvariant();
+            return extension switch
+            {
+                "png" => "png",
+                "webp" => "png",
+                _ => "jpg"
+            };
         }
     }
 }

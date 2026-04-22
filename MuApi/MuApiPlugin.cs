@@ -1,3 +1,4 @@
+using MuApiPlugin.Models.GptImage2;
 using MuApiPlugin.Models.Seedance2;
 using PluginBase;
 using System.Text.Json.Nodes;
@@ -6,17 +7,17 @@ using static System.Net.WebRequestMethods;
 namespace MuApiPlugin
 {
 #pragma warning disable CS1998
-    public class MuApiVideoPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IValidateBothPayloads, ICancellableGeneration, ITextualProgressIndication, ITrackPayloadFromModel
+    public class MuApiVideoPlugin : IVideoPlugin, IImagePlugin, ISaveAndRefresh, IImportFromImage, IValidateBothPayloads, ICancellableGeneration, ITextualProgressIndication, ITrackPayloadFromModel
     {
         public string UniqueName => "MuApiBuildIn";
 
-        public string DisplayName => "MuApi (seedance2)";
+        public string DisplayName => "MuApi";
 
         public object GeneralDefaultSettings => new ConnectionSettings();
 
         public bool IsInitialized => _isInitialized;
 
-        public string SettingsHelpText => "Powered by MuApi. Add your MuApi API key, then generate Seedance 2 videos with the currently selected model.";
+        public string SettingsHelpText => "Powered by MuApi. Add your MuApi API key, then generate images or videos with the currently selected model.";
 
         public string[] SettingsLinks => ["https://muapi.ai/access-keys"];
 
@@ -45,6 +46,24 @@ namespace MuApiPlugin
             throw new NotImplementedException();
         }
 
+        public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
+        {
+            if (_connectionSettings == null || string.IsNullOrWhiteSpace(_connectionSettings.AccessToken))
+            {
+                return new ImageResponse() { Success = false, ErrorMsg = "Uninitialized" };
+            }
+
+            if (trackPayload is ImageTrackPayload tp && itemsPayload is ImageItemPayload ip)
+            {
+                if (ImageTrackPayload.IsGptImage2(tp))
+                {
+                    return await GptImage2ImageHandler.GetImage(_connectionSettings, tp.GptImage2, ip.GptImage2, tp.Model);
+                }
+            }
+
+            throw new NotImplementedException();
+        }
+
         public async Task<string> Initialize(object settings)
         {
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings typedSettings)
@@ -68,7 +87,12 @@ namespace MuApiPlugin
 
         public object DeserializePayload(string fileName)
         {
-            return SetupConnections(JsonHelper.Deserialize<TrackPayload>(fileName) as TrackPayload);
+            return CurrentTrackType switch
+            {
+                IPluginBase.TrackType.Video => SetupConnections(JsonHelper.Deserialize<TrackPayload>(fileName) as TrackPayload),
+                IPluginBase.TrackType.Image => SetupConnections(JsonHelper.Deserialize<ImageTrackPayload>(fileName) as ImageTrackPayload),
+                _ => null
+            };
         }
 
         public IPluginBase CreateNewInstance()
@@ -91,7 +115,12 @@ namespace MuApiPlugin
             if (payload is Seedance2ItemPayload omniItem && omniItem.Duration <= 0)
             {
                 return (false, "Duration must be greater than zero");
-            }   
+            }
+
+            if (payload is ImageItemPayload gptImage2Payload && string.IsNullOrWhiteSpace(gptImage2Payload.GptImage2?.Prompt))
+            {
+                return (false, "Prompt missing");
+            }
 
             return (true, "");
         }
@@ -114,7 +143,7 @@ namespace MuApiPlugin
                     }
 
                     var videoCount = CountFiles(item.Seedance2.VideoReferences.VideoSources.Select(i => i.VideoFile));
-                    if (imageCount > 3)
+                    if (videoCount > 3)
                     {
                         return (false, "MuApi supports up to 3 video references");
                     }
@@ -125,6 +154,18 @@ namespace MuApiPlugin
                         return (false, "MuApi supports up to 3 audio references");
                     }
                 }                
+
+            }
+
+            if (trackPaylod is ImageTrackPayload imageTrack && itemPayload is ImageItemPayload imageItem)
+            {
+                if (ImageTrackPayload.IsGptImage2(imageTrack))
+                {
+                    if (string.IsNullOrWhiteSpace($"{imageTrack.GptImage2.Prompt} {imageItem.GptImage2.Prompt}".Trim()))
+                    {
+                        return (false, "Prompt missing");
+                    }
+                }
             }
 
             return (true, "");
@@ -132,25 +173,51 @@ namespace MuApiPlugin
 
         public object ItemPayloadFromLyrics(string text)
         {
-            return CurrentTrackType == IPluginBase.TrackType.Video ? new ItemPayload(text, false) : null;
+            return CurrentTrackType switch
+            {
+                IPluginBase.TrackType.Video => new ItemPayload(text, false),
+                IPluginBase.TrackType.Image => new ImageItemPayload(text),
+                _ => null
+            };
         }
 
         public object ItemPayloadFromImageSource(string imgSource)
         {
-            return CurrentTrackType == IPluginBase.TrackType.Video ? new ItemPayload(imgSource, true) : null;
+            return CurrentTrackType switch
+            {
+                IPluginBase.TrackType.Video => new ItemPayload(imgSource, true),
+                _ => null
+            };
         }
 
         public void AppendToPayloadFromLyrics(string text, object payload)
         {
-            if (CurrentTrackType == IPluginBase.TrackType.Video && payload is ItemPayload itemPayload)
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
+                if (payload is not ItemPayload itemPayload)
+                {
+                    return;
+                }
                 itemPayload.Seedance2.Prompt += text;
+            }
+            else if (CurrentTrackType == IPluginBase.TrackType.Image)
+            {
+                if (payload is not ImageItemPayload imageItemPayload)
+                {
+                    return;
+                }
+                imageItemPayload.GptImage2.Prompt += text;
             }
         }
 
         public object ObjectToItemPayload(JsonObject obj)
         {
-            return CurrentTrackType == IPluginBase.TrackType.Video ? JsonHelper.ToExactType<ItemPayload>(obj) : null;
+            return CurrentTrackType switch
+            {
+                IPluginBase.TrackType.Video => JsonHelper.ToExactType<ItemPayload>(obj),
+                IPluginBase.TrackType.Image => JsonHelper.ToExactType<ImageItemPayload>(obj),
+                _ => null
+            };
         }
 
         public object ObjectToTrackPayload(JsonObject obj)
@@ -158,7 +225,7 @@ namespace MuApiPlugin
             switch (CurrentTrackType)
             {
                 case IPluginBase.TrackType.Image:
-                    return null;
+                    return SetupConnections(JsonHelper.ToExactType<ImageTrackPayload>(obj) as ImageTrackPayload);
                 case IPluginBase.TrackType.Video:
                     return SetupConnections(JsonHelper.ToExactType<TrackPayload>(obj) as TrackPayload);
                 case IPluginBase.TrackType.Audio:
@@ -176,9 +243,14 @@ namespace MuApiPlugin
 
         public string TextualRepresentation(object itemPayload)
         {
+            if (CurrentTrackType == IPluginBase.TrackType.Image && itemPayload is ImageItemPayload typedImagePayload)
+            {
+                return typedImagePayload.GptImage2.Prompt ?? "";
+            }
+
             if (itemPayload is ItemPayload typedPayload)
             {
-                return typedPayload.Seedance2.Prompt ?? typedPayload.Seedance2.Prompt ?? "";
+                return typedPayload.Seedance2.Prompt ?? "";
             }
 
             return "";
@@ -191,6 +263,11 @@ namespace MuApiPlugin
                 return SetupConnections(new TrackPayload());
             }
 
+            if (CurrentTrackType == IPluginBase.TrackType.Image)
+            {
+                return SetupConnections(new ImageTrackPayload());
+            }
+
             throw new NotImplementedException();
         }
 
@@ -199,6 +276,11 @@ namespace MuApiPlugin
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 return new ItemPayload();
+            }
+
+            if (CurrentTrackType == IPluginBase.TrackType.Image)
+            {
+                return new ImageItemPayload();
             }
 
             throw new NotImplementedException();
@@ -211,6 +293,11 @@ namespace MuApiPlugin
                 return JsonHelper.DeepCopy<TrackPayload>(obj);
             }
 
+            if (CurrentTrackType == IPluginBase.TrackType.Image)
+            {
+                return JsonHelper.DeepCopy<ImageTrackPayload>(obj);
+            }
+
             throw new NotImplementedException();
         }
 
@@ -219,6 +306,11 @@ namespace MuApiPlugin
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 return JsonHelper.DeepCopy<ItemPayload>(obj);
+            }
+
+            if (CurrentTrackType == IPluginBase.TrackType.Image)
+            {
+                return JsonHelper.DeepCopy<ImageItemPayload>(obj);
             }
 
             throw new NotImplementedException();
@@ -231,6 +323,7 @@ namespace MuApiPlugin
                 var output = new List<string>();
                 output.AddRange(typedPayload.Seedance2.ImageReferences.ImageSources.Select(i => i.ImageFile));
                 output.AddRange(typedPayload.Seedance2.AudioReferences.AudioSources.Select(i => i.AudioFile));
+                output.AddRange(typedPayload.Seedance2.VideoReferences.VideoSources.Select(i => i.VideoFile));
                 return output;
             }
 
@@ -252,6 +345,11 @@ namespace MuApiPlugin
             foreach (var audioItem in typedPayload.Seedance2.AudioReferences.AudioSources)
             {
                 audioItem.AudioFile = ReplacePath(audioItem.AudioFile, originalPath, newPath);
+            }
+
+            foreach (var videoItem in typedPayload.Seedance2.VideoReferences.VideoSources)
+            {
+                videoItem.VideoFile = ReplacePath(videoItem.VideoFile, originalPath, newPath);
             }
         }
 
@@ -302,9 +400,23 @@ namespace MuApiPlugin
             return tp;
         }
 
+        private ImageTrackPayload SetupConnections(ImageTrackPayload tp)
+        {
+            tp.ModelChanged += (s, e) =>
+            {
+                _saveAndRefreshCallback?.Invoke(false);
+            };
+            return tp;
+        }
+
         public object TrackPayloadFromModel(string model)
         {
-            return SetupConnections(new TrackPayload() { Model = model });
+            return CurrentTrackType switch
+            {
+                IPluginBase.TrackType.Video => SetupConnections(new TrackPayload() { Model = model }),
+                IPluginBase.TrackType.Image => SetupConnections(new ImageTrackPayload() { Model = model }),
+                _ => null
+            };
         }
     }
 #pragma warning restore CS1998

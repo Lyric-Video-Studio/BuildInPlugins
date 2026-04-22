@@ -56,8 +56,7 @@ namespace OpenAiTxtToImgPlugin
 
         public object DefaultPayloadForImageTrack()
         {
-            return new TrackPayload("", OpenAI.Models.Model.DallE_3, 1, GetFunctionPropertyArray(nameof(ImageGenerationRequest.Quality))[0], ImageResponseFormat.B64_Json,
-                GetFunctionPropertyArray(nameof(ImageGenerationRequest.Size))[0], GetFunctionPropertyArray(nameof(ImageGenerationRequest.Style))[0]);
+            return new TrackPayload("");
         }
 
         public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
@@ -69,7 +68,7 @@ namespace OpenAiTxtToImgPlugin
 
             if (trackPayload is TrackPayload newTp && itemsPayload is ItemPayload newIp)
             {
-                var payload = new ImageGenerationRequest($"{newIp.Prompt} {newTp.Prompt}", newTp.Model, 1, newTp.Quality, ImageResponseFormat.B64_Json, newTp.Size, style: newTp.Style);
+                var payload = new ImageGenerationRequest($"{newIp.Prompt} {newTp.Prompt}", newTp.Model, 1);
 
                 try
                 {

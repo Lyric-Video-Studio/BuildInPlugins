@@ -1,16 +1,15 @@
-using MuApiPlugin.Models.Seedance2;
+using MuApiPlugin.Models.GptImage2;
 using PluginBase;
 using System.ComponentModel;
 
 namespace MuApiPlugin
 {
-    public class TrackPayload : IPayloadPropertyVisibility
+    public class ImageTrackPayload : IPayloadPropertyVisibility
     {
         public event EventHandler ModelChanged;
-        private string model = Seedance2TrackPayload.ModelT2V;
+        private string model = GptImage2TrackPayload.ModelTxtToImg;
 
-        [PropertyComboOptions([Seedance2TrackPayload.ModelT2V, Seedance2TrackPayload.ModelI2V, Seedance2TrackPayload.ModelOmniRef,
-            Seedance2TrackPayload.ModelT2V480p, Seedance2TrackPayload.ModelI2V480p])]
+        [PropertyComboOptions([GptImage2TrackPayload.ModelTxtToImg])]
         public string Model
         {
             get => model;
@@ -28,31 +27,32 @@ namespace MuApiPlugin
 
         [HideAllChildren]
         [ParentName("")]
-        public Seedance2TrackPayload Seedance2 { get; set; } = new Seedance2TrackPayload();
+        public GptImage2TrackPayload GptImage2 { get; set; } = new();
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
-            if (trackPayload is TrackPayload tp)
+            if (trackPayload is ImageTrackPayload tp)
             {
                 switch (propertyName)
                 {
-                    case nameof(Seedance2):
-                        return IsSeedance2(tp);
+                    case nameof(GptImage2):
+                        return IsGptImage2(tp);
                     default:
                         break;
                 }
 
-                if (IsSeedance2(tp))
+                if (IsGptImage2(tp))
                 {
-                    return tp.Seedance2.ShouldPropertyBeVisible(propertyName, model);
+                    return tp.GptImage2.ShouldPropertyBeVisible(propertyName, model);
                 }
             }
+
             return true;
         }
 
-        public static bool IsSeedance2(TrackPayload tp)
+        public static bool IsGptImage2(ImageTrackPayload tp)
         {
-            return tp.Model != null && tp.Model.StartsWith("seedance");
+            return tp.Model == GptImage2TrackPayload.ModelTxtToImg;
         }
     }
 }
