@@ -165,6 +165,19 @@ namespace MuApiPlugin
                     {
                         return (false, "Prompt missing");
                     }
+
+                    var imageCount = CountFiles(imageTrack.GptImage2.ImageReferences.ImageSources.Select(i => i.ImageFile))
+                        + CountFiles(imageItem.GptImage2.ImageReferences.ImageSources.Select(i => i.ImageFile));
+
+                    if (imageTrack.Model == GptImage2TrackPayload.ModelImgToImg && imageCount == 0)
+                    {
+                        return (false, "At least one input image is required");
+                    }
+
+                    if (imageCount > 16)
+                    {
+                        return (false, "MuApi supports up to 16 input images");
+                    }
                 }
             }
 
@@ -318,6 +331,14 @@ namespace MuApiPlugin
 
         public List<string> FilePathsOnPayloads(object trackPayload, object itemPayload)
         {
+            if (trackPayload is ImageTrackPayload imageTrack && itemPayload is ImageItemPayload imageItem)
+            {
+                var output = new List<string>();
+                output.AddRange(imageTrack.GptImage2.ImageReferences.ImageSources.Select(i => i.ImageFile));
+                output.AddRange(imageItem.GptImage2.ImageReferences.ImageSources.Select(i => i.ImageFile));
+                return output;
+            }
+
             if (itemPayload is ItemPayload typedPayload)
             {
                 var output = new List<string>();
@@ -332,14 +353,28 @@ namespace MuApiPlugin
 
         public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
         {
+            if (trackPayload is ImageTrackPayload imageTrack && itemPayload is ImageItemPayload imageItem)
+            {
+                foreach (var imageRef in imageTrack.GptImage2.ImageReferences.ImageSources)
+                {
+                    imageRef.ImageFile = ReplacePath(imageRef.ImageFile, originalPath, newPath);
+                }
+
+                foreach (var imageRef in imageItem.GptImage2.ImageReferences.ImageSources)
+                {
+                    imageRef.ImageFile = ReplacePath(imageRef.ImageFile, originalPath, newPath);
+                }
+                return;
+            }
+
             if (itemPayload is not ItemPayload typedPayload)
             {
                 return;
             }
 
-            foreach (var imageItem in typedPayload.Seedance2.ImageReferences.ImageSources)
+            foreach (var seedanceImageItem in typedPayload.Seedance2.ImageReferences.ImageSources)
             {
-                imageItem.ImageFile = ReplacePath(imageItem.ImageFile, originalPath, newPath);
+                seedanceImageItem.ImageFile = ReplacePath(seedanceImageItem.ImageFile, originalPath, newPath);
             }
 
             foreach (var audioItem in typedPayload.Seedance2.AudioReferences.AudioSources)

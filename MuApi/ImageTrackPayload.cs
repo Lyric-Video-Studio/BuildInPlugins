@@ -9,7 +9,7 @@ namespace MuApiPlugin
         public event EventHandler ModelChanged;
         private string model = GptImage2TrackPayload.ModelTxtToImg;
 
-        [PropertyComboOptions([GptImage2TrackPayload.ModelTxtToImg])]
+        [PropertyComboOptions([GptImage2TrackPayload.ModelTxtToImg, GptImage2TrackPayload.ModelImgToImg])]
         public string Model
         {
             get => model;
@@ -52,7 +52,7 @@ namespace MuApiPlugin
 
         public static bool IsGptImage2(ImageTrackPayload tp)
         {
-            return tp.Model == GptImage2TrackPayload.ModelTxtToImg;
+            return tp.Model is GptImage2TrackPayload.ModelTxtToImg or GptImage2TrackPayload.ModelImgToImg;
         }
     }
 }

@@ -19,6 +19,7 @@ namespace MuApiPlugin
     public class ImageGenerationRequest
     {
         public string prompt { get; set; }
+        public List<string> images_list { get; set; }
     }
 
     internal class Client
