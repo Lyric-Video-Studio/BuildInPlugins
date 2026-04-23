@@ -1,3 +1,4 @@
+using Avalonia.Platform.Storage;
 using MuApiPlugin.Models.Seedance2;
 using PluginBase;
 using System.ComponentModel;
@@ -53,6 +54,12 @@ namespace MuApiPlugin
         public static bool IsSeedance2(TrackPayload tp)
         {
             return tp.Model != null && tp.Model.StartsWith("seedance");
+        }
+
+        [CustomAction("Model info", true)]
+        public void ModelInfo()
+        {
+            IUriLauncher.Launcher.LaunchUrl($"https://muapi.ai/playground/{Model}");
         }
     }
 }

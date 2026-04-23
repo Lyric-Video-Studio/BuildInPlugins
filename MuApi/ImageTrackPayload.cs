@@ -54,5 +54,11 @@ namespace MuApiPlugin
         {
             return tp.Model is GptImage2TrackPayload.ModelTxtToImg or GptImage2TrackPayload.ModelImgToImg;
         }
+
+        [CustomAction("Model info", true)]
+        public void ModelInfo()
+        {
+            IUriLauncher.Launcher.LaunchUrl($"https://muapi.ai/playground/{Model}");
+        }
     }
 }

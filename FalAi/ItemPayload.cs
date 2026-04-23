@@ -95,7 +95,7 @@ namespace FalAiPlugin
         public ImageSourceContainer ImageSourceCont { get; set; } = new();
         public VideoSourceContainer VideoSourceCont { get; set; } = new();
 
-        public AudioSourceContainer AudioSourceCont { get; set; } = new();
+        public AudioSourceContainer AudioSourceCont { get; set; } = new();        
 
         public ItemPayload()
         {
@@ -105,7 +105,7 @@ namespace FalAiPlugin
         {
             if (trackPayload is TrackPayload tp)
             {
-                if (propertyName == nameof(PollingId))
+                if (propertyName is nameof(PollingId))
                 {
                     return true;
                 }

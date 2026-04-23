@@ -30,6 +30,12 @@ namespace FalAiPlugin
         {
             Speakers.Add(new Speaker());
         }
+
+        [CustomAction("Model info", true)]
+        public void ModelInfo()
+        {
+            IUriLauncher.Launcher.LaunchUrl($"https://fal.ai/explore/search?q={Model}");
+        }
     }
 
     public class Speaker

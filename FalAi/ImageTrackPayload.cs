@@ -41,6 +41,12 @@ namespace FalAiPlugin
 
         public ImageSourceContainer ImageSource { get; set; } = new();
 
+        [CustomAction("Model info", true)]
+        public void ModelInfo()
+        {
+            IUriLauncher.Launcher.LaunchUrl($"https://fal.ai/explore/search?q={Model}");
+        }
+
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             if (trackPayload is ImageTrackPayload ip)

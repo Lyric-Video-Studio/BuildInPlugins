@@ -50,7 +50,7 @@ namespace GooglePlugin
                     },
                     ImageConfig = new ImageConfig
                     {
-                        ImageSize = tp.Size                    
+                        ImageSize = tp.Size
                     },
                     ResponseModalities = new List<string>
                     {
@@ -91,6 +91,10 @@ namespace GooglePlugin
                     if (chunk.Candidates == null || chunk.Candidates.Count == 0 ||
                         chunk.Candidates[0].Content?.Parts == null)
                     {
+                        if (chunk?.Candidates?.Count > 0 && chunk.Candidates[0].FinishReason == FinishReason.ImageOther)
+                        {
+                            throw new Exception("Google API reported unknown image generation error");
+                        }
                         continue;
                     }
                     var part = chunk.Candidates[0].Content!.Parts![0];
@@ -416,7 +420,7 @@ namespace GooglePlugin
                 var prompt = (tp.Prompt + " " + ip.Prompt).Trim();
                 var getCOnfig = new GenerateVideosConfig
                 {
-                    PersonGeneration = tp.Model.Contains("lite") ? null : "allow_adult", 
+                    PersonGeneration = tp.Model.Contains("lite") || tp.Model.Contains("veo-3.1-generate-preview") ? null : "allow_adult", 
                     AspectRatio = tp.AspectRatio, 
                     DurationSeconds = int.Parse(ip.Duration), 
                     Resolution = tp.Resolution
