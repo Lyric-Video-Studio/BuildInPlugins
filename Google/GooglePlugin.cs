@@ -420,7 +420,7 @@ namespace GooglePlugin
                 var prompt = (tp.Prompt + " " + ip.Prompt).Trim();
                 var getCOnfig = new GenerateVideosConfig
                 {
-                    PersonGeneration = tp.Model.Contains("lite") || tp.Model.Contains("veo-3.1-generate-preview") ? null : "allow_adult", 
+                    PersonGeneration =  null, 
                     AspectRatio = tp.AspectRatio, 
                     DurationSeconds = int.Parse(ip.Duration), 
                     Resolution = tp.Resolution
