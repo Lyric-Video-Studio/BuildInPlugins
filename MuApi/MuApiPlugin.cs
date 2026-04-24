@@ -59,6 +59,11 @@ namespace MuApiPlugin
                 {
                     return await GptImage2ImageHandler.GetImage(_connectionSettings, tp.GptImage2, ip.GptImage2, tp.Model);
                 }
+
+                if (ImageTrackPayload.IsMidjourneyV8(tp))
+                {
+                    return await MidjourneyV8ImageHandler.GetImage(_connectionSettings, tp.MidjourneyV8, ip.MidjourneyV8, tp.Model);
+                }
             }
 
             throw new NotImplementedException();
@@ -179,6 +184,22 @@ namespace MuApiPlugin
                         return (false, "MuApi supports up to 16 input images");
                     }
                 }
+
+                if (ImageTrackPayload.IsMidjourneyV8(imageTrack))
+                {
+                    if (string.IsNullOrWhiteSpace($"{imageTrack.MidjourneyV8.Prompt} {imageItem.MidjourneyV8.Prompt}".Trim()))
+                    {
+                        return (false, "Prompt missing");
+                    }
+
+                    var imageCount = CountFiles(imageTrack.MidjourneyV8.ImageReferences.ImageSources.Select(i => i.ImageFile))
+                        + CountFiles(imageItem.MidjourneyV8.ImageReferences.ImageSources.Select(i => i.ImageFile));
+
+                    if (imageCount > 1)
+                    {
+                        return (false, "Midjourney V8 supports a single reference image");
+                    }
+                }
             }
 
             return (true, "");
@@ -220,6 +241,7 @@ namespace MuApiPlugin
                     return;
                 }
                 imageItemPayload.GptImage2.Prompt += text;
+                imageItemPayload.MidjourneyV8.Prompt += text;
             }
         }
 
@@ -258,7 +280,9 @@ namespace MuApiPlugin
         {
             if (CurrentTrackType == IPluginBase.TrackType.Image && itemPayload is ImageItemPayload typedImagePayload)
             {
-                return typedImagePayload.GptImage2.Prompt ?? "";
+                return typedImagePayload.GptImage2.Prompt
+                    ?? typedImagePayload.MidjourneyV8.Prompt
+                    ?? "";
             }
 
             if (itemPayload is ItemPayload typedPayload)
@@ -336,6 +360,8 @@ namespace MuApiPlugin
                 var output = new List<string>();
                 output.AddRange(imageTrack.GptImage2.ImageReferences.ImageSources.Select(i => i.ImageFile));
                 output.AddRange(imageItem.GptImage2.ImageReferences.ImageSources.Select(i => i.ImageFile));
+                output.AddRange(imageTrack.MidjourneyV8.ImageReferences.ImageSources.Select(i => i.ImageFile));
+                output.AddRange(imageItem.MidjourneyV8.ImageReferences.ImageSources.Select(i => i.ImageFile));
                 return output;
             }
 
@@ -361,6 +387,16 @@ namespace MuApiPlugin
                 }
 
                 foreach (var imageRef in imageItem.GptImage2.ImageReferences.ImageSources)
+                {
+                    imageRef.ImageFile = ReplacePath(imageRef.ImageFile, originalPath, newPath);
+                }
+
+                foreach (var imageRef in imageTrack.MidjourneyV8.ImageReferences.ImageSources)
+                {
+                    imageRef.ImageFile = ReplacePath(imageRef.ImageFile, originalPath, newPath);
+                }
+
+                foreach (var imageRef in imageItem.MidjourneyV8.ImageReferences.ImageSources)
                 {
                     imageRef.ImageFile = ReplacePath(imageRef.ImageFile, originalPath, newPath);
                 }

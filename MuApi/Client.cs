@@ -2,24 +2,63 @@ using MuApiPlugin.Models.Seedance2;
 using PluginBase;
 using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 namespace MuApiPlugin
 {
     public class GenerationRequest
     {
         public string prompt { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string aspect_ratio { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string quality { get; set; }
-        public int duration { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? duration { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<string> images_list { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<string> audio_files { get; set; }
-        public List<string>  video_files { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string> video_files { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string image_url { get; set; }
     }
 
     public class ImageGenerationRequest
     {
         public string prompt { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<string> images_list { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string image_url { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string aspect_ratio { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? stylize { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? chaos { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? weird { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string negative_prompt { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public long? seed { get; set; }
     }
 
     internal class Client
@@ -251,14 +290,18 @@ namespace MuApiPlugin
                     var downloadBytes = await DownloadBytes(imageUrl, cancellationToken);
                     var format = GetImageFormat(imageUrl);
 
-                    if (originalItemPayload != null)
+                    var alts = new List<string>();
+                    for (int i = 1; i < arrRes.Count; i++)
                     {
-                        originalItemPayload.PollingId = "";
-                        saveAndRefreshCallback?.Invoke(true);
+                        if (!string.IsNullOrEmpty(arrRes[i].ToString()))
+                        {
+                            var altBytes = await DownloadBytes(arrRes[i].ToString(), cancellationToken);
+                            alts.Add(Convert.ToBase64String(altBytes));
+                        }
                     }
 
                     textualProgressAction?.Invoke("");
-                    return new ImageResponse() { Success = true, Image = Convert.ToBase64String(downloadBytes), ImageFormat = format };
+                    return new ImageResponse() { Success = true, Image = Convert.ToBase64String(downloadBytes), ImageFormat = format, AlternativesImages = alts };
                 }
 
                 if (status is "failed" or "error" or "cancelled" or "canceled")
