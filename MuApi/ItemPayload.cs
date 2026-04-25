@@ -136,7 +136,7 @@ namespace MuApiPlugin
         [EnableFileDrop]
         public string ImageFile { get; set; }
 
-        [CustomAction("Remove")]
+        [CustomAction("Remove", false, nameof(ImageFile))]
         public void RemoveImage()
         {
             RemoveReference?.Invoke(this, EventArgs.Empty);
@@ -150,7 +150,7 @@ namespace MuApiPlugin
         [EnableFileDrop]
         public string AudioFile { get; set; }
 
-        [CustomAction("Remove")]
+        [CustomAction("Remove", false, nameof(AudioFile))]
         public void RemoveAudio()
         {
             RemoveReference?.Invoke(this, EventArgs.Empty);
@@ -164,7 +164,7 @@ namespace MuApiPlugin
         [EnableFileDrop]
         public string VideoFile { get; set; }
 
-        [CustomAction("Remove")]
+        [CustomAction("Remove", false, nameof(VideoFile))]
         public void RemoveVideo()
         {
             RemoveReference?.Invoke(this, EventArgs.Empty);

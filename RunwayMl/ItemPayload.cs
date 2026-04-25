@@ -101,7 +101,7 @@ namespace RunwayMlPlugin
             [EnableFileDrop]
             public string Path { get; set; }
 
-            [CustomAction("Remove")]
+            [CustomAction("Remove", false, nameof(Path))]
             public void Remove()
             {
                 RemoveReference.Invoke(this, null);

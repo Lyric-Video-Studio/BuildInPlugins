@@ -40,7 +40,7 @@ namespace RunwayMlPlugin
         [Description("Use tags in prompt, like @tag")]
         public string Tag { get; set; }
 
-        [CustomAction("Remove")]
+        [CustomAction("Remove", false, nameof(FilePath))]
         public void Remove()
         {
             RemoveReference.Invoke(this, null);

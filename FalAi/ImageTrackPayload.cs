@@ -181,7 +181,7 @@ namespace FalAiPlugin
         [EnableFileDrop]
         public string ImageFile { get; set; }
 
-        [CustomAction("Remove")]
+        [CustomAction("Remove", false, nameof(ImageFile))]
         public void RemoveImage()
         {
             RemoveReference?.Invoke(this, null);
@@ -195,7 +195,7 @@ namespace FalAiPlugin
         [EnableFileDrop]
         public string VideoFile { get; set; }
 
-        [CustomAction("Remove")]
+        [CustomAction("Remove", false, nameof(VideoFile))]
         public void RemoveVideo()
         {
             RemoveReference?.Invoke(this, null);
@@ -209,7 +209,7 @@ namespace FalAiPlugin
         [EnableFileDrop]
         public string AudioFile { get; set; }
 
-        [CustomAction("Remove")]
+        [CustomAction("Remove", false, nameof(AudioFile))]
         public void RemoveAudio()
         {
             RemoveReference?.Invoke(this, null);
