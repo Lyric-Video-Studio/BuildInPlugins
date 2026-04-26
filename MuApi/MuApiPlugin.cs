@@ -1,5 +1,7 @@
 using MuApiPlugin.Models.GptImage2;
+using MuApiPlugin.Models.MidjourneyV8;
 using MuApiPlugin.Models.Seedance2;
+using MuApiPlugin.Models.ViduQ2Turbo;
 using PluginBase;
 using System.Text.Json.Nodes;
 using static System.Net.WebRequestMethods;
@@ -40,7 +42,14 @@ namespace MuApiPlugin
 
             if (trackPayload is TrackPayload tp && itemsPayload is ItemPayload ip)
             {
-                return await Seedance2VideoHandler.GetVideo(_connectionSettings, tp.Seedance2, ip.Seedance2, folderToSaveVideo, tp.Model);
+                if (TrackPayload.IsSeedance2(tp))
+                {
+                    return await Seedance2VideoHandler.GetVideo(_connectionSettings, tp.Seedance2, ip.Seedance2, folderToSaveVideo, tp.Model);
+                }
+                if (TrackPayload.IsViduQ2Turbo(tp))
+                {
+                    return await ViduQ2TurboVideoHandler.GetVideo(_connectionSettings, tp.ViduQ2Turbo, ip.ViduQ2Turbo, folderToSaveVideo, tp.Model);
+                }
             }
 
             throw new NotImplementedException();
@@ -121,6 +130,10 @@ namespace MuApiPlugin
             {
                 return (false, "Duration must be greater than zero");
             }
+            if (payload is ViduQ2TurboItemPayload viduItem && viduItem.Duration <= 0)
+            {
+                return (false, "Duration must be greater than zero");
+            }
 
             if (payload is ImageItemPayload gptImage2Payload && string.IsNullOrWhiteSpace(gptImage2Payload.GptImage2?.Prompt))
             {
@@ -160,6 +173,37 @@ namespace MuApiPlugin
                     }
                 }                
 
+                if (TrackPayload.IsViduQ2Turbo(track))
+                {
+                    if (item.ViduQ2Turbo.Duration <= 0)
+                    {
+                        return (false, "Duration must be greater than zero");
+                    }
+
+                    if (string.IsNullOrWhiteSpace($"{track.ViduQ2Turbo.Prompt} {item.ViduQ2Turbo.Prompt}".Trim()))
+                    {
+                        return (false, "Prompt missing");
+                    }
+
+                    if (track.ViduQ2Turbo.Bgm && item.ViduQ2Turbo.Duration != 4)
+                    {
+                        return (false, "Vidu Q2 Turbo requires duration 4 when background music is enabled");
+                    }
+
+                    if (track.Model == ViduQ2TurboTrackPayload.ModelI2V &&
+                        string.IsNullOrWhiteSpace(item.ViduQ2Turbo.StartImage))
+                    {
+                        return (false, "Vidu Q2 Turbo image-to-video requires an input image");
+                    }
+
+                    if (track.Model == ViduQ2TurboTrackPayload.ModelStartEnd)
+                    {
+                        if (string.IsNullOrWhiteSpace(item.ViduQ2Turbo.StartImage) || string.IsNullOrWhiteSpace(item.ViduQ2Turbo.EndImage))
+                        {
+                            return (false, "Vidu Q2 Turbo start-end video requires both start and end images");
+                        }
+                    }
+                }
             }
 
             if (trackPaylod is ImageTrackPayload imageTrack && itemPayload is ImageItemPayload imageItem)
@@ -233,6 +277,7 @@ namespace MuApiPlugin
                     return;
                 }
                 itemPayload.Seedance2.Prompt += text;
+                itemPayload.ViduQ2Turbo.Prompt += text;
             }
             else if (CurrentTrackType == IPluginBase.TrackType.Image)
             {
@@ -371,6 +416,8 @@ namespace MuApiPlugin
                 output.AddRange(typedPayload.Seedance2.ImageReferences.ImageSources.Select(i => i.ImageFile));
                 output.AddRange(typedPayload.Seedance2.AudioReferences.AudioSources.Select(i => i.AudioFile));
                 output.AddRange(typedPayload.Seedance2.VideoReferences.VideoSources.Select(i => i.VideoFile));
+                output.Add(typedPayload.ViduQ2Turbo.StartImage);
+                output.Add(typedPayload.ViduQ2Turbo.EndImage);
                 return output;
             }
 
@@ -422,6 +469,8 @@ namespace MuApiPlugin
             {
                 videoItem.VideoFile = ReplacePath(videoItem.VideoFile, originalPath, newPath);
             }
+            typedPayload.ViduQ2Turbo.StartImage = ReplacePath(typedPayload.ViduQ2Turbo.StartImage, originalPath, newPath);
+            typedPayload.ViduQ2Turbo.EndImage = ReplacePath(typedPayload.ViduQ2Turbo.EndImage, originalPath, newPath);
         }
 
         public void UserDataDeleteRequested()

@@ -11,6 +11,7 @@ namespace MuApiPlugin
         private string model = Seedance2TrackPayload.ModelT2V;
 
         [PropertyComboOptions([Seedance2TrackPayload.ModelT2V, Seedance2TrackPayload.ModelI2V, Seedance2TrackPayload.ModelOmniRef,
+            ViduQ2TurboTrackPayload.ModelT2V, ViduQ2TurboTrackPayload.ModelI2V, ViduQ2TurboTrackPayload.ModelStartEnd,
             Seedance2TrackPayload.ModelT2V480p, Seedance2TrackPayload.ModelI2V480p])]
         public string Model
         {
@@ -30,6 +31,9 @@ namespace MuApiPlugin
         [HideAllChildren]
         [ParentName("")]
         public Seedance2TrackPayload Seedance2 { get; set; } = new Seedance2TrackPayload();
+        [HideAllChildren]
+        [ParentName("")]
+        public ViduQ2TurboTrackPayload ViduQ2Turbo { get; set; } = new();
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
@@ -39,6 +43,8 @@ namespace MuApiPlugin
                 {
                     case nameof(Seedance2):
                         return IsSeedance2(tp);
+                    case nameof(ViduQ2Turbo):
+                        return IsViduQ2Turbo(tp);
                     default:
                         break;
                 }
@@ -47,6 +53,10 @@ namespace MuApiPlugin
                 {
                     return tp.Seedance2.ShouldPropertyBeVisible(propertyName, model);
                 }
+                if (IsViduQ2Turbo(tp))
+                {
+                    return tp.ViduQ2Turbo.ShouldPropertyBeVisible(propertyName, model);
+                }
             }
             return true;
         }
@@ -54,6 +64,10 @@ namespace MuApiPlugin
         public static bool IsSeedance2(TrackPayload tp)
         {
             return tp.Model != null && tp.Model.StartsWith("seedance");
+        }
+        public static bool IsViduQ2Turbo(TrackPayload tp)
+        {
+            return ViduQ2TurboTrackPayload.IsViduQ2TurboModel(tp.Model);
         }
 
         [CustomAction("Model info", true)]

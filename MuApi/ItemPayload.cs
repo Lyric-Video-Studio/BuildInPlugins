@@ -1,5 +1,6 @@
 using MuApiPlugin.Models.GptImage2;
 using MuApiPlugin.Models.Seedance2;
+using MuApiPlugin.Models.ViduQ2Turbo;
 using PluginBase;
 using System.Collections.ObjectModel;
 
@@ -16,16 +17,21 @@ namespace MuApiPlugin
             if (isImageSource)
             {
                 Seedance2.ImageReferences.ImageSources.Add(new ImageReferenceItem() { ImageFile = text });
+                ViduQ2Turbo.StartImage = text;
             }
             else
             {
                 Seedance2.Prompt = text;
+                ViduQ2Turbo.Prompt = text;
             }
         }
 
         [HideAllChildren]
         [ParentName("")]
         public Seedance2ItemPayload Seedance2 { get; set; } = new();
+        [HideAllChildren]
+        [ParentName("")]
+        public ViduQ2TurboItemPayload ViduQ2Turbo { get; set; } = new();
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
@@ -35,6 +41,8 @@ namespace MuApiPlugin
                 {
                     case nameof(Seedance2):
                         return TrackPayload.IsSeedance2(tp);
+                    case nameof(ViduQ2Turbo):
+                        return TrackPayload.IsViduQ2Turbo(tp);
                     default:
                         break;
                 }
@@ -42,6 +50,10 @@ namespace MuApiPlugin
                 if (TrackPayload.IsSeedance2(tp))
                 {
                     return Seedance2.ShouldPropertyBeVisible(propertyName, tp.Model);
+                }
+                if (TrackPayload.IsViduQ2Turbo(tp))
+                {
+                    return ViduQ2Turbo.ShouldPropertyBeVisible(propertyName, tp.Model);
                 }
             }
             return true;
