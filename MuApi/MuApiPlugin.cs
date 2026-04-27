@@ -1,10 +1,10 @@
 using MuApiPlugin.Models.GptImage2;
+using MuApiPlugin.Models.HappyHorse1;
 using MuApiPlugin.Models.MidjourneyV8;
 using MuApiPlugin.Models.Seedance2;
 using MuApiPlugin.Models.ViduQ2Turbo;
 using PluginBase;
 using System.Text.Json.Nodes;
-using static System.Net.WebRequestMethods;
 
 namespace MuApiPlugin
 {
@@ -46,6 +46,12 @@ namespace MuApiPlugin
                 {
                     return await Seedance2VideoHandler.GetVideo(_connectionSettings, tp.Seedance2, ip.Seedance2, folderToSaveVideo, tp.Model);
                 }
+
+                if (TrackPayload.IsHappyHorse1(tp))
+                {
+                    return await HappyHorse1VideoHandler.GetVideo(_connectionSettings, tp.HappyHorse1, ip.HappyHorse1, folderToSaveVideo, tp.Model);
+                }
+
                 if (TrackPayload.IsViduQ2Turbo(tp))
                 {
                     return await ViduQ2TurboVideoHandler.GetVideo(_connectionSettings, tp.ViduQ2Turbo, ip.ViduQ2Turbo, folderToSaveVideo, tp.Model);
@@ -130,6 +136,12 @@ namespace MuApiPlugin
             {
                 return (false, "Duration must be greater than zero");
             }
+
+            if (payload is HappyHorse1ItemPayload happyHorseItem && happyHorseItem.Duration <= 0)
+            {
+                return (false, "Duration must be greater than zero");
+            }
+
             if (payload is ViduQ2TurboItemPayload viduItem && viduItem.Duration <= 0)
             {
                 return (false, "Duration must be greater than zero");
@@ -171,7 +183,36 @@ namespace MuApiPlugin
                     {
                         return (false, "MuApi supports up to 3 audio references");
                     }
-                }                
+                }
+
+                if (TrackPayload.IsHappyHorse1(track))
+                {
+                    if (item.HappyHorse1.Duration <= 0)
+                    {
+                        return (false, "Duration must be greater than zero");
+                    }
+
+                    if (string.IsNullOrWhiteSpace($"{track.HappyHorse1.Prompt} {item.HappyHorse1.Prompt}".Trim()))
+                    {
+                        return (false, "Prompt missing");
+                    }
+
+                    if (track.Model == HappyHorse1TrackPayload.ModelI2V1080p)
+                    {
+                        var imageCount = CountFiles(track.HappyHorse1.ImageReferences.ImageSources.Select(i => i.ImageFile))
+                            + CountFiles(item.HappyHorse1.ImageReferences.ImageSources.Select(i => i.ImageFile));
+
+                        if (imageCount == 0)
+                        {
+                            return (false, "Happy Horse 1 image-to-video requires an input image");
+                        }
+
+                        if (imageCount > 1)
+                        {
+                            return (false, "Happy Horse 1 image-to-video supports a single input image");
+                        }
+                    }
+                }
 
                 if (TrackPayload.IsViduQ2Turbo(track))
                 {
@@ -204,6 +245,7 @@ namespace MuApiPlugin
                         }
                     }
                 }
+
             }
 
             if (trackPaylod is ImageTrackPayload imageTrack && itemPayload is ImageItemPayload imageItem)
@@ -277,6 +319,7 @@ namespace MuApiPlugin
                     return;
                 }
                 itemPayload.Seedance2.Prompt += text;
+                itemPayload.HappyHorse1.Prompt += text;
                 itemPayload.ViduQ2Turbo.Prompt += text;
             }
             else if (CurrentTrackType == IPluginBase.TrackType.Image)
@@ -285,6 +328,7 @@ namespace MuApiPlugin
                 {
                     return;
                 }
+
                 imageItemPayload.GptImage2.Prompt += text;
                 imageItemPayload.MidjourneyV8.Prompt += text;
             }
@@ -332,7 +376,10 @@ namespace MuApiPlugin
 
             if (itemPayload is ItemPayload typedPayload)
             {
-                return typedPayload.Seedance2.Prompt ?? "";
+                return typedPayload.Seedance2.Prompt
+                    ?? typedPayload.HappyHorse1.Prompt
+                    ?? typedPayload.ViduQ2Turbo.Prompt
+                    ?? "";
             }
 
             return "";
@@ -416,6 +463,7 @@ namespace MuApiPlugin
                 output.AddRange(typedPayload.Seedance2.ImageReferences.ImageSources.Select(i => i.ImageFile));
                 output.AddRange(typedPayload.Seedance2.AudioReferences.AudioSources.Select(i => i.AudioFile));
                 output.AddRange(typedPayload.Seedance2.VideoReferences.VideoSources.Select(i => i.VideoFile));
+                output.AddRange(typedPayload.HappyHorse1.ImageReferences.ImageSources.Select(i => i.ImageFile));
                 output.Add(typedPayload.ViduQ2Turbo.StartImage);
                 output.Add(typedPayload.ViduQ2Turbo.EndImage);
                 return output;
@@ -469,6 +517,12 @@ namespace MuApiPlugin
             {
                 videoItem.VideoFile = ReplacePath(videoItem.VideoFile, originalPath, newPath);
             }
+
+            foreach (var happyHorseImageItem in typedPayload.HappyHorse1.ImageReferences.ImageSources)
+            {
+                happyHorseImageItem.ImageFile = ReplacePath(happyHorseImageItem.ImageFile, originalPath, newPath);
+            }
+
             typedPayload.ViduQ2Turbo.StartImage = ReplacePath(typedPayload.ViduQ2Turbo.StartImage, originalPath, newPath);
             typedPayload.ViduQ2Turbo.EndImage = ReplacePath(typedPayload.ViduQ2Turbo.EndImage, originalPath, newPath);
         }
@@ -515,7 +569,7 @@ namespace MuApiPlugin
         {
             tp.ModelChanged += (s, e) =>
             {
-                _saveAndRefreshCallback?.Invoke(false);                
+                _saveAndRefreshCallback?.Invoke(false);
             };
             return tp;
         }

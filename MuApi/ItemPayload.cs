@@ -1,4 +1,5 @@
 using MuApiPlugin.Models.GptImage2;
+using MuApiPlugin.Models.HappyHorse1;
 using MuApiPlugin.Models.Seedance2;
 using MuApiPlugin.Models.ViduQ2Turbo;
 using PluginBase;
@@ -17,11 +18,13 @@ namespace MuApiPlugin
             if (isImageSource)
             {
                 Seedance2.ImageReferences.ImageSources.Add(new ImageReferenceItem() { ImageFile = text });
+                HappyHorse1.ImageReferences.ImageSources.Add(new ImageReferenceItem() { ImageFile = text });
                 ViduQ2Turbo.StartImage = text;
             }
             else
             {
                 Seedance2.Prompt = text;
+                HappyHorse1.Prompt = text;
                 ViduQ2Turbo.Prompt = text;
             }
         }
@@ -29,6 +32,11 @@ namespace MuApiPlugin
         [HideAllChildren]
         [ParentName("")]
         public Seedance2ItemPayload Seedance2 { get; set; } = new();
+
+        [HideAllChildren]
+        [ParentName("")]
+        public HappyHorse1ItemPayload HappyHorse1 { get; set; } = new();
+
         [HideAllChildren]
         [ParentName("")]
         public ViduQ2TurboItemPayload ViduQ2Turbo { get; set; } = new();
@@ -41,6 +49,8 @@ namespace MuApiPlugin
                 {
                     case nameof(Seedance2):
                         return TrackPayload.IsSeedance2(tp);
+                    case nameof(HappyHorse1):
+                        return TrackPayload.IsHappyHorse1(tp);
                     case nameof(ViduQ2Turbo):
                         return TrackPayload.IsViduQ2Turbo(tp);
                     default:
@@ -51,6 +61,12 @@ namespace MuApiPlugin
                 {
                     return Seedance2.ShouldPropertyBeVisible(propertyName, tp.Model);
                 }
+
+                if (TrackPayload.IsHappyHorse1(tp))
+                {
+                    return HappyHorse1.ShouldPropertyBeVisible(propertyName, tp.Model);
+                }
+
                 if (TrackPayload.IsViduQ2Turbo(tp))
                 {
                     return ViduQ2Turbo.ShouldPropertyBeVisible(propertyName, tp.Model);
