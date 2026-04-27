@@ -448,7 +448,7 @@ namespace FalAiPlugin
                     if (respString.Contains("still in progress"))
                     {
                         textualProgressAction.Invoke("Processing...");
-                        await Task.Delay(pollingDelay);
+                        await Task.Delay(pollingDelay, cancelToken.GetValueOrDefault());
                         continue;
                     }
 
@@ -488,7 +488,7 @@ namespace FalAiPlugin
 
                         if (string.IsNullOrEmpty(videoUrl))
                         {
-                            await Task.Delay(pollingDelay);
+                            await Task.Delay(pollingDelay, cancelToken.GetValueOrDefault());
                         }
                     }
                     catch (Exception ex)
@@ -529,7 +529,7 @@ namespace FalAiPlugin
 
             while (videoResp.StatusCode != HttpStatusCode.OK)
             {
-                await Task.Delay(pollingDelay);
+                await Task.Delay(pollingDelay, cancelToken.GetValueOrDefault());
                 videoResp = await downloadClient.GetAsync(file);
             }
 
