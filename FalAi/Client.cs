@@ -64,6 +64,9 @@ namespace FalAiPlugin
         public string video_url { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string audio_setting { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string style { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -216,6 +219,13 @@ namespace FalAiPlugin
                 {
                     // Need to prop out the fal-ai
                     baseUrl = baseUrl.Replace("fal-ai/", "bytedance/");
+                    model = string.Join('/', model.Split('/').Skip(1));
+                }
+
+                if (model.Contains("alibaba/happy-horse/"))
+                {
+                    // Need to prop out the fal-ai
+                    baseUrl = baseUrl.Replace("fal-ai/", "alibaba/");
                     model = string.Join('/', model.Split('/').Skip(1));
                 }
 

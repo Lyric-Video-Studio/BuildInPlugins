@@ -31,10 +31,14 @@ namespace FalAiPlugin
 
         public IPluginBase.TrackType CurrentTrackType { get; set; }
 
-        public static List<ModelVisibilityHandlerBase> VisibilityHandlers = new List<ModelVisibilityHandlerBase>() 
-        { 
-            new Seedance2T2VHandler(), 
-            new Seedance2Handler(), 
+        public static List<ModelVisibilityHandlerBase> VisibilityHandlers = new List<ModelVisibilityHandlerBase>()
+        {
+            new HappyHorseT2VHandler(),
+            new HappyHorseI2VHandler(),
+            new HappyHorseR2VHandler(),
+            new HappyHorseVideoEditHandler(),
+            new Seedance2T2VHandler(),
+            new Seedance2Handler(),
             new Seedance2R2VHandler()
         };
 
@@ -58,6 +62,11 @@ namespace FalAiPlugin
                 if (newTp.ShouldPropertyBeVisible(nameof(newTp.Resolution), newTp, newIp))
                 {
                     reg.resolution = newTp.Resolution;
+                }
+
+                if (newTp.ShouldPropertyBeVisible(nameof(TrackPayload.AudioSettingHappyHorseEdit), newTp, newIp))
+                {
+                    reg.audio_setting = newTp.AudioSettingHappyHorseEdit;
                 }
 
                 if (newTp.Model.StartsWith("wan"))
@@ -311,7 +320,7 @@ namespace FalAiPlugin
                 if (newTp.ShouldPropertyBeVisible(nameof(TrackPayload.AspectRatioVeo31T2V), newTp, newIp))
                 {
                     reg.aspect_ratio = newTp.AspectRatioVeo31T2V;
-                }                
+                }
 
                 if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationVeo), newTp, newIp))
                 {
@@ -394,8 +403,16 @@ namespace FalAiPlugin
 
                 if (newIp.ShouldPropertyBeVisible(nameof(ItemPayload.DurationKlingO3), newTp, newIp))
                 {
-                    reg.duration = newIp.DurationKlingO3;
-                }                
+                    if (newTp.Model.StartsWith("alibaba/happy-horse/", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        reg.duration = null;
+                        reg.durationInt = int.Parse(newIp.DurationKlingO3);
+                    }
+                    else
+                    {
+                        reg.duration = newIp.DurationKlingO3;
+                    }
+                }
 
                 if (newTp.Model == "veo3.1/reference-to-video")
                 {
@@ -552,14 +569,14 @@ namespace FalAiPlugin
                 output["Google"] = ["veo3.1", "veo3.1/fast", "veo3.1/image-to-video", "veo3.1/fast/image-to-video", "veo3.1/reference-to-video", "veo3.1/first-last-frame-to-video"];
                 output["Minimax"] = ["minimax/hailuo-2.3-fast/standard/image-to-video", "minimax/hailuo-2.3-fast/pro/image-to-video"];
 
-                output["Wan"] = ["wan/v2.7/text-to-video", "wan/v2.7/image-to-video", "wan/v2.7/reference-to-video", "wan/v2.7/edit-video",  
+                output["Wan"] = ["wan/v2.7/text-to-video", "wan/v2.7/image-to-video", "wan/v2.7/reference-to-video", "wan/v2.7/edit-video",
                                 "wan/v2.6/text-to-video", "wan/v2.6/image-to-video",
                                 "wan-25-preview/text-to-video", "wan-25-preview/image-to-video",
                                 "wan-alpha"];
 
                 output["KlingAi"] = ["kling-video/o3/pro/text-to-video", "kling-video/o3/pro/image-to-video", "kling-video/v3/pro/motion-control",
                             "kling-video/ai-avatar/v2/pro", "kling-video/v2.6/pro/text-to-video", "kling-video/v2.6/pro/image-to-video", "kling-video/o1/image-to-video",
-                            "kling-video/v2.6/pro/motion-control", "kling-video/v2.6/standard/motion-control", 
+                            "kling-video/v2.6/pro/motion-control", "kling-video/v2.6/standard/motion-control",
                             "kling-video/v2.5-turbo/pro/image-to-video", "kling-video/v2.5-turbo/pro/text-to-video"];
 
                 output["Ltxv"] = ["ltxv-2/text-to-video/fast", "ltxv-2/text-to-video", "ltxv-2/image-to-video/fast", "ltxv-2/image-to-video"];
@@ -600,7 +617,7 @@ namespace FalAiPlugin
                 output["Qwen"] = ["qwen-image-2512", "qwen-image-edit-2511"];
                 output["Google"] = ["imagen4/preview"];
                 output["Wan"] = ["wan/v2.2-a14b/text-to-image", "wan-25-preview/text-to-image", "wan-25-preview/image-to-image"];
-                output["Bytedance"] = ["bytedance/seedream/v5/lite/text-to-image", "bytedance/seedream/v5/lite/edit", 
+                output["Bytedance"] = ["bytedance/seedream/v5/lite/text-to-image", "bytedance/seedream/v5/lite/edit",
                     "bytedance/seedream/v4.5/text-to-image", "bytedance/seedream/v4/text-to-image", "bytedance/seedream/v4/edit"];
                 output["OpenAi"] = ["gpt-image-2", "gpt-image-2/edit", "gpt-image-1.5", "gpt-image-1.5/edit", "gpt-image-1-mini", "gpt-image-1-mini/edit"];
                 return Task.FromResult(output);
@@ -766,7 +783,7 @@ namespace FalAiPlugin
                 if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
                 {
                     return (false, "Auth token empty!!!");
-                }                
+                }
             }
 
             if (payload is TrackPayload tp)
@@ -875,7 +892,7 @@ namespace FalAiPlugin
             {
                 return JsonHelper.ToExactType<AudioTrackPayload>(obj);
             }
-            return SetupConnections(JsonHelper.ToExactType<ImageTrackPayload>(obj) as ImageTrackPayload);            
+            return SetupConnections(JsonHelper.ToExactType<ImageTrackPayload>(obj) as ImageTrackPayload);
         }
 
         public object ObjectToGeneralSettings(JsonObject obj)
@@ -909,7 +926,7 @@ namespace FalAiPlugin
                 case IPluginBase.TrackType.Video:
                     return SetupConnections(new TrackPayload());
 
-                case IPluginBase.TrackType.Image:  
+                case IPluginBase.TrackType.Image:
                     return SetupConnections(new ImageTrackPayload());
 
                 case IPluginBase.TrackType.Audio:
@@ -1125,7 +1142,7 @@ namespace FalAiPlugin
                 return new TrackPayload() { Model = model };
             }
             return null;
-        }        
+        }
     }
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously

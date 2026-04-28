@@ -63,6 +63,10 @@ namespace FalAiPlugin
 
         public string Resolution { get; set; } = "1080p";
 
+        [CustomName("AudioSetting")]
+        [PropertyComboOptions(["auto", "origin"])]
+        public string AudioSettingHappyHorseEdit { get; set; } = "auto";
+
         [CustomName("Resolution")]
         [PropertyComboOptions(["720p", "1080p", "4k"])]
         public string ResolutionVeo31 { get; set; } = "1080p";
@@ -116,7 +120,7 @@ namespace FalAiPlugin
                 if (propertyName == nameof(AspectRatioPixverse6))
                 {
                     return model != null && tp.Model.StartsWith("pixverse/v6");
-                } 
+                }
                 else if (tp.Model.StartsWith("pixverse/v6") && propertyName.StartsWith("Aspect"))
                 {
                     return false;
