@@ -32,7 +32,7 @@ namespace GooglePlugin
         public int VideoConcurrencyLimit{ get; set; } = 2;
 
         [Description("Concurrency limit, adjust this if you have higher limits")]
-        public int AudioConcurrencyLimit { get; set; } = 20;
+        public int AudioConcurrencyLimit { get; set; } = 10;
 
         [Description("Concurrency limit, adjust this if you have higher limits")]
         public int ImageConcurrencyLimit { get; set; } = 20;
