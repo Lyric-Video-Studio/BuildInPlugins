@@ -42,7 +42,7 @@ namespace GooglePlugin
                 return new ImageResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
 
-            if (activeImageRequests > _connectionSettings.ImageConcurrencyLimit)
+            while (activeImageRequests > _connectionSettings.ImageConcurrencyLimit)
             {
                 await Task.Delay(200);
             }
@@ -135,7 +135,7 @@ namespace GooglePlugin
                 return new AudioResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
 
-            if (activeAudioRequests > _connectionSettings.AudioConcurrencyLimit)
+            while (activeAudioRequests > _connectionSettings.AudioConcurrencyLimit)
             {
                 await Task.Delay(200);
             }
@@ -438,7 +438,7 @@ namespace GooglePlugin
                 return new VideoResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
 
-            if (activeVideoRequests > _connectionSettings.VideoConcurrencyLimit)
+            while (activeVideoRequests > _connectionSettings.VideoConcurrencyLimit)
             {
                 await Task.Delay(200);
             }
