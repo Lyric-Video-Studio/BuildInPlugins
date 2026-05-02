@@ -31,12 +31,23 @@ namespace GooglePlugin
 
         private ConnectionSettings _connectionSettings = new ConnectionSettings();
 
+        private int activeVideoRequests = 0;
+        private int activeAudioRequests = 0;
+        private int activeImageRequests = 0;
+
         public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
         {
             if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
             {
                 return new ImageResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
+
+            if (activeImageRequests > _connectionSettings.ImageConcurrencyLimit)
+            {
+                await Task.Delay(200);
+            }
+
+            activeImageRequests++;
 
             if (trackPayload is ImageTrackPayload tp && itemsPayload is ImageItemPayload ip)
             {
@@ -93,6 +104,7 @@ namespace GooglePlugin
                     {
                         if (chunk?.Candidates?.Count > 0 && chunk.Candidates[0].FinishReason == FinishReason.ImageOther)
                         {
+                            activeImageRequests--;
                             throw new Exception("Google API reported unknown image generation error");
                         }
                         continue;
@@ -103,6 +115,7 @@ namespace GooglePlugin
                         var inlineData = part.InlineData;
                         var dataBuffer = inlineData.Data;
                         var fileExtension = GetFileExtension(inlineData.MimeType);
+                        activeImageRequests--;
                         return new ImageResponse() { Success = dataBuffer.Length > 0, Image = Convert.ToBase64String(dataBuffer), ImageFormat = $"{fileExtension}" };
                     }
                     else
@@ -111,6 +124,7 @@ namespace GooglePlugin
                     }
                 }
             }
+            activeImageRequests--;
             throw new Exception("Internal error");
         }
 
@@ -120,6 +134,13 @@ namespace GooglePlugin
             {
                 return new AudioResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
+
+            if (activeAudioRequests > _connectionSettings.AudioConcurrencyLimit)
+            {
+                await Task.Delay(200);
+            }
+
+            activeAudioRequests++;
 
             if (trackPayload is GoogleAudioTrackPayload tp && itemsPayload is GoogleAudioItemPayload ip)
             {
@@ -197,6 +218,7 @@ namespace GooglePlugin
                     var response = await _googleAi.Models.GenerateContentAsync(tp.Model, contents, config, ct);
                     if (response.Candidates == null || response.Candidates.Count == 0)
                     {
+                        activeAudioRequests--;
                         return new AudioResponse { Success = false, ErrorMsg = "No candidates were returned" };
                     }
 
@@ -227,6 +249,7 @@ namespace GooglePlugin
                     if (audioParts.Count == 0)
                     {
                         var errorMsg = textResponse.Length > 0 ? textResponse.ToString().Trim() : "No audio data was returned";
+                        activeAudioRequests--;
                         return new AudioResponse { Success = false, ErrorMsg = errorMsg };
                     }
 
@@ -301,15 +324,16 @@ namespace GooglePlugin
                         await System.IO.File.WriteAllBytesAsync(alternativeFile, alternativeAudio.Data, ct);
                         result.AlternativeAudioFile = alternativeFile;
                     }
-
+                    activeAudioRequests--;
                     return result;
                 }
                 catch (OperationCanceledException)
                 {
+                    activeAudioRequests--;
                     return new AudioResponse { Success = false, ErrorMsg = "Cancelled" };
                 }
             }
-
+            activeAudioRequests--;
             return new AudioResponse { Success = false, ErrorMsg = "Track playoad or item payload object not valid" };
         }
 
@@ -414,6 +438,13 @@ namespace GooglePlugin
                 return new VideoResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
 
+            if (activeVideoRequests > _connectionSettings.VideoConcurrencyLimit)
+            {
+                await Task.Delay(200);
+            }
+
+            activeVideoRequests++;
+
             if (trackPayload is VideoTrackPayload tp && itemsPayload is VideoItemPayload ip)
             {
                 var effectiveImage = !string.IsNullOrEmpty(ip.ImageSource) ? ip.ImageSource : tp.ImageSource;
@@ -454,6 +485,7 @@ namespace GooglePlugin
 
                 if (res.Response?.GeneratedVideos?.Count == 0 || res.Response?.GeneratedVideos == null)
                 {
+                    activeVideoRequests--;
                     return new VideoResponse { Success = false, ErrorMsg = "failed to generate video" };
                 }
 
@@ -465,11 +497,13 @@ namespace GooglePlugin
                         generatedVideo: res.Response.GeneratedVideos[i],
                         outputPath: targetFile
                     );
+                    activeVideoRequests--;
                     // Current fps is not selectable
                     return new VideoResponse() { Success = true, Fps = 24, VideoFile = targetFile };
                 }
 
             }
+            activeVideoRequests--;
             throw new Exception("Internal error");
             
         }
