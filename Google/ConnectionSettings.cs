@@ -28,14 +28,14 @@ namespace GooglePlugin
             }
         }
 
-        [Description("Concurrency limit, adjust this if you have higher limits")]
-        public int VideoConcurrencyLimit{ get; set; } = 2;
+        [Description("Requests per minute limit, adjust this if your Google quota is higher")]
+        public int VideRpmLimit { get; set; } = 2;
 
-        [Description("Concurrency limit, adjust this if you have higher limits")]
-        public int AudioConcurrencyLimit { get; set; } = 10;
+        [Description("Requests per minute limit, adjust this if your Google quota is higher")]
+        public int AudioRpmLimit { get; set; } = 10;
 
-        [Description("Concurrency limit, adjust this if you have higher limits")]
-        public int ImageConcurrencyLimit { get; set; } = 20;
+        [Description("Requests per minute limit, adjust this if your Google quota is higher")]
+        public int ImageRpmLimit { get; set; } = 20;
 
         public void OnSerialized()
         {
