@@ -55,7 +55,7 @@ namespace GooglePlugin
                 var prompt = (tp.Prompt + " " + ip.Prompt).Trim();
                 var getCOnfig = new GenerateContentConfig
                 {
-                    ThinkingConfig = new ThinkingConfig
+                    ThinkingConfig = tp.Model is "gemini-2.5-flash-image" ? null : new ThinkingConfig
                     {
                         ThinkingLevel = "MINIMAL"
                     },
