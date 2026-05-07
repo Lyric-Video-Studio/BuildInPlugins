@@ -847,20 +847,19 @@ namespace FalAiPlugin
 
         public void AppendToPayloadFromLyrics(string text, object payload)
         {
-            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            if (payload is ItemPayload ipv)
             {
-                if (payload is ItemPayload ip)
-                {
-                    ip.Prompt += text;
-                }
+                ipv.Prompt += text;
             }
 
-            if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            if (payload is AudioItemPayload ipa)
             {
-                if (payload is AudioItemPayload ip)
-                {
-                    ip.Prompt += text;
-                }
+                ipa.Prompt += text;
+            }
+
+            if (payload is AudioItemPayload ipi)
+            {
+                ipi.Prompt += text;
             }
         }
 
