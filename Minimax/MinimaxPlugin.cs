@@ -379,7 +379,7 @@ namespace MinimaxPlugin
             {
                 if (payload is ItemPayload ip)
                 {
-                    ip.Prompt += text;
+                    ip.Prompt = text;
                 }
             }
         }

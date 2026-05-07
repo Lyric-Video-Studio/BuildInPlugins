@@ -700,7 +700,7 @@ namespace LumaAiDreamMachinePlugin
         {
             if (payload is ItemPayload ip)
             {
-                ip.Prompt += text;
+                ip.Prompt = text;
             }
         }
 

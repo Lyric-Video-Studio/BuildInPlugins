@@ -318,9 +318,9 @@ namespace MuApiPlugin
                 {
                     return;
                 }
-                itemPayload.Seedance2.Prompt += text;
-                itemPayload.HappyHorse1.Prompt += text;
-                itemPayload.ViduQ2Turbo.Prompt += text;
+                itemPayload.Seedance2.Prompt = text;
+                itemPayload.HappyHorse1.Prompt = text;
+                itemPayload.ViduQ2Turbo.Prompt = text;
             }
             else if (CurrentTrackType == IPluginBase.TrackType.Image)
             {
@@ -329,8 +329,8 @@ namespace MuApiPlugin
                     return;
                 }
 
-                imageItemPayload.GptImage2.Prompt += text;
-                imageItemPayload.MidjourneyV8.Prompt += text;
+                imageItemPayload.GptImage2.Prompt = text;
+                imageItemPayload.MidjourneyV8.Prompt = text;
             }
         }
 

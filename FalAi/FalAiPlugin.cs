@@ -849,17 +849,17 @@ namespace FalAiPlugin
         {
             if (payload is ItemPayload ipv)
             {
-                ipv.Prompt += text;
+                ipv.Prompt = text;
             }
 
             if (payload is AudioItemPayload ipa)
             {
-                ipa.Prompt += text;
+                ipa.Prompt = text;
             }
 
             if (payload is ImageItemPayload ipi)
             {
-                ipi.Prompt += text;
+                ipi.Prompt = text;
             }
         }
 
