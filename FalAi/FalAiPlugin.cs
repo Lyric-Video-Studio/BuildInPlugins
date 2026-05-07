@@ -857,7 +857,7 @@ namespace FalAiPlugin
                 ipa.Prompt += text;
             }
 
-            if (payload is AudioItemPayload ipi)
+            if (payload is ImageItemPayload ipi)
             {
                 ipi.Prompt += text;
             }
