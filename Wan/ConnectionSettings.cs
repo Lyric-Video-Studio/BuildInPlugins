@@ -23,7 +23,7 @@ namespace WanPlugin
         {
             try
             {
-                AccessToken = SecureStorageWrapper.SecStorage.Get(accessTokenKey);
+                AccessToken = SecureStorageWrapper.SecStorage.GetKey(accessTokenKey);
             }
             catch (Exception)
             {
@@ -41,13 +41,13 @@ namespace WanPlugin
         {
             if (!string.IsNullOrEmpty(AccessToken))
             {
-                SecureStorageWrapper.SecStorage.Set(accessTokenKey, AccessToken);
+                SecureStorageWrapper.SecStorage.SetKey(accessTokenKey, AccessToken);
             }
         }
 
         internal void DeleteTokens()
         {
-            SecureStorageWrapper.SecStorage.Delete(accessTokenKey);
+            SecureStorageWrapper.SecStorage.DeleteKey(accessTokenKey);
         }
     }
 }

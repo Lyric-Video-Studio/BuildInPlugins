@@ -20,7 +20,7 @@ namespace GooglePlugin
         {
             try
             {
-                AccessToken = SecureStorageWrapper.SecStorage.Get(accessTokenKey);
+                AccessToken = SecureStorageWrapper.SecStorage.GetKey(accessTokenKey);
             }
             catch (Exception)
             {
@@ -45,12 +45,12 @@ namespace GooglePlugin
 
         public void OnSerializing()
         {
-            SecureStorageWrapper.SecStorage.Set(accessTokenKey, AccessToken);
+            SecureStorageWrapper.SecStorage.SetKey(accessTokenKey, AccessToken);
         }
 
         internal void DeleteTokens()
         {
-            SecureStorageWrapper.SecStorage.Delete(accessTokenKey);
+            SecureStorageWrapper.SecStorage.DeleteKey(accessTokenKey);
         }
     }
 }

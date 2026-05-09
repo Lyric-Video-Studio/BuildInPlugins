@@ -1,18 +1,16 @@
-﻿using PluginBase;
+using PluginBase;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
 namespace LumaAiDreamMachinePlugin
 {
-    public class ImageItemPayload : IJsonOnDeserialized
+    public class ImageItemPayload : IJsonOnDeserialized, IPayloadPropertyVisibility
     {
         [IgnoreDynamicEdit]
         public bool IsVideo { get; set; } = false;
 
         private string prompt = "";
-
-        //public KeyFrames KeyFrames { get; set; } = new KeyFrames();
 
         public string Prompt { get => prompt; set => prompt = value; }
 
@@ -22,11 +20,18 @@ namespace LumaAiDreamMachinePlugin
         [ParentName("Style reference")]
         public ImageRef StyleRef { get; set; }
 
-        [ParentName("Modify imagee")]
+        [ParentName("Edit source image")]
         public ImageRef ModifyImage { get; set; }
 
         [Description("Up to 4")]
         public ObservableCollection<CharacterRef> CharacterRefs { get; set; } = new ObservableCollection<CharacterRef>();
+
+        [EnableFileDrop]
+        [CustomName("Uni image to modify")]
+        public string UniImageToModify { get; set; }
+
+        [Description("Used by uni-1 and uni-1-max as extra visual references")]
+        public ObservableCollection<UniReferenceImage> UniReferenceImages { get; set; } = new ObservableCollection<UniReferenceImage>();
 
         private string pollingId;
 
@@ -81,12 +86,55 @@ namespace LumaAiDreamMachinePlugin
             ModifyImage = null;
         }
 
+        [CustomAction("Add uni reference image")]
+        public void AddUniReferenceImage()
+        {
+            var item = new UniReferenceImage();
+            item.AddParent(UniReferenceImages);
+            UniReferenceImages.Add(item);
+        }
+
         public void OnDeserialized()
         {
             foreach (var item in CharacterRefs)
             {
                 item.AddParent(CharacterRefs);
             }
+
+            foreach (var item in UniReferenceImages)
+            {
+                item.AddParent(UniReferenceImages);
+            }
+        }
+
+        public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
+        {
+            var useUniModel = trackPayload is ImageTrackPayload tp && (tp.Settings?.model == "uni-1" || tp.Settings?.model == "uni-1-max");
+
+            if (propertyName == nameof(ImageRef) || propertyName == nameof(StyleRef) || propertyName == nameof(ModifyImage) || propertyName == nameof(CharacterRefs))
+            {
+                return !useUniModel;
+            }
+
+            if (propertyName == nameof(UniImageToModify) || propertyName == nameof(UniReferenceImages))
+            {
+                return useUniModel;
+            }
+
+            if (propertyName == nameof(AddImageReference) || propertyName == nameof(RemoveImageReference) ||
+                propertyName == nameof(AddStyleReference) || propertyName == nameof(RemoveStyleReference) ||
+                propertyName == nameof(AddCharacterReference) || propertyName == nameof(AddModImg) ||
+                propertyName == nameof(RemoveAddModImg))
+            {
+                return !useUniModel;
+            }
+
+            if (propertyName == nameof(AddUniReferenceImage))
+            {
+                return useUniModel;
+            }
+
+            return true;
         }
     }
 
@@ -112,6 +160,25 @@ namespace LumaAiDreamMachinePlugin
 
         [CustomAction("Remove character reference")]
         public void RemoveCharacterReference()
+        {
+            parent.Remove(this);
+        }
+    }
+
+    public class UniReferenceImage
+    {
+        private ObservableCollection<UniReferenceImage> parent;
+
+        public void AddParent(ObservableCollection<UniReferenceImage> list)
+        {
+            parent = list;
+        }
+
+        [EnableFileDrop]
+        public string SourceFile { get; set; }
+
+        [CustomAction("Remove uni reference image")]
+        public void RemoveUniReferenceImage()
         {
             parent.Remove(this);
         }

@@ -14,17 +14,16 @@ namespace OpenAiTxtToImgPlugin
     public class TrackPayload
     {
         [PropertyComboOptions(["gpt-image-1"/*, "gpt-image-2"*/])]
-        public string Model { get; set; } = "gpt-image-2";
+        public string Model { get; set; } = "gpt-image-1";
 
         public string Prompt { get; set; }
 
         public TrackPayload(string prompt)
         {
-            Prompt = prompt;  
+            Prompt = prompt;
         }
         public TrackPayload()
         {
-
         }
     }
 }

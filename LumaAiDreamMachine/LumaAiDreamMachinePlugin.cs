@@ -1,4 +1,4 @@
-﻿using PluginBase;
+using PluginBase;
 using System.Text.Json.Nodes;
 
 namespace LumaAiDreamMachinePlugin
@@ -10,7 +10,7 @@ namespace LumaAiDreamMachinePlugin
     {
         public const string PluginName = "LumaAiDreamMachineImgToVidBuildIn";
         public string UniqueName { get => PluginName; }
-        public string DisplayName { get => "Dream Machine"; }
+        public string DisplayName { get => "Luma labs"; }
 
         public object GeneralDefaultSettings => new ConnectionSettings();
 
@@ -22,7 +22,7 @@ namespace LumaAiDreamMachinePlugin
 
         public bool AsynchronousGeneration { get; } = true;
 
-        public string[] SettingsLinks => new[] { "https://lumalabs.ai/dream-machine/api/keys" };
+        public string[] SettingsLinks => new[] { "https://lumalabs.ai/dream-machine/api/keys", "https://platform.lumalabs.ai/keys/" };
 
         public IPluginBase.TrackType CurrentTrackType { get; set; }
 
@@ -59,19 +59,14 @@ namespace LumaAiDreamMachinePlugin
             {
                 if (JsonHelper.DeepCopy<TrackPayload>(trackPayload) is TrackPayload newTp && JsonHelper.DeepCopy<ItemPayload>(itemsPayload) is ItemPayload newIp)
                 {
-                    // combine prompts
-
                     if (!string.IsNullOrEmpty(newIp.VideoFile))
                     {
                         return await ModifyVideo(newTp, newIp, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
                     }
 
-                    // Also, when img2Vid
-
                     newTp.Settings.prompt = (newTp.Settings.prompt + " " + newIp.Prompt).Trim();
                     newTp.Settings.keyframes = newIp.KeyFrames;
 
-                    // Upload to cloud first
                     if (!string.IsNullOrEmpty(newTp.Settings.keyframes.frame0.url))
                     {
                         var resp = await _uploader.RequestContentUpload(newTp.Settings.keyframes.frame0.url);
@@ -102,17 +97,14 @@ namespace LumaAiDreamMachinePlugin
 
                     if (newTp.Settings.model == "ray-1-6")
                     {
-                        // TODO: quick hack, remember to do thatdunamic thingies as well
                         newTp.Settings.duration = null;
                         newTp.Settings.resolution = null;
                     }
 
                     return await _wrapper.GetImgToVid(newTp.Settings, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
                 }
-                else
-                {
-                    return new VideoResponse { ErrorMsg = "Track playoad or item payload object not valid", Success = false };
-                }
+
+                return new VideoResponse { ErrorMsg = "Track playoad or item payload object not valid", Success = false };
             }
             catch (Exception)
             {
@@ -138,11 +130,10 @@ namespace LumaAiDreamMachinePlugin
                 {
                     return resp.uploadedUrl;
                 }
-                else
-                {
-                    throw new Exception($"Failed to upload image to cloud, {resp.responseCode}");
-                }
+
+                throw new Exception($"Failed to upload image to cloud, {resp.responseCode}");
             }
+
             modifyRequest.media.url = await UploadedPathAsync(newIp.VideoFile);
 
             if (!string.IsNullOrEmpty(newIp.FirstFrame))
@@ -179,13 +170,14 @@ namespace LumaAiDreamMachinePlugin
             {
                 if (JsonHelper.DeepCopy<ImageTrackPayload>(trackPayload) is ImageTrackPayload newTp && JsonHelper.DeepCopy<ImageItemPayload>(itemsPayload) is ImageItemPayload newIp)
                 {
-                    // combine prompts
-
-                    // Also, when img2Vid
-
                     newTp.Settings.prompt = (newTp.Settings.prompt + " " + newIp.Prompt).Trim();
 
-                    // Upload to cloud first
+                    if (IsUniImageModel(newTp.Settings.model))
+                    {
+                        var uniRequest = await BuildUniImageRequestAsync(newTp, newIp);
+                        return await _wrapper.GetUniImage(uniRequest, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback);
+                    }
+
                     if (newIp.ImageRef != null && !string.IsNullOrEmpty(newIp.ImageRef.ImageSource))
                     {
                         newTp.Settings.image_ref = [new ImageRequestRefImage()];
@@ -242,10 +234,10 @@ namespace LumaAiDreamMachinePlugin
 
                     for (int i = 0; i < newIp.CharacterRefs.Count; i++)
                     {
-                        newIp.CharacterRefs[i].SourceFile = newIp.CharacterRefs[i].SourceFile.Replace("\"", ""); // Because windows source copy gives quotes...
+                        newIp.CharacterRefs[i].SourceFile = newIp.CharacterRefs[i].SourceFile.Replace("\"", "");
                     }
 
-                    var charRefs = newIp.CharacterRefs.Where(s => File.Exists(s.SourceFile)).ToList(); ;
+                    var charRefs = newIp.CharacterRefs.Where(s => File.Exists(s.SourceFile)).ToList();
                     if (charRefs.Count > 0)
                     {
                         newTp.Settings.character_ref = new ImageRequestRefCharacter();
@@ -268,10 +260,8 @@ namespace LumaAiDreamMachinePlugin
 
                     return await _wrapper.GetImg(newTp.Settings, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback);
                 }
-                else
-                {
-                    return new ImageResponse { ErrorMsg = "Track playoad or item payload object not valid", Success = false };
-                }
+
+                return new ImageResponse { ErrorMsg = "Track playoad or item payload object not valid", Success = false };
             }
             catch (Exception)
             {
@@ -291,10 +281,8 @@ namespace LumaAiDreamMachinePlugin
                 _isInitialized = !string.IsNullOrEmpty(s.AccessToken);
                 return "";
             }
-            else
-            {
-                return "Connection settings object not valid";
-            }
+
+            return "Connection settings object not valid";
         }
 
         public void CloseConnection()
@@ -307,10 +295,15 @@ namespace LumaAiDreamMachinePlugin
             {
                 return Array.Empty<string>();
             }
-            // TODO: Mutta miten jos tää onkin image? Samassa siis
+
             if (propertyName == nameof(Request.aspect_ratio))
             {
                 return ["16:9", "1:1", "9:16", "4:3", "3:4", "21:9", "9:21"];
+            }
+
+            if (propertyName == nameof(ImageRequest.aspect_ratio))
+            {
+                return ["3:1", "2:1", "16:9", "3:2", "1:1", "2:3", "9:16", "1:2", "1:3", "4:3", "3:4", "21:9", "9:21"];
             }
 
             if (propertyName == nameof(Request.resolution))
@@ -333,15 +326,13 @@ namespace LumaAiDreamMachinePlugin
                 switch (CurrentTrackType)
                 {
                     case IPluginBase.TrackType.Image:
-                        return ["photon-1", "photon-flash-1"];
+                        return ["uni-1", "uni-1-max", "photon-1", "photon-flash-1"];
 
                     case IPluginBase.TrackType.Video:
                         return ["ray-2", "ray-flash-2", "ray-1-6"];
-
-                    default:
-                        break;
                 }
             }
+
             return Array.Empty<string>();
         }
 
@@ -379,17 +370,7 @@ namespace LumaAiDreamMachinePlugin
         {
             try
             {
-                return ""; // TODO: jaa. oisko joku ping
-                /*var res = await _wrapper.PingConnection(_connectionSettings);
-
-                if(res)
-                {
-                    return "";
-                }
-                else
-                {
-                    return "Initialization failed";
-                }*/
+                return "";
             }
             catch (Exception ex)
             {
@@ -435,10 +416,8 @@ namespace LumaAiDreamMachinePlugin
             {
                 return new ItemPayload() { Prompt = text };
             }
-            else
-            {
-                return new ImageItemPayload() { Prompt = text };
-            }
+
+            return new ImageItemPayload() { Prompt = text };
         }
 
         public object ItemPayloadFromImageSource(string imgSource)
@@ -449,10 +428,8 @@ namespace LumaAiDreamMachinePlugin
                 output.KeyFrames.frame0.url = imgSource;
                 return output;
             }
-            else
-            {
-                return new ImageItemPayload() { ImageRef = new ImageRef() { ImageSource = imgSource } };
-            }
+
+            return new ImageItemPayload() { UniImageToModify = imgSource };
         }
 
         public void ContentUploaderProvided(IContentUploader uploader)
@@ -486,8 +463,6 @@ namespace LumaAiDreamMachinePlugin
         {
             return JsonHelper.ToExactType<ConnectionSettings>(obj);
         }
-
-        // Image stuffs
 
         public object DefaultPayloadForImageTrack()
         {
@@ -532,6 +507,15 @@ namespace LumaAiDreamMachinePlugin
                 }
             }
 
+            if (payload is ImageTrackPayload tp && IsUniImageModel(tp.Settings?.model))
+            {
+                var validAspectRatios = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "3:1", "2:1", "16:9", "3:2", "1:1", "2:3", "9:16", "1:2", "1:3" };
+                if (!string.IsNullOrWhiteSpace(tp.Settings?.aspect_ratio) && !validAspectRatios.Contains(tp.Settings.aspect_ratio))
+                {
+                    return (false, "uni-1 models support aspect ratios 3:1, 2:1, 16:9, 3:2, 1:1, 2:3, 9:16, 1:2 and 1:3");
+                }
+            }
+
             return (true, "");
         }
 
@@ -572,9 +556,6 @@ namespace LumaAiDreamMachinePlugin
 
                 case IPluginBase.TrackType.Video:
                     return DefaultPayloadForVideoTrack();
-
-                default:
-                    break;
             }
             throw new NotImplementedException();
         }
@@ -588,9 +569,6 @@ namespace LumaAiDreamMachinePlugin
 
                 case IPluginBase.TrackType.Video:
                     return DefaultPayloadForVideoItem();
-
-                default:
-                    break;
             }
             throw new NotImplementedException();
         }
@@ -604,9 +582,6 @@ namespace LumaAiDreamMachinePlugin
 
                 case IPluginBase.TrackType.Video:
                     return CopyPayloadForVideoTrack(obj);
-
-                default:
-                    break;
             }
             throw new NotImplementedException();
         }
@@ -620,9 +595,6 @@ namespace LumaAiDreamMachinePlugin
 
                 case IPluginBase.TrackType.Video:
                     return CopyPayloadForVideoItem(obj);
-
-                default:
-                    break;
             }
             throw new NotImplementedException();
         }
@@ -639,9 +611,6 @@ namespace LumaAiDreamMachinePlugin
 
                 case IPluginBase.TrackType.Audio:
                     return (true, "");
-
-                default:
-                    break;
             }
             return (true, "");
         }
@@ -660,13 +629,20 @@ namespace LumaAiDreamMachinePlugin
                 return new List<string>() { ip.KeyFrames.frame0.url, ip.KeyFrames.frame1.url };
             }
 
+            if (trackPayload is ImageTrackPayload && itemPayload is ImageItemPayload imgIp)
+            {
+                var output = new List<string> { imgIp.ImageRef?.ImageSource, imgIp.StyleRef?.ImageSource, imgIp.ModifyImage?.ImageSource, imgIp.UniImageToModify };
+                output.AddRange(imgIp.CharacterRefs.Select(s => s.SourceFile));
+                output.AddRange(imgIp.UniReferenceImages.Select(s => s.SourceFile));
+                return output.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+            }
+
             return new List<string>();
         }
 
         public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
         {
-            // No need to do anything
-            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
+            if (trackPayload is TrackPayload && itemPayload is ItemPayload ip)
             {
                 for (int i = 0; i < originalPath.Count; i++)
                 {
@@ -678,6 +654,48 @@ namespace LumaAiDreamMachinePlugin
                     if (originalPath[i] == ip.KeyFrames.frame1.url)
                     {
                         ip.KeyFrames.frame1.url = newPath[i];
+                    }
+                }
+            }
+
+            if (trackPayload is ImageTrackPayload && itemPayload is ImageItemPayload imgIp)
+            {
+                for (int i = 0; i < originalPath.Count; i++)
+                {
+                    if (originalPath[i] == imgIp.ImageRef?.ImageSource)
+                    {
+                        imgIp.ImageRef.ImageSource = newPath[i];
+                    }
+
+                    if (originalPath[i] == imgIp.StyleRef?.ImageSource)
+                    {
+                        imgIp.StyleRef.ImageSource = newPath[i];
+                    }
+
+                    if (originalPath[i] == imgIp.ModifyImage?.ImageSource)
+                    {
+                        imgIp.ModifyImage.ImageSource = newPath[i];
+                    }
+
+                    if (originalPath[i] == imgIp.UniImageToModify)
+                    {
+                        imgIp.UniImageToModify = newPath[i];
+                    }
+
+                    foreach (var item in imgIp.CharacterRefs)
+                    {
+                        if (originalPath[i] == item.SourceFile)
+                        {
+                            item.SourceFile = newPath[i];
+                        }
+                    }
+
+                    foreach (var item in imgIp.UniReferenceImages)
+                    {
+                        if (originalPath[i] == item.SourceFile)
+                        {
+                            item.SourceFile = newPath[i];
+                        }
                     }
                 }
             }
@@ -693,6 +711,15 @@ namespace LumaAiDreamMachinePlugin
                 }
             }
 
+            if (trackPaylod is ImageTrackPayload imgTp && itemPayload is ImageItemPayload imgIp && IsUniImageModel(imgTp.Settings?.model))
+            {
+                var isEdit = imgIp.ModifyImage != null && !string.IsNullOrWhiteSpace(imgIp.ModifyImage.ImageSource);
+                if (!isEdit && imgTp.Style == "manga" && imgTp.Settings?.aspect_ratio is "3:1" or "2:1" or "16:9" or "3:2" or "1:1")
+                {
+                    return (false, "manga style only supports portrait ratios for uni text-to-image");
+                }
+            }
+
             return (true, "");
         }
 
@@ -702,6 +729,11 @@ namespace LumaAiDreamMachinePlugin
             {
                 ip.Prompt = text;
             }
+
+            if (payload is ImageItemPayload imgIp)
+            {
+                imgIp.Prompt = text;
+            }
         }
 
         public void UserDataDeleteRequested()
@@ -710,6 +742,79 @@ namespace LumaAiDreamMachinePlugin
             {
                 _connectionSettings.DeleteTokens();
             }
+        }
+
+        private static bool IsUniImageModel(string model)
+        {
+            return model == "uni-1" || model == "uni-1-max";
+        }
+
+        private async Task<LumaAgentsImageRequest> BuildUniImageRequestAsync(ImageTrackPayload trackPayload, ImageItemPayload itemPayload)
+        {
+            var isEdit = !string.IsNullOrWhiteSpace(itemPayload.UniImageToModify);
+            var request = new LumaAgentsImageRequest
+            {
+                model = trackPayload.Settings.model,
+                prompt = trackPayload.Settings.prompt,
+                type = isEdit ? "image_edit" : "image",
+                style = string.IsNullOrWhiteSpace(trackPayload.Style) ? "auto" : trackPayload.Style,
+                output_format = trackPayload.OutputFormat == "auto" ? null : trackPayload.OutputFormat,
+                web_search = trackPayload.WebSearch
+            };
+
+            if (!isEdit)
+            {
+                request.aspect_ratio = string.IsNullOrWhiteSpace(trackPayload.Settings.aspect_ratio) ? null : trackPayload.Settings.aspect_ratio;
+            }
+
+            var refs = new List<LumaAgentsImageReference>();
+
+            async Task AddReferenceAsync(string source)
+            {
+                if (string.IsNullOrWhiteSpace(source))
+                {
+                    return;
+                }
+
+                var resp = await _uploader.RequestContentUpload(source);
+                if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                {
+                    refs.Add(new LumaAgentsImageReference { url = resp.uploadedUrl });
+                    return;
+                }
+
+                throw new Exception($"Failed to upload image to cloud, {resp.responseCode}");
+            }
+
+            if (isEdit)
+            {
+                var resp = await _uploader.RequestContentUpload(itemPayload.UniImageToModify);
+                if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+                {
+                    request.source = new LumaAgentsImageReference { url = resp.uploadedUrl };
+                }
+                else
+                {
+                    throw new Exception($"Failed to upload image to cloud, {resp.responseCode}");
+                }
+            }
+
+            foreach (var item in itemPayload.UniReferenceImages)
+            {
+                if (refs.Count >= (isEdit ? 8 : 9))
+                {
+                    break;
+                }
+
+                await AddReferenceAsync(item.SourceFile?.Replace("\"", ""));
+            }
+
+            if (refs.Count > 0)
+            {
+                request.image_ref = refs.Take(isEdit ? 8 : 9).ToArray();
+            }
+
+            return request;
         }
     }
 

@@ -1,4 +1,4 @@
-﻿using LumaAiDreamMachinePlugin.AddAudio;
+using LumaAiDreamMachinePlugin.AddAudio;
 using LumaAiDreamMachinePlugin.VideoUpscale;
 using PluginBase;
 using System.ComponentModel;
@@ -42,18 +42,32 @@ namespace LumaAiDreamMachinePlugin
 
         [IgnoreDynamicEdit]
         public ImageRequestRefImage modify_image_ref { get; set; }
+    }
 
-        //[IgnoreDynamicEdit]
-        //public KeyFrames keyframes { get; set; } = new KeyFrames();
+    public class LumaAgentsImageRequest
+    {
+        public string type { get; set; } = "image";
+        public string model { get; set; } = "uni-1";
+        public string prompt { get; set; } = "";
+        public string aspect_ratio { get; set; }
+        public string style { get; set; } = "auto";
+        public string output_format { get; set; }
+        public bool web_search { get; set; }
+        public LumaAgentsImageReference[] image_ref { get; set; }
+        public LumaAgentsImageReference source { get; set; }
     }
 
     public class ImageRequestRefImage
     {
         public string url { get; set; } = "";
         public double weight { get; set; } = 0.85;
+    }
 
-        //[IgnoreDynamicEdit]
-        //public KeyFrames keyframes { get; set; } = new KeyFrames();
+    public class LumaAgentsImageReference
+    {
+        public string url { get; set; }
+        public string data { get; set; }
+        public string media_type { get; set; }
     }
 
     public class ImageRequestRefCharacter
@@ -108,17 +122,27 @@ namespace LumaAiDreamMachinePlugin
     public class Response
     {
         public Guid id { get; set; }
+        public string type { get; set; }
+        public string model { get; set; }
         public string state { get; set; }
         public string failure_reason { get; set; }
+        public string failure_code { get; set; }
         public string created_at { get; set; }
 
         public Asset assets { get; set; }
+        public OutputItem[] output { get; set; }
     }
 
     public class Asset
     {
         public string video { get; set; }
         public string image { get; set; }
+    }
+
+    public class OutputItem
+    {
+        public string type { get; set; }
+        public string url { get; set; }
     }
 
     internal class Client
@@ -128,14 +152,7 @@ namespace LumaAiDreamMachinePlugin
         {
             try
             {
-                using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Remove("accept");
-
-                // It's best to keep these here: use can change these from item settings
-                httpClient.BaseAddress = new Uri(connectionSettings.Url);
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Bearer {connectionSettings.AccessToken}");
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+                using var httpClient = CreateJsonClient(connectionSettings.Url, connectionSettings.AccessToken);
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
@@ -163,36 +180,14 @@ namespace LumaAiDreamMachinePlugin
                     }
                 }
 
-                var serialized = "";
-
-                try
-                {
-                    serialized = JsonHelper.Serialize(request);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex.ToString());
-                    return new VideoResponse() { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
-                }
-
-                var stringContent = new StringContent(serialized);
+                var serialized = JsonHelper.Serialize(request);
+                using var stringContent = new StringContent(serialized);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
                 var extraPath = request is Request ? "" : "/modify";
-
                 var resp = await httpClient.PostAsync($"dream-machine/v1/generations/video{extraPath}", stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
-                Response respSerialized = null;
-
-                try
-                {
-                    respSerialized = JsonHelper.DeserializeString<Response>(respString);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex.ToString());
-                    return new VideoResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
-                }
+                var respSerialized = JsonHelper.DeserializeString<Response>(respString);
 
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
@@ -200,10 +195,8 @@ namespace LumaAiDreamMachinePlugin
                     saveAndRefreshCallback.Invoke(true);
                     return await PollVideoResults(httpClient, respSerialized.assets, respSerialized.id, folderToSave, textualProgressAction);
                 }
-                else
-                {
-                    return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
-                }
+
+                return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
             }
             catch (Exception ex)
             {
@@ -217,59 +210,65 @@ namespace LumaAiDreamMachinePlugin
         {
             try
             {
-                using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Remove("accept");
-
-                // It's best to keep these here: use can change these from item settings
-                httpClient.BaseAddress = new Uri(connectionSettings.Url);
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Bearer {connectionSettings.AccessToken}");
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+                using var httpClient = CreateJsonClient(connectionSettings.Url, connectionSettings.AccessToken);
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollImageResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId));
+                    return await PollLegacyImageResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId));
                 }
 
-                var serialized = "";
-
-                try
-                {
-                    serialized = JsonHelper.Serialize(request);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex.ToString());
-                    return new ImageResponse() { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
-                }
-
-                var stringContent = new StringContent(serialized);
+                var serialized = JsonHelper.Serialize(request);
+                using var stringContent = new StringContent(serialized);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
                 var resp = await httpClient.PostAsync("dream-machine/v1/generations/image", stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
-                Response respSerialized = null;
-
-                try
-                {
-                    respSerialized = JsonHelper.DeserializeString<Response>(respString);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex.ToString());
-                    return new ImageResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
-                }
+                var respSerialized = JsonHelper.DeserializeString<Response>(respString);
 
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
                     refItemPlayload.PollingId = respSerialized.id.ToString();
                     saveAndRefreshCallback.Invoke(true);
-                    return await PollImageResults(httpClient, respSerialized.assets, respSerialized.id);
+                    return await PollLegacyImageResults(httpClient, respSerialized.assets, respSerialized.id);
                 }
-                else
+
+                return new ImageResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
+                return new ImageResponse() { ErrorMsg = ex.Message, Success = false };
+            }
+        }
+
+        public async Task<ImageResponse> GetUniImage(LumaAgentsImageRequest request, ConnectionSettings connectionSettings,
+            ImageItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback)
+        {
+            try
+            {
+                using var httpClient = CreateJsonClient(connectionSettings.AgentsUrl, connectionSettings.AccessToken);
+
+                if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return new ImageResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+                    return await PollUniImageResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), request.output_format);
                 }
+
+                var serialized = JsonHelper.Serialize(request);
+                using var stringContent = new StringContent(serialized);
+                stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+                var resp = await httpClient.PostAsync("v1/generations", stringContent);
+                var respString = await resp.Content.ReadAsStringAsync();
+                var respSerialized = JsonHelper.DeserializeString<Response>(respString);
+
+                if (respSerialized != null && resp.IsSuccessStatusCode)
+                {
+                    refItemPlayload.PollingId = respSerialized.id.ToString();
+                    saveAndRefreshCallback.Invoke(true);
+                    return await PollUniImageResults(httpClient, respSerialized, respSerialized.id, request.output_format);
+                }
+
+                return new ImageResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
             }
             catch (Exception ex)
             {
@@ -283,36 +282,19 @@ namespace LumaAiDreamMachinePlugin
         {
             try
             {
-                using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Remove("accept");
-
-                // It's best to keep these here: use can change these from item settings
-                httpClient.BaseAddress = new Uri(connectionSettings.Url);
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Bearer {connectionSettings.AccessToken}");
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+                using var httpClient = CreateJsonClient(connectionSettings.Url, connectionSettings.AccessToken);
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
                     return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave, textualProgress);
                 }
 
-                var stringContent = new StringContent("{\"resolution\":\"" + resolution + "\"}");
+                using var stringContent = new StringContent("{\"resolution\":\"" + resolution + "\"}");
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
                 var resp = await httpClient.PostAsync($"dream-machine/v1/generations/{generationId}/upscale", stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
-                Response respSerialized = null;
-
-                try
-                {
-                    respSerialized = JsonHelper.DeserializeString<Response>(respString);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex.ToString());
-                    return new VideoResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
-                }
+                var respSerialized = JsonHelper.DeserializeString<Response>(respString);
 
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
@@ -320,10 +302,8 @@ namespace LumaAiDreamMachinePlugin
                     saveAndRefreshCallback.Invoke(true);
                     return await PollVideoResults(httpClient, respSerialized.assets, respSerialized.id, folderToSave, textualProgress);
                 }
-                else
-                {
-                    return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
-                }
+
+                return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
             }
             catch (Exception ex)
             {
@@ -337,35 +317,20 @@ namespace LumaAiDreamMachinePlugin
         {
             try
             {
-                using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Remove("accept");
-
-                // It's best to keep these here: use can change these from item settings
-                httpClient.BaseAddress = new Uri(connectionSettings.Url);
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Bearer {connectionSettings.AccessToken}");
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+                using var httpClient = CreateJsonClient(connectionSettings.Url, connectionSettings.AccessToken);
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
                     return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave, textualProgress);
                 }
-                var test = "{\"prompt\":\"" + positivePrompt.Trim() + "\",\"negative_prompt\":\"" + megativePrompt.Trim() + "\"}";
-                var stringContent = new StringContent(test);
+
+                var payload = "{\"prompt\":\"" + positivePrompt.Trim() + "\",\"negative_prompt\":\"" + megativePrompt.Trim() + "\"}";
+                using var stringContent = new StringContent(payload);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
                 var resp = await httpClient.PostAsync($"dream-machine/v1/generations/{generationId}/audio", stringContent);
                 var respString = await resp.Content.ReadAsStringAsync();
-                Response respSerialized = null;
-
-                try
-                {
-                    respSerialized = JsonHelper.DeserializeString<Response>(respString);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex.ToString());
-                    return new VideoResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
-                }
+                var respSerialized = JsonHelper.DeserializeString<Response>(respString);
 
                 if (respSerialized != null && resp.IsSuccessStatusCode)
                 {
@@ -373,10 +338,8 @@ namespace LumaAiDreamMachinePlugin
                     saveAndRefreshCallback.Invoke(true);
                     return await PollVideoResults(httpClient, respSerialized.assets, respSerialized.id, folderToSave, textualProgress);
                 }
-                else
-                {
-                    return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
-                }
+
+                return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
             }
             catch (Exception ex)
             {
@@ -385,42 +348,41 @@ namespace LumaAiDreamMachinePlugin
             }
         }
 
+        private static HttpClient CreateJsonClient(string baseUrl, string accessToken)
+        {
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Remove("accept");
+            httpClient.BaseAddress = new Uri(baseUrl);
+            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Bearer {accessToken}");
+            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
+            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+            return httpClient;
+        }
+
         private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, Asset assets, Guid id, string folderToSave, Action<string> textualProgressAction)
         {
             var pollingDelay = TimeSpan.FromSeconds(7);
 
-            var videoUrl = assets?.video ?? "";
-
             while (string.IsNullOrEmpty(assets?.video))
             {
-                // Wait for assets to be filled
                 try
                 {
                     var generationResp = await httpClient.GetAsync($"dream-machine/v1/generations/{id}");
                     var respString = await generationResp.Content.ReadAsStringAsync();
-                    Response respSerialized = null;
+                    var respSerialized = JsonHelper.DeserializeString<Response>(respString);
+                    assets = respSerialized.assets;
 
-                    try
+                    if (respSerialized.state == "failed")
                     {
-                        respSerialized = JsonHelper.DeserializeString<Response>(respString);
-                        assets = respSerialized.assets;
-
-                        if (respSerialized.state == "failed")
-                        {
-                            return new VideoResponse() { Success = false, ErrorMsg = $"Luma Ai backend reported that video generating failed: {respSerialized.failure_reason}" };
-                        }
-
-                        System.Diagnostics.Debug.WriteLine($"State: {respSerialized.state}");
-                        textualProgressAction.Invoke(respSerialized.state);
-
-                        if (string.IsNullOrEmpty(assets?.video))
-                        {
-                            await Task.Delay(pollingDelay);
-                        }
+                        return new VideoResponse() { Success = false, ErrorMsg = $"Luma Ai backend reported that video generating failed: {respSerialized.failure_reason}" };
                     }
-                    catch (Exception ex)
+
+                    System.Diagnostics.Debug.WriteLine($"State: {respSerialized.state}");
+                    textualProgressAction.Invoke(respSerialized.state);
+
+                    if (string.IsNullOrEmpty(assets?.video))
                     {
-                        System.Diagnostics.Debug.WriteLine(ex.ToString());
+                        await Task.Delay(pollingDelay);
                     }
                 }
                 catch (Exception)
@@ -429,15 +391,11 @@ namespace LumaAiDreamMachinePlugin
                 }
             }
 
-            videoUrl = assets?.video ?? "";
-
+            var videoUrl = assets.video;
             var file = Path.GetFileName(videoUrl);
 
             using var downloadClient = new HttpClient { BaseAddress = new Uri(videoUrl.Replace(file, "")), Timeout = Timeout.InfiniteTimeSpan };
-
             downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
-
-            // Store video request token to disk, in case connection is broken or something
 
             textualProgressAction.Invoke("Downloading");
 
@@ -456,47 +414,33 @@ namespace LumaAiDreamMachinePlugin
                 await File.WriteAllBytesAsync(pathToVideo, respBytes);
                 return new VideoResponse() { Success = true, VideoFile = pathToVideo };
             }
-            else
-            {
-                return new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
-            }
+
+            return new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
         }
 
-        private static async Task<ImageResponse> PollImageResults(HttpClient httpClient, Asset assets, Guid id)
+        private static async Task<ImageResponse> PollLegacyImageResults(HttpClient httpClient, Asset assets, Guid id)
         {
             var pollingDelay = TimeSpan.FromSeconds(7);
 
-            var imageUrl = assets?.image ?? "";
-
             while (string.IsNullOrEmpty(assets?.image))
             {
-                // Wait for assets to be filled
                 try
                 {
                     var generationResp = await httpClient.GetAsync($"dream-machine/v1/generations/{id}");
                     var respString = await generationResp.Content.ReadAsStringAsync();
-                    Response respSerialized = null;
+                    var respSerialized = JsonHelper.DeserializeString<Response>(respString);
+                    assets = respSerialized.assets;
 
-                    try
+                    if (respSerialized.state == "failed")
                     {
-                        respSerialized = JsonHelper.DeserializeString<Response>(respString);
-                        assets = respSerialized.assets;
-
-                        if (respSerialized.state == "failed")
-                        {
-                            return new ImageResponse() { Success = false, ErrorMsg = "Luma Ai backend reported that video generating failed" };
-                        }
-
-                        System.Diagnostics.Debug.WriteLine($"State: {respSerialized.state}");
-
-                        if (string.IsNullOrEmpty(assets?.image))
-                        {
-                            await Task.Delay(pollingDelay);
-                        }
+                        return new ImageResponse() { Success = false, ErrorMsg = $"Luma Ai backend reported that image generating failed: {respSerialized.failure_reason}" };
                     }
-                    catch (Exception ex)
+
+                    System.Diagnostics.Debug.WriteLine($"State: {respSerialized.state}");
+
+                    if (string.IsNullOrEmpty(assets?.image))
                     {
-                        System.Diagnostics.Debug.WriteLine(ex.ToString());
+                        await Task.Delay(pollingDelay);
                     }
                 }
                 catch (Exception)
@@ -505,33 +449,118 @@ namespace LumaAiDreamMachinePlugin
                 }
             }
 
-            imageUrl = assets?.image ?? "";
+            return await DownloadImageResponse(assets.image, null);
+        }
 
-            var file = Path.GetFileName(imageUrl);
+        private static async Task<ImageResponse> PollUniImageResults(HttpClient httpClient, Response initialResponse, Guid id, string requestedOutputFormat)
+        {
+            var pollingDelay = TimeSpan.FromSeconds(7);
+            var currentResponse = initialResponse ?? new Response();
+            var imageUrl = GetImageUrl(currentResponse);
 
-            using var downloadClient = new HttpClient { BaseAddress = new Uri(imageUrl.Replace(file, "")), Timeout = Timeout.InfiniteTimeSpan };
+            while (string.IsNullOrWhiteSpace(imageUrl))
+            {
+                try
+                {
+                    var generationResp = await httpClient.GetAsync($"v1/generations/{id}");
+                    var respString = await generationResp.Content.ReadAsStringAsync();
+                    currentResponse = JsonHelper.DeserializeString<Response>(respString);
+                    imageUrl = GetImageUrl(currentResponse);
 
-            downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
+                    if (currentResponse.state == "failed")
+                    {
+                        var reason = string.IsNullOrWhiteSpace(currentResponse.failure_reason) ? currentResponse.failure_code : currentResponse.failure_reason;
+                        return new ImageResponse() { Success = false, ErrorMsg = $"Luma Agents backend reported that image generating failed: {reason}" };
+                    }
 
-            // Store video request token to disk, in case connection is broken or something
+                    System.Diagnostics.Debug.WriteLine($"State: {currentResponse.state}");
 
-            var videoResp = await downloadClient.GetAsync(file);
+                    if (string.IsNullOrWhiteSpace(imageUrl))
+                    {
+                        await Task.Delay(pollingDelay);
+                    }
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
 
-            while (videoResp.StatusCode != HttpStatusCode.OK)
+            return await DownloadImageResponse(imageUrl, requestedOutputFormat);
+        }
+
+        private static async Task<ImageResponse> DownloadImageResponse(string imageUrl, string requestedOutputFormat)
+        {
+            var pollingDelay = TimeSpan.FromSeconds(7);
+            using var downloadClient = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
+            downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "image/*");
+
+            var imageResp = await downloadClient.GetAsync(imageUrl);
+            while (imageResp.StatusCode != HttpStatusCode.OK)
             {
                 await Task.Delay(pollingDelay);
-                videoResp = await downloadClient.GetAsync(file);
+                imageResp = await downloadClient.GetAsync(imageUrl);
             }
 
-            if (videoResp.StatusCode == HttpStatusCode.OK)
+            if (imageResp.StatusCode == HttpStatusCode.OK)
             {
-                var respBytes = await videoResp.Content.ReadAsByteArrayAsync();
-                return new ImageResponse() { Success = true, Image = Convert.ToBase64String(respBytes), ImageFormat = "jpg" };
+                var respBytes = await imageResp.Content.ReadAsByteArrayAsync();
+                return new ImageResponse()
+                {
+                    Success = true,
+                    Image = Convert.ToBase64String(respBytes),
+                    ImageFormat = GetImageFormat(imageUrl, imageResp.Content.Headers.ContentType?.MediaType, requestedOutputFormat)
+                };
             }
-            else
+
+            return new ImageResponse() { ErrorMsg = $"Error: {imageResp.StatusCode}, details: {await imageResp.Content.ReadAsStringAsync()}", Success = false };
+        }
+
+        private static string GetImageUrl(Response response)
+        {
+            if (!string.IsNullOrWhiteSpace(response?.assets?.image))
             {
-                return new ImageResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
+                return response.assets.image;
             }
+
+            return response?.output?.FirstOrDefault(s => s.type == "image")?.url ?? "";
+        }
+
+        private static string GetImageFormat(string imageUrl, string contentType, string requestedOutputFormat)
+        {
+            if (!string.IsNullOrWhiteSpace(requestedOutputFormat))
+            {
+                return requestedOutputFormat == "jpeg" ? "jpg" : requestedOutputFormat;
+            }
+
+            if (!string.IsNullOrWhiteSpace(contentType))
+            {
+                if (contentType.Contains("png", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "png";
+                }
+
+                if (contentType.Contains("jpeg", StringComparison.OrdinalIgnoreCase) || contentType.Contains("jpg", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "jpg";
+                }
+            }
+
+            if (Uri.TryCreate(imageUrl, UriKind.Absolute, out var uri))
+            {
+                var extension = Path.GetExtension(uri.AbsolutePath).TrimStart('.');
+                if (string.Equals(extension, "jpeg", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "jpg";
+                }
+
+                if (!string.IsNullOrWhiteSpace(extension))
+                {
+                    return extension;
+                }
+            }
+
+            return "jpg";
         }
     }
 }

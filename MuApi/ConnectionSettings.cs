@@ -22,7 +22,7 @@ namespace MuApiPlugin
         {
             try
             {
-                AccessToken = SecureStorageWrapper.SecStorage.Get(AccessTokenKey);
+                AccessToken = SecureStorageWrapper.SecStorage.GetKey(AccessTokenKey);
             }
             catch (Exception)
             {
@@ -39,13 +39,13 @@ namespace MuApiPlugin
         {
             if (!string.IsNullOrEmpty(AccessToken))
             {
-                SecureStorageWrapper.SecStorage.Set(AccessTokenKey, AccessToken);
+                SecureStorageWrapper.SecStorage.SetKey(AccessTokenKey, AccessToken);
             }
         }
 
         internal void DeleteTokens()
         {
-            SecureStorageWrapper.SecStorage.Delete(AccessTokenKey);
+            SecureStorageWrapper.SecStorage.DeleteKey(AccessTokenKey);
         }
     }
 }
