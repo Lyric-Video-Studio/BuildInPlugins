@@ -111,27 +111,17 @@ namespace LumaAiDreamMachinePlugin
         {
             var useUniModel = trackPayload is ImageTrackPayload tp && (tp.Settings?.model == "uni-1" || tp.Settings?.model == "uni-1-max");
 
-            if (propertyName == nameof(ImageRef) || propertyName == nameof(StyleRef) || propertyName == nameof(ModifyImage) || propertyName == nameof(CharacterRefs))
-            {
-                return !useUniModel;
-            }
-
-            if (propertyName == nameof(UniImageToModify) || propertyName == nameof(UniReferenceImages))
+            if (propertyName is nameof(UniImageToModify) or nameof(UniReferenceImages) or nameof(UniReferenceImage.RemoveUniReferenceImage) or nameof(AddUniReferenceImage) or nameof(UniReferenceImages))
             {
                 return useUniModel;
             }
 
-            if (propertyName == nameof(AddImageReference) || propertyName == nameof(RemoveImageReference) ||
-                propertyName == nameof(AddStyleReference) || propertyName == nameof(RemoveStyleReference) ||
-                propertyName == nameof(AddCharacterReference) || propertyName == nameof(AddModImg) ||
-                propertyName == nameof(RemoveAddModImg))
+            if (propertyName is nameof(AddImageReference) or nameof(ImageRef) or  nameof(RemoveImageReference) or 
+                nameof(AddStyleReference) or nameof(RemoveStyleReference) or nameof(StyleRef) or
+                nameof(AddCharacterReference) or nameof(CharacterRefs) or nameof(CharacterRef.RemoveCharacterReference) or
+                nameof(AddModImg) or nameof(RemoveAddModImg) or nameof(ModifyImage))
             {
                 return !useUniModel;
-            }
-
-            if (propertyName == nameof(AddUniReferenceImage))
-            {
-                return useUniModel;
             }
 
             return true;
@@ -156,9 +146,10 @@ namespace LumaAiDreamMachinePlugin
         }
 
         [EnableFileDrop]
-        public string SourceFile { get; set; }
+        [CustomName("Source file")]
+        public string CharacterSourceFile { get; set; }
 
-        [CustomAction("Remove character reference")]
+        [CustomAction("Remove character reference", false, nameof(CharacterSourceFile))]
         public void RemoveCharacterReference()
         {
             parent.Remove(this);
@@ -175,9 +166,10 @@ namespace LumaAiDreamMachinePlugin
         }
 
         [EnableFileDrop]
-        public string SourceFile { get; set; }
+        [CustomName("Source file")]
+        public string UniSourceFile { get; set; }
 
-        [CustomAction("Remove uni reference image")]
+        [CustomAction("Remove uni reference image", false, nameof(UniSourceFile))]
         public void RemoveUniReferenceImage()
         {
             parent.Remove(this);

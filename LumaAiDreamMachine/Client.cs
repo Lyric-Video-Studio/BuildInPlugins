@@ -27,7 +27,22 @@ namespace LumaAiDreamMachinePlugin
 
     public class ImageRequest
     {
-        public string model { get; set; } = "photon-1";
+        public event EventHandler ModelChanged;
+        private string _model = "photon-1";
+        public string model 
+        { 
+            get => _model; 
+            set
+            {
+                var notifi = IPayloadPropertyVisibility.UserInitiatedSet && model != value;
+                _model = value;
+
+                if (notifi)
+                {
+                    ModelChanged?.Invoke(this, null);
+                }
+            }
+        }
         public string prompt { get; set; } = "";
         public string aspect_ratio { get; set; } = "16:9";
 
@@ -246,7 +261,7 @@ namespace LumaAiDreamMachinePlugin
         {
             try
             {
-                using var httpClient = CreateJsonClient(connectionSettings.AgentsUrl, connectionSettings.AccessToken);
+                using var httpClient = CreateJsonClient(connectionSettings.AgentsUrl, connectionSettings.AccessTokenUni);
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {

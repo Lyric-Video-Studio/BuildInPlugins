@@ -10,6 +10,7 @@ namespace LumaAiDreamMachinePlugin
         private string url = "https://api.lumalabs.ai";
         private string agentsUrl = "https://agents.lumalabs.ai";
         private string accessToken;
+        private string accessTokenUni;
 
         [Description("Url to luma ai API")]
         public string Url { get => url; set => url = value; }
@@ -23,15 +24,23 @@ namespace LumaAiDreamMachinePlugin
         [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
+        [Description("Access token for UNI image. Uses credits. Access token is found from https://platform.lumalabs.ai/keys " +
+            "This application is not resposible for possible usage of credits and will not in any way refund any used credits!!!")]
+        [EditorWidth(300)]
+        [MaskInput]
+        public string AccessTokenUni { get => accessTokenUni; set => accessTokenUni = value; }
+
         public void OnDeserialized()
         {
             try
             {
                 AccessToken = SecureStorageWrapper.SecStorage.GetKey(accessTokenKey);
+                AccessTokenUni = SecureStorageWrapper.SecStorage.GetKey(accessTokenKey + ".uni");
             }
             catch (Exception)
             {
                 AccessToken = "";
+                AccessTokenUni = "";
             }
         }
 
@@ -46,6 +55,11 @@ namespace LumaAiDreamMachinePlugin
             if (!string.IsNullOrEmpty(AccessToken))
             {
                 SecureStorageWrapper.SecStorage.SetKey(accessTokenKey, AccessToken);
+            }
+
+            if (!string.IsNullOrEmpty(AccessTokenUni))
+            {
+                SecureStorageWrapper.SecStorage.SetKey(accessTokenKey + ".uni", AccessTokenUni);
             }
         }
 

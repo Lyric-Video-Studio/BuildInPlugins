@@ -234,10 +234,10 @@ namespace LumaAiDreamMachinePlugin
 
                     for (int i = 0; i < newIp.CharacterRefs.Count; i++)
                     {
-                        newIp.CharacterRefs[i].SourceFile = newIp.CharacterRefs[i].SourceFile.Replace("\"", "");
+                        newIp.CharacterRefs[i].CharacterSourceFile = newIp.CharacterRefs[i].CharacterSourceFile.Replace("\"", "");
                     }
 
-                    var charRefs = newIp.CharacterRefs.Where(s => File.Exists(s.SourceFile)).ToList();
+                    var charRefs = newIp.CharacterRefs.Where(s => File.Exists(s.CharacterSourceFile)).ToList();
                     if (charRefs.Count > 0)
                     {
                         newTp.Settings.character_ref = new ImageRequestRefCharacter();
@@ -245,7 +245,7 @@ namespace LumaAiDreamMachinePlugin
 
                         for (int i = 0; i < charRefs.Count; i++)
                         {
-                            var resp = await _uploader.RequestContentUpload(charRefs[i].SourceFile);
+                            var resp = await _uploader.RequestContentUpload(charRefs[i].CharacterSourceFile);
 
                             if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
                             {
@@ -456,7 +456,7 @@ namespace LumaAiDreamMachinePlugin
                 return resp;
             }
 
-            return JsonHelper.ToExactType<ImageTrackPayload>(obj);
+            return SetSubs(JsonHelper.ToExactType<ImageTrackPayload>(obj));
         }
 
         public object ObjectToGeneralSettings(JsonObject obj)
@@ -466,7 +466,7 @@ namespace LumaAiDreamMachinePlugin
 
         public object DefaultPayloadForImageTrack()
         {
-            return new ImageTrackPayload();
+            return SetSubs(new ImageTrackPayload());
         }
 
         public object DefaultPayloadForImageItem()
@@ -474,11 +474,17 @@ namespace LumaAiDreamMachinePlugin
             return new ImageItemPayload();
         }
 
+        private ImageTrackPayload SetSubs(ImageTrackPayload pl)
+        {
+            pl.Settings.ModelChanged += (_, __) => saveAndRefreshCallback.Invoke(false);
+            return pl;
+        }
+
         public object CopyPayloadForImageTrack(object obj)
         {
             if (obj is ImageTrackPayload ip)
             {
-                return JsonHelper.DeepCopy<ImageTrackPayload>(ip);
+                return SetSubs(JsonHelper.DeepCopy<ImageTrackPayload>(ip));
             }
             return null;
         }
@@ -496,10 +502,10 @@ namespace LumaAiDreamMachinePlugin
         {
             if (payload is ImageItemPayload ip)
             {
-                if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
+                if (string.IsNullOrEmpty(_connectionSettings.AccessToken) && string.IsNullOrEmpty(_connectionSettings.AccessTokenUni))
                 {
-                    return (false, "Auth token empty!!!");
-                }
+                    return (false, "Both Auth tokens empty");
+                } 
 
                 if (string.IsNullOrEmpty(ip.Prompt))
                 {
@@ -632,8 +638,8 @@ namespace LumaAiDreamMachinePlugin
             if (trackPayload is ImageTrackPayload && itemPayload is ImageItemPayload imgIp)
             {
                 var output = new List<string> { imgIp.ImageRef?.ImageSource, imgIp.StyleRef?.ImageSource, imgIp.ModifyImage?.ImageSource, imgIp.UniImageToModify };
-                output.AddRange(imgIp.CharacterRefs.Select(s => s.SourceFile));
-                output.AddRange(imgIp.UniReferenceImages.Select(s => s.SourceFile));
+                output.AddRange(imgIp.CharacterRefs.Select(s => s.CharacterSourceFile));
+                output.AddRange(imgIp.UniReferenceImages.Select(s => s.UniSourceFile));
                 return output.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
             }
 
@@ -684,17 +690,17 @@ namespace LumaAiDreamMachinePlugin
 
                     foreach (var item in imgIp.CharacterRefs)
                     {
-                        if (originalPath[i] == item.SourceFile)
+                        if (originalPath[i] == item.CharacterSourceFile)
                         {
-                            item.SourceFile = newPath[i];
+                            item.CharacterSourceFile = newPath[i];
                         }
                     }
 
                     foreach (var item in imgIp.UniReferenceImages)
                     {
-                        if (originalPath[i] == item.SourceFile)
+                        if (originalPath[i] == item.UniSourceFile)
                         {
-                            item.SourceFile = newPath[i];
+                            item.UniSourceFile = newPath[i];
                         }
                     }
                 }
@@ -806,7 +812,7 @@ namespace LumaAiDreamMachinePlugin
                     break;
                 }
 
-                await AddReferenceAsync(item.SourceFile?.Replace("\"", ""));
+                await AddReferenceAsync(item.UniSourceFile?.Replace("\"", ""));
             }
 
             if (refs.Count > 0)
