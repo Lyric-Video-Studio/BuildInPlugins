@@ -20,9 +20,26 @@ namespace FalAiPlugin.ModelVisibilityHandlers
             return false;
         }
 
+        public virtual bool ShouldImageTrackPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
+        {
+            return false;
+        }
+
+        public virtual bool ShouldImageItemPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
+        {
+            return false;
+        }
+
         public bool IsImageReferences(string propertyName)
         {
             return propertyName == nameof(TrackPayload.ImageSourceCont) || ImageSourceContainer.IsImageRefName(propertyName);
+        }
+
+        public bool IsImageGeneratorReferences(string propertyName)
+        {
+            return propertyName == nameof(ImageTrackPayload.ImageSource) ||
+                propertyName == nameof(ImageItemPayload.ImageSources) ||
+                ImageSourceContainer.IsImageRefName(propertyName);
         }
 
         public bool IsVideoReferences(string propertyName)
@@ -37,6 +54,10 @@ namespace FalAiPlugin.ModelVisibilityHandlers
 
         public virtual void ConvertRequest(VideoRequest reg)
         {            
+        }
+
+        public virtual void ConvertRequest(Request reg)
+        {
         }
     }
 }

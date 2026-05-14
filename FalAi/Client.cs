@@ -106,9 +106,6 @@ namespace FalAiPlugin
         public string? reference_video_url { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string[] reference_image_urls { get; set; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<string> reference_video_urls { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -157,6 +154,9 @@ namespace FalAiPlugin
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<string> image_urls { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string[] reference_image_urls { get; set; }
     }
 
     public class ImageSizeCustom

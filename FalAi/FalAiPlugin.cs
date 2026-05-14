@@ -42,6 +42,12 @@ namespace FalAiPlugin
             new Seedance2R2VHandler()
         };
 
+        public static List<ModelVisibilityHandlerBase> ImageVisibilityHandlers = new List<ModelVisibilityHandlerBase>()
+        {
+            new HidreamO1ImageHandler(),
+            new HidreamO1ImageEditHandler()
+        };
+
         public async Task<VideoResponse> GetVideo(object trackPayload, object itemsPayload, string folderToSaveVideo)
         {
             if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
@@ -516,6 +522,11 @@ namespace FalAiPlugin
                     imageReg.image_size = null;
                 }
 
+                if (FalAiImgToVidPlugin.ImageVisibilityHandlers.FirstOrDefault(f => f.ModelPath == newTp.Model) is ModelVisibilityHandlerBase imageVisibilityHandler)
+                {
+                    imageVisibilityHandler.ConvertRequest(imageReg);
+                }
+
                 return await new Client().GetImage(imageReg, _connectionSettings, itemsPayload as ImageItemPayload, saveAndRefreshCallback, textualProgressAction, newTp.Model, _ct);
             }
             return new ImageResponse { Success = false, ErrorMsg = "Unknown error" };
@@ -620,6 +631,18 @@ namespace FalAiPlugin
                 output["Bytedance"] = ["bytedance/seedream/v5/lite/text-to-image", "bytedance/seedream/v5/lite/edit",
                     "bytedance/seedream/v4.5/text-to-image", "bytedance/seedream/v4/text-to-image", "bytedance/seedream/v4/edit"];
                 output["OpenAi"] = ["gpt-image-2", "gpt-image-2/edit", "gpt-image-1.5", "gpt-image-1.5/edit", "gpt-image-1-mini", "gpt-image-1-mini/edit"];
+
+                ImageVisibilityHandlers.ForEach(f =>
+                {
+                    if (!output.TryGetValue(f.ModelCategory, out var currentModels))
+                    {
+                        currentModels = [];
+                    }
+
+                    currentModels = [f.ModelPath, .. currentModels];
+                    output[f.ModelCategory] = currentModels;
+                });
+
                 return Task.FromResult(output);
             }
             return Task.FromResult(new Dictionary<string, string[]>());

@@ -2,6 +2,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 
+using FalAiPlugin.ModelVisibilityHandlers;
+
 namespace FalAiPlugin
 {
     public class ImageItemPayload : IPayloadPropertyVisibility
@@ -22,6 +24,16 @@ namespace FalAiPlugin
         {
             if (trackPayload is ImageTrackPayload ip)
             {
+                if (propertyName == nameof(PollingId))
+                {
+                    return true;
+                }
+
+                if (FalAiImgToVidPlugin.ImageVisibilityHandlers.FirstOrDefault(f => f.ModelPath == ip.Model) is ModelVisibilityHandlerBase mb)
+                {
+                    return mb.ShouldImageItemPropertyBeVisible(propertyName, trackPayload, itemPayload);
+                }
+
                 if (ip.Model.Contains("gpt", StringComparison.InvariantCultureIgnoreCase) && (propertyName is nameof(Seed) or nameof(NegativePrompt)))
                 {
                     return false;

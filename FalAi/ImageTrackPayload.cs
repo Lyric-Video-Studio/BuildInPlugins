@@ -1,6 +1,8 @@
 ﻿using PluginBase;
 using System.Collections.ObjectModel;
 
+using FalAiPlugin.ModelVisibilityHandlers;
+
 namespace FalAiPlugin
 {
     public class ImageTrackPayload : IPayloadPropertyVisibility
@@ -51,6 +53,16 @@ namespace FalAiPlugin
         {
             if (trackPayload is ImageTrackPayload ip)
             {
+                if (propertyName is nameof(Model) or nameof(ModelInfo))
+                {
+                    return true;
+                }
+
+                if (FalAiImgToVidPlugin.ImageVisibilityHandlers.FirstOrDefault(f => f.ModelPath == ip.Model) is ModelVisibilityHandlerBase mb)
+                {
+                    return mb.ShouldImageTrackPropertyBeVisible(propertyName, trackPayload, itemPayload);
+                }
+
                 if (propertyName == nameof(WidthPx) || propertyName == nameof(HeigthPx)) // TODO: Käyköhän tää kaikille??
                 {
                     return !ip.Model.Contains("gpt-image-1.5") && !ip.Model.Contains("imagineart");

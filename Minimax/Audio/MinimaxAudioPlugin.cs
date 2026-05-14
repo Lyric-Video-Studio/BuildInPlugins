@@ -389,7 +389,7 @@ namespace MinimaxPlugin.Audio
 
                     if (!string.IsNullOrEmpty(ip.Prompt) && ip.Prompt.Length > 300)
                     {
-                        return (false, "Lyrics too long, max 300 characters");
+                        return (false, "Prompt too long, max 300 characters");
                     }
                     return (!string.IsNullOrEmpty(ip.Prompt), "Prompt must be defined");
                 }
