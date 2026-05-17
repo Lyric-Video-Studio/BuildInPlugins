@@ -42,7 +42,15 @@ namespace BflTxtToImgPlugin
         public string InputImage8 { get; set; }
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
-        {            
+        {
+            if (trackPayload is TrackPayload tp && tp.Mode == TrackPayload.ModeOutpaint)
+            {
+                if (propertyName is nameof(Prompt) or nameof(Seed) or nameof(InputImage2) or nameof(InputImage3) or nameof(InputImage4) or nameof(InputImage5) or nameof(InputImage6) or nameof(InputImage7) or nameof(InputImage8))
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
     }

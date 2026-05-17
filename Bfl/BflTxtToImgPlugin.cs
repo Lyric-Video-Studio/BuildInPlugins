@@ -1,6 +1,7 @@
 ﻿using Bfl;
 using PluginBase;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -8,7 +9,7 @@ namespace BflTxtToImgPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class BflTxtToImgPlugin : IImagePlugin, ICancellableGeneration, ISaveAndRefresh, IImportFromImage, IGenerationCost, ITextualProgressIndication
+    public class BflTxtToImgPlugin : IImagePlugin, ICancellableGeneration, ISaveAndRefresh, IImportFromImage, IGenerationCost, ITextualProgressIndication, IValidateBothPayloads
     {
         public string UniqueName { get => "BflTxtToImageBuildIn"; }
         public string DisplayName { get => "Black Forest Labs"; }
@@ -78,111 +79,41 @@ namespace BflTxtToImgPlugin
                 {
                     AsyncResponse imageRequest;
 
-                    if (newIp.Seed == 0)
+                    var inputImages = GetInputImagePaths(newTp, newIp);
+
+                    if (newTp.Mode == TrackPayload.ModeOutpaint)
                     {
-                        newIp.Seed = rnd.Next();
-                        oldPl.Seed = newIp.Seed;
-                    }                    
-                    
-                    newTp.SettingsNew.Prompt = $"{newIp.Prompt} {newTp.SettingsNew.Prompt}";
-                    newTp.SettingsNew.Prompt = newTp.SettingsNew.Prompt.Trim();
-
-                    // Gather all input images
-                    var inputImages = new string[] {newTp.InputImage, newTp.InputImage2, newTp.InputImage3, newTp.InputImage4, newTp.InputImage5,
-                            newTp.InputImage6, newTp.InputImage7,newTp.InputImage8,
-                            newIp.InputImage, newIp.InputImage2, newIp.InputImage3, newIp.InputImage4, newIp.InputImage5,
-                            newIp.InputImage6, newIp.InputImage7, newIp.InputImage8 }.Where(s => !string.IsNullOrEmpty(s) && File.Exists(s)).ToList();
-
-                    for (int i = 0; i < inputImages.Count && i < 8; i++)
-                    {
-                        // Bit silly way to go, but, well...
-
-                        var b64 = Convert.ToBase64String(File.ReadAllBytes(inputImages[i]));
-
-                        switch (i)
+                        if (inputImages.Count == 0)
                         {
-                            case 0:
-                                newTp.SettingsNew.Input_image = b64;
-                                break;
-
-                            case 1:
-                                newTp.SettingsNew.Input_image_2 = b64;
-                                break;
-
-                            case 2:
-                                newTp.SettingsNew.Input_image_3 = b64;
-                                break;
-
-                            case 3:
-                                newTp.SettingsNew.Input_image_4 = b64;
-                                break;
-
-                            case 4:
-                                newTp.SettingsNew.Input_image_5 = b64;
-                                break;
-
-                            case 5:
-                                newTp.SettingsNew.Input_image_6 = b64;
-                                break;
-
-                            case 6:
-                                newTp.SettingsNew.Input_image_7 = b64;
-                                break;
-
-                            case 7:
-                                newTp.SettingsNew.Input_image_8 = b64;
-                                break;
-
-                            default:
-                                break;
+                            return new ImageResponse { Success = false, ErrorMsg = "Input image missing" };
                         }
-                    }
 
-                    // Sigh, make sure the images are null if empty. Sigh, BFL, please fix your code :D
-                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image))
+                        if (inputImages.Count > 1)
+                        {
+                            return new ImageResponse { Success = false, ErrorMsg = "Outpaint supports a single input image" };
+                        }
+
+                        imageRequest = await SubmitOutpaintRequestAsync(newTp.OutpaintSettings, inputImages.First());
+                    }
+                    else
                     {
-                        newTp.SettingsNew.Input_image = null;
+                        if (newIp.Seed == 0)
+                        {
+                            newIp.Seed = rnd.Next();
+                            oldPl.Seed = newIp.Seed;
+                        }
+
+                        newTp.SettingsNew.Prompt = $"{newIp.Prompt} {newTp.SettingsNew.Prompt}";
+                        newTp.SettingsNew.Prompt = newTp.SettingsNew.Prompt.Trim();
+
+                        ApplyFlux2InputImages(newTp.SettingsNew, inputImages);
+                        imageRequest = await imgClient.Generate_flux_2_pro_v1_flux_2_pro_postAsync(newTp.SettingsNew);
                     }
 
-                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_2))
+                    if (imageRequest.Cost > 0)
                     {
-                        newTp.SettingsNew.Input_image_2 = null;
+                        costAction?.Invoke((imageRequest.Cost / 100).ToString() + "€");
                     }
-
-                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_3))
-                    {
-                        newTp.SettingsNew.Input_image_3 = null;
-                    }
-
-                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_4))
-                    {
-                        newTp.SettingsNew.Input_image_4 = null;
-                    }
-
-                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_5))
-                    {
-                        newTp.SettingsNew.Input_image_5 = null;
-                    }
-
-                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_6))
-                    {
-                        newTp.SettingsNew.Input_image_6 = null;
-                    }
-
-                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_7))
-                    {
-                        newTp.SettingsNew.Input_image_7 = null;
-                    }
-
-                    if (string.IsNullOrEmpty(newTp.SettingsNew.Input_image_8))
-                    {
-                        newTp.SettingsNew.Input_image_8 = null;
-                    }
-
-                    imageRequest = await imgClient.Generate_flux_2_pro_v1_flux_2_pro_postAsync(newTp.SettingsNew);
-                    
-
-                    costAction.Invoke((imageRequest.Cost / 100).ToString() + "€");
 
                     if (!string.IsNullOrEmpty(imageRequest.Id))
                     {
@@ -229,6 +160,8 @@ namespace BflTxtToImgPlugin
                     try
                     {
                         using var fetchImgClient = new HttpClient() { Timeout = TimeSpan.FromMinutes(10), BaseAddress = new Uri(pollingUrl) };
+                        fetchImgClient.DefaultRequestHeaders.Add("x-key", _connectionSettings.AccessToken);
+                        fetchImgClient.DefaultRequestHeaders.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                         var rawRes = await fetchImgClient.GetAsync("");
 
@@ -236,7 +169,7 @@ namespace BflTxtToImgPlugin
 
                         resp = JsonHelper.DeserializeString<ResultResponse>(stringResp);
 
-                        progressAction.Invoke(resp.Status.ToString());
+                        progressAction?.Invoke(resp.Status.ToString());
 
                         if (resp.Status == StatusResponse.Ready)
                         {
@@ -374,7 +307,44 @@ namespace BflTxtToImgPlugin
                 return (false, "Auth token missing");
             }
 
-            if (payload is ItemPayload ip && string.IsNullOrEmpty(ip.Prompt))
+            return (true, "");
+        }
+
+        public (bool payloadOk, string reasonIfNot) ValidatePayloads(object trackPaylod, object itemPayload)
+        {
+            if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            {
+                return (false, "Auth token missing");
+            }
+
+            if (trackPaylod is not TrackPayload tp || itemPayload is not ItemPayload ip)
+            {
+                return (false, "Track playoad or item payload object not valid");
+            }
+
+            if (tp.Mode == TrackPayload.ModeOutpaint)
+            {
+                if (tp.OutpaintSettings.Width < 64 || tp.OutpaintSettings.Height < 64)
+                {
+                    return (false, "Width and height must be at least 64");
+                }
+
+                var inputImages = GetInputImagePaths(tp, ip);
+                if (inputImages.Count == 0)
+                {
+                    return (false, "Input image missing");
+                }
+
+                if (inputImages.Count > 1)
+                {
+                    return (false, "Outpaint supports a single input image");
+                }
+
+                return (true, "");
+            }
+
+            var prompt = $"{ip.Prompt} {tp.SettingsNew.Prompt}".Trim();
+            if (string.IsNullOrEmpty(prompt))
             {
                 return (false, "Prompt missing");
             }
@@ -573,6 +543,121 @@ namespace BflTxtToImgPlugin
         public void SetTextProgressCallback(Action<string> action)
         {
             progressAction = action;
+        }
+
+        private static List<string> GetInputImagePaths(TrackPayload trackPayload, ItemPayload itemPayload)
+        {
+            return new string[] { trackPayload.InputImage, trackPayload.InputImage2, trackPayload.InputImage3, trackPayload.InputImage4, trackPayload.InputImage5,
+                    trackPayload.InputImage6, trackPayload.InputImage7, trackPayload.InputImage8,
+                    itemPayload.InputImage, itemPayload.InputImage2, itemPayload.InputImage3, itemPayload.InputImage4, itemPayload.InputImage5,
+                    itemPayload.InputImage6, itemPayload.InputImage7, itemPayload.InputImage8 }
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Select(path => WorkspaceSettings.GetAbsolutePath(path))
+                .Where(File.Exists)
+                .ToList();
+        }
+
+        private static void ApplyFlux2InputImages(Flux2Inputs settings, List<string> inputImages)
+        {
+            settings.Input_image = null;
+            settings.Input_image_2 = null;
+            settings.Input_image_3 = null;
+            settings.Input_image_4 = null;
+            settings.Input_image_5 = null;
+            settings.Input_image_6 = null;
+            settings.Input_image_7 = null;
+            settings.Input_image_8 = null;
+
+            for (int i = 0; i < inputImages.Count && i < 8; i++)
+            {
+                var b64 = Convert.ToBase64String(File.ReadAllBytes(inputImages[i]));
+
+                switch (i)
+                {
+                    case 0:
+                        settings.Input_image = b64;
+                        break;
+                    case 1:
+                        settings.Input_image_2 = b64;
+                        break;
+                    case 2:
+                        settings.Input_image_3 = b64;
+                        break;
+                    case 3:
+                        settings.Input_image_4 = b64;
+                        break;
+                    case 4:
+                        settings.Input_image_5 = b64;
+                        break;
+                    case 5:
+                        settings.Input_image_6 = b64;
+                        break;
+                    case 6:
+                        settings.Input_image_7 = b64;
+                        break;
+                    case 7:
+                        settings.Input_image_8 = b64;
+                        break;
+                }
+            }
+        }
+
+        private async Task<AsyncResponse> SubmitOutpaintRequestAsync(FluxOutpaintSettings settings, string inputImagePath)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.bfl.ai/v1/flux-tools/outpainting-v1");
+            request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+            var payload = new Dictionary<string, object>
+            {
+                ["input_image"] = Convert.ToBase64String(File.ReadAllBytes(inputImagePath)),
+                ["width"] = settings.Width,
+                ["height"] = settings.Height,
+                ["output_format"] = settings.OutputFormat
+            };
+
+            if (settings.ReferenceOffsetX.HasValue)
+            {
+                payload["reference_offset_x"] = settings.ReferenceOffsetX.Value;
+            }
+
+            if (settings.ReferenceOffsetY.HasValue)
+            {
+                payload["reference_offset_y"] = settings.ReferenceOffsetY.Value;
+            }
+
+            if (settings.AutoCrop)
+            {
+                payload["auto_crop"] = true;
+            }
+
+            var json = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(payload);
+            request.Content = new ByteArrayContent(json);
+            request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+            using var response = await httpClient.SendAsync(request, cancelToken);
+            var responseText = await response.Content.ReadAsStringAsync(cancelToken);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
+            {
+                var validation = System.Text.Json.JsonSerializer.Deserialize<HTTPValidationError>(responseText);
+                var validationMessage = validation?.Detail != null
+                    ? string.Join(", ", validation.Detail.Select(d => d.Msg))
+                    : responseText;
+                throw new InvalidOperationException(validationMessage);
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException($"BFL outpaint request failed ({(int)response.StatusCode}): {responseText}");
+            }
+
+            var result = System.Text.Json.JsonSerializer.Deserialize<AsyncResponse>(responseText);
+            if (result == null)
+            {
+                throw new InvalidOperationException("BFL outpaint request did not return a valid response");
+            }
+
+            return result;
         }
 
         public void UserDataDeleteRequested()
