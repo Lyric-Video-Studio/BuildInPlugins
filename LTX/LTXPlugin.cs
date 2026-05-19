@@ -8,7 +8,7 @@ namespace LTXPlugin
     public class LtxPlugin : IVideoPlugin, IImportFromImage, IValidateBothPayloads, ICancellableGeneration, IRequireMp3Converter
     {
         public string UniqueName { get => "LTXBuildIn"; }
-        public string DisplayName { get => "LTX"; }
+        public string DisplayName { get => "LTX (API)"; }
 
         public object GeneralDefaultSettings => new ConnectionSettings();
 

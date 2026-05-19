@@ -8,7 +8,7 @@ namespace WanPlugin
     public class WanVideoPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IRequestContentUploader, ITextualProgressIndication
     {
         public string UniqueName { get => "WanVideoBuildIn"; }
-        public string DisplayName { get => "WAN API"; }
+        public string DisplayName { get => "WAN (API)"; }
 
         public object GeneralDefaultSettings => new ConnectionSettings();
 
