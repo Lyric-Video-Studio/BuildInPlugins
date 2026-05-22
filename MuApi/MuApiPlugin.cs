@@ -1,4 +1,5 @@
 using MuApiPlugin.Models.GptImage2;
+using MuApiPlugin.Models.GeminiOmni;
 using MuApiPlugin.Models.HappyHorse1;
 using MuApiPlugin.Models.MidjourneyV8;
 using MuApiPlugin.Models.Seedance2;
@@ -42,19 +43,24 @@ namespace MuApiPlugin
 
             if (trackPayload is TrackPayload tp && itemsPayload is ItemPayload ip)
             {
+                if (TrackPayload.IsGeminiOmni(tp))
+                {
+                    return await GeminiOmniVideoHandler.GetVideo(_connectionSettings, tp.GeminiOmni, ip.GeminiOmni, folderToSaveVideo, tp.Model, ip);
+                }
+
                 if (TrackPayload.IsSeedance2(tp))
                 {
-                    return await Seedance2VideoHandler.GetVideo(_connectionSettings, tp.Seedance2, ip.Seedance2, folderToSaveVideo, tp.Model);
+                    return await Seedance2VideoHandler.GetVideo(_connectionSettings, tp.Seedance2, ip.Seedance2, folderToSaveVideo, tp.Model, ip);
                 }
 
                 if (TrackPayload.IsHappyHorse1(tp))
                 {
-                    return await HappyHorse1VideoHandler.GetVideo(_connectionSettings, tp.HappyHorse1, ip.HappyHorse1, folderToSaveVideo, tp.Model);
+                    return await HappyHorse1VideoHandler.GetVideo(_connectionSettings, tp.HappyHorse1, ip.HappyHorse1, folderToSaveVideo, tp.Model, ip);
                 }
 
                 if (TrackPayload.IsViduQ2Turbo(tp))
                 {
-                    return await ViduQ2TurboVideoHandler.GetVideo(_connectionSettings, tp.ViduQ2Turbo, ip.ViduQ2Turbo, folderToSaveVideo, tp.Model);
+                    return await ViduQ2TurboVideoHandler.GetVideo(_connectionSettings, tp.ViduQ2Turbo, ip.ViduQ2Turbo, folderToSaveVideo, tp.Model, ip);
                 }
             }
 
@@ -72,12 +78,12 @@ namespace MuApiPlugin
             {
                 if (ImageTrackPayload.IsGptImage2(tp))
                 {
-                    return await GptImage2ImageHandler.GetImage(_connectionSettings, tp.GptImage2, ip.GptImage2, tp.Model);
+                    return await GptImage2ImageHandler.GetImage(_connectionSettings, tp.GptImage2, ip.GptImage2, tp.Model, ip);
                 }
 
                 if (ImageTrackPayload.IsMidjourneyV8(tp))
                 {
-                    return await MidjourneyV8ImageHandler.GetImage(_connectionSettings, tp.MidjourneyV8, ip.MidjourneyV8, tp.Model);
+                    return await MidjourneyV8ImageHandler.GetImage(_connectionSettings, tp.MidjourneyV8, ip.MidjourneyV8, tp.Model, ip);
                 }
             }
 
@@ -137,6 +143,11 @@ namespace MuApiPlugin
                 return (false, "Duration must be greater than zero");
             }
 
+            if (payload is GeminiOmniItemPayload geminiOmniItem && geminiOmniItem.Duration <= 0)
+            {
+                return (false, "Duration must be greater than zero");
+            }
+
             if (payload is HappyHorse1ItemPayload happyHorseItem && happyHorseItem.Duration <= 0)
             {
                 return (false, "Duration must be greater than zero");
@@ -159,6 +170,47 @@ namespace MuApiPlugin
         {
             if (trackPaylod is TrackPayload track && itemPayload is ItemPayload item)
             {
+                if (TrackPayload.IsGeminiOmni(track))
+                {
+                    if (item.GeminiOmni.Duration <= 0)
+                    {
+                        return (false, "Duration must be greater than zero");
+                    }
+
+                    if (string.IsNullOrWhiteSpace($"{track.GeminiOmni.Prompt} {item.GeminiOmni.Prompt}".Trim()))
+                    {
+                        return (false, "Prompt missing");
+                    }
+
+                    var audioIdCount = track.GeminiOmni.AudioIds.AudioIds.Count(i => !string.IsNullOrWhiteSpace(i.AudioId));
+                    if (audioIdCount > 3)
+                    {
+                        return (false, "Gemini Omni supports up to 3 audio IDs");
+                    }
+
+                    var characterIdCount = track.GeminiOmni.CharacterIds.CharacterIds.Count(i => !string.IsNullOrWhiteSpace(i.CharacterId));
+                    if (characterIdCount > 3)
+                    {
+                        return (false, "Gemini Omni supports up to 3 character IDs");
+                    }
+
+                    if (track.Model == GeminiOmniTrackPayload.ModelI2V)
+                    {
+                        var imageCount = CountFiles(track.GeminiOmni.ImageReferences.ImageSources.Select(i => i.ImageFile))
+                            + CountFiles(item.GeminiOmni.ImageReferences.ImageSources.Select(i => i.ImageFile));
+
+                        if (imageCount == 0)
+                        {
+                            return (false, "Gemini Omni image-to-video requires at least one input image");
+                        }
+
+                        if (imageCount > 5)
+                        {
+                            return (false, "Gemini Omni image-to-video supports up to 5 input images");
+                        }
+                    }
+                }
+
                 if (TrackPayload.IsSeedance2(track))
                 {
                     if (string.IsNullOrWhiteSpace($"{track.Seedance2.Prompt} {item.Seedance2.Prompt}".Trim()))
@@ -318,6 +370,7 @@ namespace MuApiPlugin
                 {
                     return;
                 }
+                itemPayload.GeminiOmni.Prompt = text;
                 itemPayload.Seedance2.Prompt = text;
                 itemPayload.HappyHorse1.Prompt = text;
                 itemPayload.ViduQ2Turbo.Prompt = text;
@@ -376,7 +429,8 @@ namespace MuApiPlugin
 
             if (itemPayload is ItemPayload typedPayload)
             {
-                return typedPayload.Seedance2.Prompt
+                return typedPayload.GeminiOmni.Prompt
+                    ?? typedPayload.Seedance2.Prompt
                     ?? typedPayload.HappyHorse1.Prompt
                     ?? typedPayload.ViduQ2Turbo.Prompt
                     ?? "";
@@ -460,6 +514,16 @@ namespace MuApiPlugin
             if (itemPayload is ItemPayload typedPayload)
             {
                 var output = new List<string>();
+                if (trackPayload is TrackPayload videoTrack)
+                {
+                    output.AddRange(videoTrack.GeminiOmni.ImageReferences.ImageSources.Select(i => i.ImageFile));
+                    output.AddRange(videoTrack.Seedance2.ImageReferences.ImageSources.Select(i => i.ImageFile));
+                    output.AddRange(videoTrack.Seedance2.AudioReferences.AudioSources.Select(i => i.AudioFile));
+                    output.AddRange(videoTrack.Seedance2.VideoReferences.VideoSources.Select(i => i.VideoFile));
+                    output.AddRange(videoTrack.HappyHorse1.ImageReferences.ImageSources.Select(i => i.ImageFile));
+                }
+
+                output.AddRange(typedPayload.GeminiOmni.ImageReferences.ImageSources.Select(i => i.ImageFile));
                 output.AddRange(typedPayload.Seedance2.ImageReferences.ImageSources.Select(i => i.ImageFile));
                 output.AddRange(typedPayload.Seedance2.AudioReferences.AudioSources.Select(i => i.AudioFile));
                 output.AddRange(typedPayload.Seedance2.VideoReferences.VideoSources.Select(i => i.VideoFile));
@@ -501,6 +565,39 @@ namespace MuApiPlugin
             if (itemPayload is not ItemPayload typedPayload)
             {
                 return;
+            }
+
+            if (trackPayload is TrackPayload videoTrackPayload)
+            {
+                foreach (var geminiImageItem in videoTrackPayload.GeminiOmni.ImageReferences.ImageSources)
+                {
+                    geminiImageItem.ImageFile = ReplacePath(geminiImageItem.ImageFile, originalPath, newPath);
+                }
+
+                foreach (var seedanceImageItem in videoTrackPayload.Seedance2.ImageReferences.ImageSources)
+                {
+                    seedanceImageItem.ImageFile = ReplacePath(seedanceImageItem.ImageFile, originalPath, newPath);
+                }
+
+                foreach (var audioItem in videoTrackPayload.Seedance2.AudioReferences.AudioSources)
+                {
+                    audioItem.AudioFile = ReplacePath(audioItem.AudioFile, originalPath, newPath);
+                }
+
+                foreach (var videoItem in videoTrackPayload.Seedance2.VideoReferences.VideoSources)
+                {
+                    videoItem.VideoFile = ReplacePath(videoItem.VideoFile, originalPath, newPath);
+                }
+
+                foreach (var happyHorseImageItem in videoTrackPayload.HappyHorse1.ImageReferences.ImageSources)
+                {
+                    happyHorseImageItem.ImageFile = ReplacePath(happyHorseImageItem.ImageFile, originalPath, newPath);
+                }
+            }
+
+            foreach (var geminiImageItem in typedPayload.GeminiOmni.ImageReferences.ImageSources)
+            {
+                geminiImageItem.ImageFile = ReplacePath(geminiImageItem.ImageFile, originalPath, newPath);
             }
 
             foreach (var seedanceImageItem in typedPayload.Seedance2.ImageReferences.ImageSources)

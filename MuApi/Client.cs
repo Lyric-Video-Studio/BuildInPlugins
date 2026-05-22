@@ -23,10 +23,19 @@ namespace MuApiPlugin
         public List<string> images_list { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string> image_urls { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<string> audio_files { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string> audio_ids { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<string> video_files { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string> character_ids { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string image_url { get; set; }
@@ -42,6 +51,9 @@ namespace MuApiPlugin
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string movement_amplitude { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? seed { get; set; }
     }
 
     public class ImageGenerationRequest
@@ -118,7 +130,7 @@ namespace MuApiPlugin
         }
 
         public async Task<VideoResponse> GetVideo(GenerationRequest request, string endpointPath, string folderToSave,
-            ConnectionSettings connectionSettings, IMuApiPollingPayload originalItemPayload, Action<bool> saveAndRefreshCallback,
+            ConnectionSettings connectionSettings, IApiPollingPayload originalItemPayload, Action<bool> saveAndRefreshCallback,
             Action<string> textualProgressAction, CancellationToken cancellationToken)
         {
             try
@@ -171,7 +183,7 @@ namespace MuApiPlugin
         }
 
         public async Task<ImageResponse> GetImage(ImageGenerationRequest request, string endpointPath,
-            ConnectionSettings connectionSettings, IMuApiPollingPayload originalItemPayload, Action<bool> saveAndRefreshCallback,
+            ConnectionSettings connectionSettings, IApiPollingPayload originalItemPayload, Action<bool> saveAndRefreshCallback,
             Action<string> textualProgressAction, CancellationToken cancellationToken)
         {
             try
@@ -224,7 +236,7 @@ namespace MuApiPlugin
         }
 
         private static async Task<VideoResponse> PollVideoResult(HttpClient httpClient, string requestId, string folderToSave,
-            IMuApiPollingPayload originalItemPayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, CancellationToken cancellationToken)
+            IApiPollingPayload originalItemPayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, CancellationToken cancellationToken)
         {
             while (true)
             {
@@ -271,7 +283,7 @@ namespace MuApiPlugin
         }
 
         private static async Task<ImageResponse> PollImageResult(HttpClient httpClient, string requestId,
-            IMuApiPollingPayload originalItemPayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, CancellationToken cancellationToken)
+            IApiPollingPayload originalItemPayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, CancellationToken cancellationToken)
         {
             while (true)
             {
@@ -340,9 +352,9 @@ namespace MuApiPlugin
         {
             using var downloadClient = new HttpClient() { Timeout = Timeout.InfiniteTimeSpan };
             downloadClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
-            
+
             var response = await downloadClient.GetByteArrayAsync(url, cancellationToken);
-            
+
             return response;
         }
 

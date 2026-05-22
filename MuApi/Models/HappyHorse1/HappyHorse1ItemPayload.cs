@@ -4,11 +4,8 @@ using System.ComponentModel;
 
 namespace MuApiPlugin.Models.HappyHorse1
 {
-    public class HappyHorse1ItemPayload : IMuApiPollingPayload
+    public class HappyHorse1ItemPayload
     {
-        [Description("Generation id saved after submit. Leave it in place if you want the plugin to resume polling instead of creating a new request.")]
-        public string PollingId { get; set; }
-
         [Description("Item-level prompt suffix for Happy Horse 1 video generation.")]
         [EditorWidth(360)]
         public string Prompt { get; set; }

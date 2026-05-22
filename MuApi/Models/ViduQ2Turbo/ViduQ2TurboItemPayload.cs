@@ -4,11 +4,8 @@ using System.ComponentModel;
 
 namespace MuApiPlugin.Models.ViduQ2Turbo
 {
-    public class ViduQ2TurboItemPayload : IMuApiPollingPayload
+    public class ViduQ2TurboItemPayload
     {
-        [Description("Generation id saved after submit. Leave it in place if you want the plugin to resume polling instead of creating a new request.")]
-        public string PollingId { get; set; }
-
         [Description("Item-level prompt suffix for Vidu Q2 Turbo video generation.")]
         [EditorWidth(360)]
         public string Prompt { get; set; }

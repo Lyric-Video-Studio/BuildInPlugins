@@ -78,4 +78,5 @@ namespace MuApiPlugin
             IUriLauncher.Launcher.LaunchUrl($"https://muapi.ai/playground/{Model}");
         }
     }
+
 }

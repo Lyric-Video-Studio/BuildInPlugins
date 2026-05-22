@@ -4,7 +4,7 @@ namespace MuApiPlugin.Models.HappyHorse1
 {
     internal class HappyHorse1VideoHandler
     {
-        public static async Task<VideoResponse> GetVideo(ConnectionSettings connectionSettings, object trackPayload, object itemsPayload, string folderToSaveVideo, string model)
+        public static async Task<VideoResponse> GetVideo(ConnectionSettings connectionSettings, object trackPayload, object itemsPayload, string folderToSaveVideo, string model, IApiPollingPayload pollingId)
         {
             if (connectionSettings == null || string.IsNullOrWhiteSpace(connectionSettings.AccessToken))
             {
@@ -58,7 +58,7 @@ namespace MuApiPlugin.Models.HappyHorse1
                 }
             }
 
-            return await client.GetVideo(request, model, folderToSaveVideo, connectionSettings, typedItemPayload,
+            return await client.GetVideo(request, model, folderToSaveVideo, connectionSettings, pollingId,
                 MuApiVideoPlugin._saveAndRefreshCallback, MuApiVideoPlugin._textualProgressAction, MuApiVideoPlugin._cancellationToken);
         }
     }

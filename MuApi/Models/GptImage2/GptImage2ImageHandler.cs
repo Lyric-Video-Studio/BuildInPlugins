@@ -4,7 +4,7 @@ namespace MuApiPlugin.Models.GptImage2
 {
     internal class GptImage2ImageHandler
     {
-        public static async Task<ImageResponse> GetImage(ConnectionSettings connectionSettings, object trackPayload, object itemsPayload, string model)
+        public static async Task<ImageResponse> GetImage(ConnectionSettings connectionSettings, object trackPayload, object itemsPayload, string model, IApiPollingPayload pollingId)
         {
             if (connectionSettings == null || string.IsNullOrWhiteSpace(connectionSettings.AccessToken))
             {
@@ -66,7 +66,7 @@ namespace MuApiPlugin.Models.GptImage2
 
             request.images_list = uploadedImages.Count > 0 ? uploadedImages : null;
 
-            return await client.GetImage(request, model, connectionSettings, itemsPayload as GptImage2ItemPayload,
+            return await client.GetImage(request, model, connectionSettings, pollingId,
                 MuApiVideoPlugin._saveAndRefreshCallback, MuApiVideoPlugin._textualProgressAction, MuApiVideoPlugin._cancellationToken);
         }
     }

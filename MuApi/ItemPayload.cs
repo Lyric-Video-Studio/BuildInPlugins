@@ -1,4 +1,5 @@
 using MuApiPlugin.Models.GptImage2;
+using MuApiPlugin.Models.GeminiOmni;
 using MuApiPlugin.Models.HappyHorse1;
 using MuApiPlugin.Models.Seedance2;
 using MuApiPlugin.Models.ViduQ2Turbo;
@@ -7,7 +8,7 @@ using System.Collections.ObjectModel;
 
 namespace MuApiPlugin
 {
-    public class ItemPayload : IPayloadPropertyVisibility
+    public class ItemPayload : IPayloadPropertyVisibility, IApiPollingPayload
     {
         public ItemPayload()
         {
@@ -17,17 +18,23 @@ namespace MuApiPlugin
         {
             if (isImageSource)
             {
+                GeminiOmni.ImageReferences.ImageSources.Add(new ImageReferenceItem() { ImageFile = text });
                 Seedance2.ImageReferences.ImageSources.Add(new ImageReferenceItem() { ImageFile = text });
                 HappyHorse1.ImageReferences.ImageSources.Add(new ImageReferenceItem() { ImageFile = text });
                 ViduQ2Turbo.StartImage = text;
             }
             else
             {
+                GeminiOmni.Prompt = text;
                 Seedance2.Prompt = text;
                 HappyHorse1.Prompt = text;
                 ViduQ2Turbo.Prompt = text;
             }
         }
+
+        [HideAllChildren]
+        [ParentName("")]
+        public GeminiOmniItemPayload GeminiOmni { get; set; } = new();
 
         [HideAllChildren]
         [ParentName("")]
@@ -40,6 +47,7 @@ namespace MuApiPlugin
         [HideAllChildren]
         [ParentName("")]
         public ViduQ2TurboItemPayload ViduQ2Turbo { get; set; } = new();
+        public string PollingId { get; set; }
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
@@ -47,6 +55,8 @@ namespace MuApiPlugin
             {
                 switch (propertyName)
                 {
+                    case nameof(GeminiOmni):
+                        return TrackPayload.IsGeminiOmni(tp);
                     case nameof(Seedance2):
                         return TrackPayload.IsSeedance2(tp);
                     case nameof(HappyHorse1):
@@ -55,6 +65,11 @@ namespace MuApiPlugin
                         return TrackPayload.IsViduQ2Turbo(tp);
                     default:
                         break;
+                }
+
+                if (TrackPayload.IsGeminiOmni(tp))
+                {
+                    return GeminiOmni.ShouldPropertyBeVisible(propertyName, tp.Model);
                 }
 
                 if (TrackPayload.IsSeedance2(tp))

@@ -4,7 +4,7 @@ namespace MuApiPlugin.Models.Seedance2
 {
     internal class Seedance2VideoHandler
     {
-        public static async Task<VideoResponse> GetVideo(ConnectionSettings connectionSettings, Seedance2TrackPayload trackPayload, Seedance2ItemPayload itemsPayload, string folderToSaveVideo, string model)
+        public static async Task<VideoResponse> GetVideo(ConnectionSettings connectionSettings, Seedance2TrackPayload trackPayload, Seedance2ItemPayload itemsPayload, string folderToSaveVideo, string model, IApiPollingPayload pollingId)
         {
             if (connectionSettings == null || string.IsNullOrWhiteSpace(connectionSettings.AccessToken))
             {
@@ -74,7 +74,7 @@ namespace MuApiPlugin.Models.Seedance2
                 video_files = uploadedVideos.Count > 0 ? uploadedVideos : null,
             };
 
-            return await client.GetVideo(request, model, folderToSaveVideo, connectionSettings, itemsPayload,
+            return await client.GetVideo(request, model, folderToSaveVideo, connectionSettings, pollingId,
                 MuApiVideoPlugin._saveAndRefreshCallback, MuApiVideoPlugin._textualProgressAction, MuApiVideoPlugin._cancellationToken);
         }        
 

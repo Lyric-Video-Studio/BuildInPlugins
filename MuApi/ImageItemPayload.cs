@@ -4,7 +4,7 @@ using PluginBase;
 
 namespace MuApiPlugin
 {
-    public class ImageItemPayload : IPayloadPropertyVisibility
+    public class ImageItemPayload : IPayloadPropertyVisibility, IApiPollingPayload
     {
         public ImageItemPayload()
         {
@@ -23,6 +23,7 @@ namespace MuApiPlugin
         [HideAllChildren]
         [ParentName("")]
         public MidjourneyV8ItemPayload MidjourneyV8 { get; set; } = new();
+        public string PollingId { get; set; }
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {

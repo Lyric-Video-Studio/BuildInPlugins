@@ -4,7 +4,7 @@ namespace MuApiPlugin.Models.MidjourneyV8
 {
     internal class MidjourneyV8ImageHandler
     {
-        public static async Task<ImageResponse> GetImage(ConnectionSettings connectionSettings, object trackPayload, object itemsPayload, string model)
+        public static async Task<ImageResponse> GetImage(ConnectionSettings connectionSettings, object trackPayload, object itemsPayload, string model, IApiPollingPayload pollingId)
         {
             if (connectionSettings == null || string.IsNullOrWhiteSpace(connectionSettings.AccessToken))
             {
@@ -61,7 +61,7 @@ namespace MuApiPlugin.Models.MidjourneyV8
                 return new ImageResponse() { Success = false, ErrorMsg = ex.Message };
             }
 
-            return await client.GetImage(request, model, connectionSettings, itemsPayload as MidjourneyV8ItemPayload,
+            return await client.GetImage(request, model, connectionSettings, pollingId,
                 MuApiVideoPlugin._saveAndRefreshCallback, MuApiVideoPlugin._textualProgressAction, MuApiVideoPlugin._cancellationToken);
         }
     }

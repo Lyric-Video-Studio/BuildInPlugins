@@ -1,4 +1,5 @@
 using Avalonia.Platform.Storage;
+using MuApiPlugin.Models.GeminiOmni;
 using MuApiPlugin.Models.HappyHorse1;
 using MuApiPlugin.Models.Seedance2;
 using MuApiPlugin.Models.ViduQ2Turbo;
@@ -12,7 +13,8 @@ namespace MuApiPlugin
         public event EventHandler ModelChanged;
         private string model = Seedance2TrackPayload.ModelT2V;
 
-        [PropertyComboOptions([Seedance2TrackPayload.ModelT2V, Seedance2TrackPayload.ModelI2V, Seedance2TrackPayload.ModelOmniRef,
+        [PropertyComboOptions([GeminiOmniTrackPayload.ModelT2V, GeminiOmniTrackPayload.ModelI2V,
+            Seedance2TrackPayload.ModelT2V, Seedance2TrackPayload.ModelI2V, Seedance2TrackPayload.ModelOmniRef,
             HappyHorse1TrackPayload.ModelT2V1080p, HappyHorse1TrackPayload.ModelI2V1080p, HappyHorse1TrackPayload.ModelT2V720p, HappyHorse1TrackPayload.ModelI2V720pp,
             ViduQ2TurboTrackPayload.ModelT2V, ViduQ2TurboTrackPayload.ModelI2V, ViduQ2TurboTrackPayload.ModelStartEnd,
             Seedance2TrackPayload.ModelT2V480p, Seedance2TrackPayload.ModelI2V480p])]
@@ -33,6 +35,10 @@ namespace MuApiPlugin
 
         [HideAllChildren]
         [ParentName("")]
+        public GeminiOmniTrackPayload GeminiOmni { get; set; } = new();
+
+        [HideAllChildren]
+        [ParentName("")]
         public Seedance2TrackPayload Seedance2 { get; set; } = new Seedance2TrackPayload();
 
         [HideAllChildren]
@@ -49,6 +55,8 @@ namespace MuApiPlugin
             {
                 switch (propertyName)
                 {
+                    case nameof(GeminiOmni):
+                        return IsGeminiOmni(tp);
                     case nameof(Seedance2):
                         return IsSeedance2(tp);
                     case nameof(HappyHorse1):
@@ -57,6 +65,11 @@ namespace MuApiPlugin
                         return IsViduQ2Turbo(tp);
                     default:
                         break;
+                }
+
+                if (IsGeminiOmni(tp))
+                {
+                    return tp.GeminiOmni.ShouldPropertyBeVisible(propertyName, model);
                 }
 
                 if (IsSeedance2(tp))
@@ -75,6 +88,11 @@ namespace MuApiPlugin
                 }
             }
             return true;
+        }
+
+        public static bool IsGeminiOmni(TrackPayload tp)
+        {
+            return GeminiOmniTrackPayload.IsGeminiOmniVideoModel(tp.Model);
         }
 
         public static bool IsSeedance2(TrackPayload tp)
