@@ -19,7 +19,10 @@ namespace MuApiPlugin.Models.GptImage2
 
             var request = new ImageGenerationRequest()
             {
-                prompt = $"{typedTrackPayload.Prompt} {typedItemPayload.Prompt}".Trim()
+                prompt = $"{typedTrackPayload.Prompt} {typedItemPayload.Prompt}".Trim(),
+                aspect_ratio = string.IsNullOrWhiteSpace(typedTrackPayload.AspectRatio) ? null : typedTrackPayload.AspectRatio,
+                resolution = string.IsNullOrWhiteSpace(typedTrackPayload.Resolution) ? null : typedTrackPayload.Resolution,
+                quality = string.IsNullOrWhiteSpace(typedTrackPayload.Quality) ? null : typedTrackPayload.Quality
             };
 
             var imageFiles = typedTrackPayload.ImageReferences.ImageSources.Select(i => i.ImageFile)

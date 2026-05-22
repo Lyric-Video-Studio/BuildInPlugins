@@ -309,6 +309,21 @@ namespace MuApiPlugin
                         return (false, "Prompt missing");
                     }
 
+                    var aspectRatio = imageTrack.GptImage2.AspectRatio?.Trim();
+                    var resolution = imageTrack.GptImage2.Resolution?.Trim();
+
+                    if ((string.IsNullOrWhiteSpace(aspectRatio) || aspectRatio.Equals("auto", StringComparison.OrdinalIgnoreCase)) &&
+                        !string.Equals(resolution, "1K", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return (false, "GPT Image 2 requires resolution 1K when aspect ratio is auto");
+                    }
+
+                    if (string.Equals(aspectRatio, "1:1", StringComparison.OrdinalIgnoreCase) &&
+                        string.Equals(resolution, "4K", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return (false, "GPT Image 2 does not support 4K with aspect ratio 1:1");
+                    }
+
                     var imageCount = CountFiles(imageTrack.GptImage2.ImageReferences.ImageSources.Select(i => i.ImageFile))
                         + CountFiles(imageItem.GptImage2.ImageReferences.ImageSources.Select(i => i.ImageFile));
 
