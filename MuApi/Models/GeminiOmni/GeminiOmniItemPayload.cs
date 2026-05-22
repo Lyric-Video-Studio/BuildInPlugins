@@ -13,6 +13,24 @@ namespace MuApiPlugin.Models.GeminiOmni
         [PropertyComboOptions(["4", "6", "8", "10"])]
         public int Duration { get; set; } = 8;
 
+        [CustomName("Voice profile 1")]
+        public string AudioId1 { get; set; } = GeminiOmniProfileOptions.None;
+
+        [CustomName("Voice profile 2")]
+        public string AudioId2 { get; set; } = GeminiOmniProfileOptions.None;
+
+        [CustomName("Voice profile 3")]
+        public string AudioId3 { get; set; } = GeminiOmniProfileOptions.None;
+
+        [CustomName("Character 1")]
+        public string CharacterId1 { get; set; } = GeminiOmniProfileOptions.None;
+
+        [CustomName("Character 2")]
+        public string CharacterId2 { get; set; } = GeminiOmniProfileOptions.None;
+
+        [CustomName("Character 3")]
+        public string CharacterId3 { get; set; } = GeminiOmniProfileOptions.None;
+
         public ImageReferenceContainer ImageReferences { get; set; } = new();
 
         public bool ShouldPropertyBeVisible(string propertyName, string model)

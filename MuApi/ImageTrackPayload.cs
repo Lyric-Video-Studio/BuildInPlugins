@@ -1,4 +1,5 @@
 using MuApiPlugin.Models.GptImage2;
+using MuApiPlugin.Models.GeminiOmni;
 using MuApiPlugin.Models.MidjourneyV8;
 using PluginBase;
 using System.ComponentModel;
@@ -10,7 +11,7 @@ namespace MuApiPlugin
         public event EventHandler ModelChanged;
         private string model = GptImage2TrackPayload.ModelTxtToImg;
 
-        [PropertyComboOptions([GptImage2TrackPayload.ModelTxtToImg, GptImage2TrackPayload.ModelImgToImg, MidjourneyV8TrackPayload.ModelTxtToImg])]
+        [PropertyComboOptions([GptImage2TrackPayload.ModelTxtToImg, GptImage2TrackPayload.ModelImgToImg, MidjourneyV8TrackPayload.ModelTxtToImg, GeminiOmniCharacterTrackPayload.ModelCharacter])]
         public string Model
         {
             get => model;
@@ -28,6 +29,10 @@ namespace MuApiPlugin
 
         [HideAllChildren]
         [ParentName("")]
+        public GeminiOmniCharacterTrackPayload GeminiOmniCharacter { get; set; } = new();
+
+        [HideAllChildren]
+        [ParentName("")]
         public GptImage2TrackPayload GptImage2 { get; set; } = new();
 
         [HideAllChildren]
@@ -40,12 +45,19 @@ namespace MuApiPlugin
             {
                 switch (propertyName)
                 {
+                    case nameof(GeminiOmniCharacter):
+                        return IsGeminiOmniCharacter(tp);
                     case nameof(GptImage2):
                         return IsGptImage2(tp);
                     case nameof(MidjourneyV8):
                         return IsMidjourneyV8(tp);
                     default:
                         break;
+                }
+
+                if (IsGeminiOmniCharacter(tp))
+                {
+                    return tp.GeminiOmniCharacter.ShouldPropertyBeVisible(propertyName, model);
                 }
 
                 if (IsGptImage2(tp))
@@ -60,6 +72,11 @@ namespace MuApiPlugin
             }
 
             return true;
+        }
+
+        public static bool IsGeminiOmniCharacter(ImageTrackPayload tp)
+        {
+            return tp.Model == GeminiOmniCharacterTrackPayload.ModelCharacter;
         }
 
         public static bool IsGptImage2(ImageTrackPayload tp)

@@ -91,6 +91,41 @@ namespace MuApiPlugin
         public long? seed { get; set; }
     }
 
+    public class AudioProfileRequest
+    {
+        public string audio_id { get; set; }
+
+        public string name { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string voice_description { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string example_dialogue { get; set; }
+    }
+
+    public class CharacterProfileRequest
+    {
+        public string descriptions { get; set; }
+
+        public List<string> images_list { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string character_name { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string> audio_ids { get; set; }
+    }
+
+    public class JsonResponse
+    {
+        public bool Success { get; set; }
+
+        public string ErrorMsg { get; set; }
+
+        public JsonNode ResultNode { get; set; }
+    }
+
     internal class Client
     {
         private static readonly TimeSpan PollingDelay = TimeSpan.FromSeconds(10);
@@ -241,6 +276,59 @@ namespace MuApiPlugin
             }
         }
 
+        public async Task<JsonResponse> GetJsonResult(object request, string endpointPath,
+            ConnectionSettings connectionSettings, IApiPollingPayload originalItemPayload, Action<bool> saveAndRefreshCallback,
+            Action<string> textualProgressAction, CancellationToken cancellationToken)
+        {
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                using var httpClient = CreateApiClient(connectionSettings);
+
+                if (!string.IsNullOrWhiteSpace(originalItemPayload?.PollingId))
+                {
+                    return await PollJsonResult(httpClient, originalItemPayload.PollingId, originalItemPayload, saveAndRefreshCallback, textualProgressAction, cancellationToken);
+                }
+
+                var serialized = JsonHelper.Serialize(request);
+                using var stringContent = new StringContent(serialized);
+                stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+                var response = await httpClient.PostAsync(endpointPath.TrimStart('/'), stringContent, cancellationToken);
+                var payload = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new JsonResponse() { Success = false, ErrorMsg = $"Error: {response.StatusCode}, details: {GetErrorMessage(payload)}" };
+                }
+
+                var node = JsonNode.Parse(payload);
+                var requestId = GetString(node, "data", "request_id") ?? GetString(node, "request_id");
+
+                if (string.IsNullOrEmpty(requestId))
+                {
+                    return new JsonResponse() { Success = false, ErrorMsg = "MuApi response did not contain a request_id." };
+                }
+
+                if (originalItemPayload != null)
+                {
+                    originalItemPayload.PollingId = requestId;
+                    saveAndRefreshCallback?.Invoke(true);
+                }
+
+                return await PollJsonResult(httpClient, requestId, originalItemPayload, saveAndRefreshCallback, textualProgressAction, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return new JsonResponse() { Success = false, ErrorMsg = "User cancelled" };
+            }
+            catch (Exception ex)
+            {
+                return new JsonResponse() { Success = false, ErrorMsg = ex.Message };
+            }
+        }
+
         private static async Task<VideoResponse> PollVideoResult(HttpClient httpClient, string requestId, string folderToSave,
             IApiPollingPayload originalItemPayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, CancellationToken cancellationToken)
         {
@@ -344,6 +432,46 @@ namespace MuApiPlugin
             }
         }
 
+        private static async Task<JsonResponse> PollJsonResult(HttpClient httpClient, string requestId,
+            IApiPollingPayload originalItemPayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction, CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var response = await httpClient.GetAsync($"predictions/{requestId}/result", cancellationToken);
+                var payload = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new JsonResponse() { Success = false, ErrorMsg = $"Polling failed: {response.StatusCode}, details: {GetErrorMessage(payload)}" };
+                }
+
+                var node = JsonNode.Parse(payload);
+                var status = (GetString(node, "data", "status") ?? GetString(node, "status") ?? "").ToLowerInvariant();
+
+                if (status is "completed" or "succeeded" or "success")
+                {
+                    textualProgressAction?.Invoke("");
+                    return new JsonResponse() { Success = true, ResultNode = node };
+                }
+
+                if (string.IsNullOrWhiteSpace(status) && IsDirectJsonResult(node))
+                {
+                    textualProgressAction?.Invoke("");
+                    return new JsonResponse() { Success = true, ResultNode = node };
+                }
+
+                if (status is "failed" or "error" or "cancelled" or "canceled")
+                {
+                    return new JsonResponse() { Success = false, ErrorMsg = GetErrorMessage(payload) };
+                }
+
+                textualProgressAction?.Invoke(string.IsNullOrEmpty(status) ? "Processing" : status);
+                await Task.Delay(PollingDelay, cancellationToken);
+            }
+        }
+
         private static HttpClient CreateApiClient(ConnectionSettings connectionSettings)
         {
             var httpClient = new HttpClient() { Timeout = Timeout.InfiniteTimeSpan };
@@ -376,6 +504,8 @@ namespace MuApiPlugin
                 var node = JsonNode.Parse(payload);
                 return GetString(node, "error") ??
                     GetString(node, "message") ??
+                    GetString(node, "detail", "error") ??
+                    GetString(node, "detail", "message") ??
                     GetString(node, "detail") ??
                     GetString(node, "data", "error") ??
                     payload;
@@ -399,7 +529,33 @@ namespace MuApiPlugin
                 current = current[segment];
             }
 
-            return current?.GetValue<string>();
+            return current switch
+            {
+                null => null,
+                JsonValue => current.ToString(),
+                _ => current.ToJsonString()
+            };
+        }
+
+        private static bool IsDirectJsonResult(JsonNode node)
+        {
+            if (node is not JsonObject obj || obj.Count == 0)
+            {
+                return false;
+            }
+
+            if (obj.ContainsKey("status") || obj.ContainsKey("request_id") || obj.ContainsKey("data"))
+            {
+                return false;
+            }
+
+            return obj.ContainsKey("characterId")
+                || obj.ContainsKey("character_id")
+                || obj.ContainsKey("characterName")
+                || obj.ContainsKey("image")
+                || obj.ContainsKey("kieAudioId")
+                || obj.ContainsKey("audioId")
+                || obj.ContainsKey("audio_id");
         }
 
         private static string GetImageFormat(string url)

@@ -10,7 +10,7 @@ using System.Text.Json.Nodes;
 namespace MuApiPlugin
 {
 #pragma warning disable CS1998
-    public class MuApiVideoPlugin : IVideoPlugin, IImagePlugin, ISaveAndRefresh, IImportFromImage, IValidateBothPayloads, ICancellableGeneration, ITextualProgressIndication, ITrackPayloadFromModel
+    public class MuApiVideoPlugin : IVideoPlugin, IImagePlugin, IAudioPlugin, ISaveAndRefresh, ISaveConnectionSettings, IImportFromImage, IValidateBothPayloads, ICancellableGeneration, ITextualProgressIndication, ITrackPayloadFromModel
     {
         public string UniqueName => "MuApiBuildIn";
 
@@ -33,6 +33,7 @@ namespace MuApiPlugin
         public static Action<bool> _saveAndRefreshCallback;
         public static Action<string> _textualProgressAction;
         public static CancellationToken _cancellationToken;
+        private Action<object> _saveConnectionSettingsCallback;
 
         public async Task<VideoResponse> GetVideo(object trackPayload, object itemsPayload, string folderToSaveVideo)
         {
@@ -76,6 +77,11 @@ namespace MuApiPlugin
 
             if (trackPayload is ImageTrackPayload tp && itemsPayload is ImageItemPayload ip)
             {
+                if (ImageTrackPayload.IsGeminiOmniCharacter(tp))
+                {
+                    return await GeminiOmniCharacterImageHandler.GetImage(_connectionSettings, tp.GeminiOmniCharacter, ip.GeminiOmniCharacter, tp.Model, ip, _saveConnectionSettingsCallback);
+                }
+
                 if (ImageTrackPayload.IsGptImage2(tp))
                 {
                     return await GptImage2ImageHandler.GetImage(_connectionSettings, tp.GptImage2, ip.GptImage2, tp.Model, ip);
@@ -84,6 +90,24 @@ namespace MuApiPlugin
                 if (ImageTrackPayload.IsMidjourneyV8(tp))
                 {
                     return await MidjourneyV8ImageHandler.GetImage(_connectionSettings, tp.MidjourneyV8, ip.MidjourneyV8, tp.Model, ip);
+                }
+            }
+
+            throw new NotImplementedException();
+        }
+
+        public async Task<AudioResponse> GetAudio(object trackPayload, object itemsPayload, string folderToSaveAudio)
+        {
+            if (_connectionSettings == null || string.IsNullOrWhiteSpace(_connectionSettings.AccessToken))
+            {
+                return new AudioResponse() { Success = false, ErrorMsg = "Uninitialized" };
+            }
+
+            if (trackPayload is AudioTrackPayload tp && itemsPayload is AudioItemPayload ip)
+            {
+                if (AudioTrackPayload.IsGeminiOmniAudio(tp))
+                {
+                    return await GeminiOmniAudioHandler.GetAudio(_connectionSettings, tp.GeminiOmniAudio, ip.GeminiOmniAudio, tp.Model, ip, _saveConnectionSettingsCallback);
                 }
             }
 
@@ -108,6 +132,22 @@ namespace MuApiPlugin
 
         public async Task<string[]> SelectionOptionsForProperty(string propertyName)
         {
+            if (propertyName == nameof(GeminiOmniAudioTrackPayload.PresetVoiceId))
+            {
+                return GeminiOmniAudioTrackPayload.PresetVoiceIds;
+            }
+
+            if (propertyName is nameof(GeminiOmniItemPayload.AudioId1) or nameof(GeminiOmniItemPayload.AudioId2) or nameof(GeminiOmniItemPayload.AudioId3)
+                or nameof(GeminiOmniCharacterItemPayload.AudioId1) or nameof(GeminiOmniCharacterItemPayload.AudioId2) or nameof(GeminiOmniCharacterItemPayload.AudioId3))
+            {
+                return [GeminiOmniProfileOptions.None, .. (_connectionSettings?.GetGeminiOmniAudioProfileNames() ?? Array.Empty<string>())];
+            }
+
+            if (propertyName is nameof(GeminiOmniItemPayload.CharacterId1) or nameof(GeminiOmniItemPayload.CharacterId2) or nameof(GeminiOmniItemPayload.CharacterId3))
+            {
+                return [GeminiOmniProfileOptions.None, .. (_connectionSettings?.GetGeminiOmniCharacterProfileNames() ?? Array.Empty<string>())];
+            }
+
             return Array.Empty<string>();
         }
 
@@ -117,6 +157,7 @@ namespace MuApiPlugin
             {
                 IPluginBase.TrackType.Video => SetupConnections(JsonHelper.Deserialize<TrackPayload>(fileName) as TrackPayload),
                 IPluginBase.TrackType.Image => SetupConnections(JsonHelper.Deserialize<ImageTrackPayload>(fileName) as ImageTrackPayload),
+                IPluginBase.TrackType.Audio => SetupConnections(JsonHelper.Deserialize<AudioTrackPayload>(fileName) as AudioTrackPayload),
                 _ => null
             };
         }
@@ -158,9 +199,14 @@ namespace MuApiPlugin
                 return (false, "Duration must be greater than zero");
             }
 
-            if (payload is ImageItemPayload gptImage2Payload && string.IsNullOrWhiteSpace(gptImage2Payload.GptImage2?.Prompt))
+            if (payload is AudioItemPayload audioPayload)
             {
-                return (false, "Prompt missing");
+                return ValidateGeminiOmniAudioPayload(audioPayload.GeminiOmniAudio, null);
+            }
+
+            if (payload is GeminiOmniAudioItemPayload geminiOmniAudioPayload)
+            {
+                return ValidateGeminiOmniAudioPayload(geminiOmniAudioPayload, null);
             }
 
             return (true, "");
@@ -182,13 +228,13 @@ namespace MuApiPlugin
                         return (false, "Prompt missing");
                     }
 
-                    var audioIdCount = track.GeminiOmni.AudioIds.AudioIds.Count(i => !string.IsNullOrWhiteSpace(i.AudioId));
+                    var audioIdCount = CountIds(item.GeminiOmni.AudioId1, item.GeminiOmni.AudioId2, item.GeminiOmni.AudioId3);
                     if (audioIdCount > 3)
                     {
                         return (false, "Gemini Omni supports up to 3 audio IDs");
                     }
 
-                    var characterIdCount = track.GeminiOmni.CharacterIds.CharacterIds.Count(i => !string.IsNullOrWhiteSpace(i.CharacterId));
+                    var characterIdCount = CountIds(item.GeminiOmni.CharacterId1, item.GeminiOmni.CharacterId2, item.GeminiOmni.CharacterId3);
                     if (characterIdCount > 3)
                     {
                         return (false, "Gemini Omni supports up to 3 character IDs");
@@ -300,8 +346,41 @@ namespace MuApiPlugin
 
             }
 
+            if (trackPaylod is AudioTrackPayload audioTrack && itemPayload is AudioItemPayload audioItem)
+            {
+                if (AudioTrackPayload.IsGeminiOmniAudio(audioTrack))
+                {
+                    if (string.IsNullOrWhiteSpace(audioTrack.GeminiOmniAudio.PresetVoiceId))
+                    {
+                        return (false, "Base preset voice missing");
+                    }
+
+                    return ValidateGeminiOmniAudioPayload(audioItem.GeminiOmniAudio, audioTrack.GeminiOmniAudio);
+                }
+            }
+
             if (trackPaylod is ImageTrackPayload imageTrack && itemPayload is ImageItemPayload imageItem)
             {
+                if (ImageTrackPayload.IsGeminiOmniCharacter(imageTrack))
+                {
+                    if (string.IsNullOrWhiteSpace(imageItem.GeminiOmniCharacter.Descriptions))
+                    {
+                        return (false, "Character description missing");
+                    }
+
+                    var imageCount = CountFiles(imageItem.GeminiOmniCharacter.ImageReferences.ImageSources.Select(i => i.ImageFile));
+                    if (imageCount != 1)
+                    {
+                        return (false, "Gemini Omni Character requires exactly one reference image");
+                    }
+
+                    var audioIdCount = CountIds(imageItem.GeminiOmniCharacter.AudioId1, imageItem.GeminiOmniCharacter.AudioId2, imageItem.GeminiOmniCharacter.AudioId3);
+                    if (audioIdCount > 3)
+                    {
+                        return (false, "Gemini Omni Character supports up to 3 audio IDs");
+                    }
+                }
+
                 if (ImageTrackPayload.IsGptImage2(imageTrack))
                 {
                     if (string.IsNullOrWhiteSpace($"{imageTrack.GptImage2.Prompt} {imageItem.GptImage2.Prompt}".Trim()))
@@ -364,6 +443,7 @@ namespace MuApiPlugin
             {
                 IPluginBase.TrackType.Video => new ItemPayload(text, false),
                 IPluginBase.TrackType.Image => new ImageItemPayload(text),
+                IPluginBase.TrackType.Audio => new AudioItemPayload(text),
                 _ => null
             };
         }
@@ -373,6 +453,7 @@ namespace MuApiPlugin
             return CurrentTrackType switch
             {
                 IPluginBase.TrackType.Video => new ItemPayload(imgSource, true),
+                IPluginBase.TrackType.Image => new ImageItemPayload(imgSource, true),
                 _ => null
             };
         }
@@ -390,6 +471,15 @@ namespace MuApiPlugin
                 itemPayload.HappyHorse1.Prompt = text;
                 itemPayload.ViduQ2Turbo.Prompt = text;
             }
+            else if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                if (payload is not AudioItemPayload audioItemPayload)
+                {
+                    return;
+                }
+
+                audioItemPayload.GeminiOmniAudio.ExampleDialogue = text?.Length > 120 ? text[..120] : text;
+            }
             else if (CurrentTrackType == IPluginBase.TrackType.Image)
             {
                 if (payload is not ImageItemPayload imageItemPayload)
@@ -399,6 +489,7 @@ namespace MuApiPlugin
 
                 imageItemPayload.GptImage2.Prompt = text;
                 imageItemPayload.MidjourneyV8.Prompt = text;
+                imageItemPayload.GeminiOmniCharacter.Descriptions = text;
             }
         }
 
@@ -408,6 +499,7 @@ namespace MuApiPlugin
             {
                 IPluginBase.TrackType.Video => JsonHelper.ToExactType<ItemPayload>(obj),
                 IPluginBase.TrackType.Image => JsonHelper.ToExactType<ImageItemPayload>(obj),
+                IPluginBase.TrackType.Audio => JsonHelper.ToExactType<AudioItemPayload>(obj),
                 _ => null
             };
         }
@@ -421,7 +513,7 @@ namespace MuApiPlugin
                 case IPluginBase.TrackType.Video:
                     return SetupConnections(JsonHelper.ToExactType<TrackPayload>(obj) as TrackPayload);
                 case IPluginBase.TrackType.Audio:
-                    return null;
+                    return SetupConnections(JsonHelper.ToExactType<AudioTrackPayload>(obj) as AudioTrackPayload);
                 default:
                     break;
             }
@@ -437,8 +529,21 @@ namespace MuApiPlugin
         {
             if (CurrentTrackType == IPluginBase.TrackType.Image && itemPayload is ImageItemPayload typedImagePayload)
             {
+                if (!string.IsNullOrWhiteSpace(typedImagePayload.GeminiOmniCharacter.Descriptions))
+                {
+                    return typedImagePayload.GeminiOmniCharacter.Descriptions;
+                }
+
                 return typedImagePayload.GptImage2.Prompt
                     ?? typedImagePayload.MidjourneyV8.Prompt
+                    ?? "";
+            }
+
+            if (CurrentTrackType == IPluginBase.TrackType.Audio && itemPayload is AudioItemPayload typedAudioPayload)
+            {
+                return typedAudioPayload.GeminiOmniAudio.Name
+                    ?? typedAudioPayload.GeminiOmniAudio.ExampleDialogue
+                    ?? typedAudioPayload.GeminiOmniAudio.VoiceDescription
                     ?? "";
             }
 
@@ -461,6 +566,11 @@ namespace MuApiPlugin
                 return SetupConnections(new TrackPayload());
             }
 
+            if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                return SetupConnections(new AudioTrackPayload());
+            }
+
             if (CurrentTrackType == IPluginBase.TrackType.Image)
             {
                 return SetupConnections(new ImageTrackPayload());
@@ -474,6 +584,11 @@ namespace MuApiPlugin
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 return new ItemPayload();
+            }
+
+            if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                return new AudioItemPayload();
             }
 
             if (CurrentTrackType == IPluginBase.TrackType.Image)
@@ -491,6 +606,11 @@ namespace MuApiPlugin
                 return JsonHelper.DeepCopy<TrackPayload>(obj);
             }
 
+            if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                return JsonHelper.DeepCopy<AudioTrackPayload>(obj);
+            }
+
             if (CurrentTrackType == IPluginBase.TrackType.Image)
             {
                 return JsonHelper.DeepCopy<ImageTrackPayload>(obj);
@@ -506,6 +626,11 @@ namespace MuApiPlugin
                 return JsonHelper.DeepCopy<ItemPayload>(obj);
             }
 
+            if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                return JsonHelper.DeepCopy<AudioItemPayload>(obj);
+            }
+
             if (CurrentTrackType == IPluginBase.TrackType.Image)
             {
                 return JsonHelper.DeepCopy<ImageItemPayload>(obj);
@@ -519,11 +644,17 @@ namespace MuApiPlugin
             if (trackPayload is ImageTrackPayload imageTrack && itemPayload is ImageItemPayload imageItem)
             {
                 var output = new List<string>();
+                output.AddRange(imageItem.GeminiOmniCharacter.ImageReferences.ImageSources.Select(i => i.ImageFile));
                 output.AddRange(imageTrack.GptImage2.ImageReferences.ImageSources.Select(i => i.ImageFile));
                 output.AddRange(imageItem.GptImage2.ImageReferences.ImageSources.Select(i => i.ImageFile));
                 output.AddRange(imageTrack.MidjourneyV8.ImageReferences.ImageSources.Select(i => i.ImageFile));
                 output.AddRange(imageItem.MidjourneyV8.ImageReferences.ImageSources.Select(i => i.ImageFile));
                 return output;
+            }
+
+            if (trackPayload is AudioTrackPayload && itemPayload is AudioItemPayload)
+            {
+                return [];
             }
 
             if (itemPayload is ItemPayload typedPayload)
@@ -555,6 +686,11 @@ namespace MuApiPlugin
         {
             if (trackPayload is ImageTrackPayload imageTrack && itemPayload is ImageItemPayload imageItem)
             {
+                foreach (var imageRef in imageItem.GeminiOmniCharacter.ImageReferences.ImageSources)
+                {
+                    imageRef.ImageFile = ReplacePath(imageRef.ImageFile, originalPath, newPath);
+                }
+
                 foreach (var imageRef in imageTrack.GptImage2.ImageReferences.ImageSources)
                 {
                     imageRef.ImageFile = ReplacePath(imageRef.ImageFile, originalPath, newPath);
@@ -574,6 +710,11 @@ namespace MuApiPlugin
                 {
                     imageRef.ImageFile = ReplacePath(imageRef.ImageFile, originalPath, newPath);
                 }
+                return;
+            }
+
+            if (trackPayload is AudioTrackPayload && itemPayload is AudioItemPayload)
+            {
                 return;
             }
 
@@ -659,9 +800,19 @@ namespace MuApiPlugin
             _textualProgressAction = action;
         }
 
+        public void SetSaveConnectionSettingsCallback(Action<object> saveConnectionSettings)
+        {
+            _saveConnectionSettingsCallback = saveConnectionSettings;
+        }
+
         private static int CountFiles(IEnumerable<string> additionalFiles)
         {
             return additionalFiles.Count(file => !string.IsNullOrWhiteSpace(file));
+        }
+
+        private static int CountIds(params string[] ids)
+        {
+            return ids.Count(id => !string.IsNullOrWhiteSpace(id) && !string.Equals(id, GeminiOmniProfileOptions.None, StringComparison.OrdinalIgnoreCase));
         }
 
         private static string ReplacePath(string currentPath, List<string> originalPath, List<string> newPath)
@@ -695,14 +846,59 @@ namespace MuApiPlugin
             return tp;
         }
 
+        private AudioTrackPayload SetupConnections(AudioTrackPayload tp)
+        {
+            tp.ModelChanged += (s, e) =>
+            {
+                _saveAndRefreshCallback?.Invoke(false);
+            };
+            return tp;
+        }
+
         public object TrackPayloadFromModel(string model)
         {
             return CurrentTrackType switch
             {
                 IPluginBase.TrackType.Video => SetupConnections(new TrackPayload() { Model = model }),
                 IPluginBase.TrackType.Image => SetupConnections(new ImageTrackPayload() { Model = model }),
+                IPluginBase.TrackType.Audio => SetupConnections(new AudioTrackPayload() { Model = model }),
                 _ => null
             };
+        }
+
+        private static (bool payloadOk, string reasonIfNot) ValidateGeminiOmniAudioPayload(GeminiOmniAudioItemPayload payload, GeminiOmniAudioTrackPayload trackPayload)
+        {
+            if (payload == null)
+            {
+                return (false, "Audio payload missing");
+            }
+
+            if (trackPayload != null && string.IsNullOrWhiteSpace(trackPayload.PresetVoiceId))
+            {
+                return (false, "Base preset voice missing");
+            }
+
+            if (string.IsNullOrWhiteSpace(payload.Name))
+            {
+                return (false, "Voice profile name missing");
+            }
+
+            if (payload.Name.Length > 210)
+            {
+                return (false, "Voice profile name exceeds 210 characters");
+            }
+
+            if (!string.IsNullOrWhiteSpace(payload.VoiceDescription) && payload.VoiceDescription.Length > 20000)
+            {
+                return (false, "Voice description exceeds 20,000 characters");
+            }
+
+            if (!string.IsNullOrWhiteSpace(payload.ExampleDialogue) && payload.ExampleDialogue.Length > 120)
+            {
+                return (false, "Example dialogue exceeds 120 characters");
+            }
+
+            return (true, "");
         }
     }
 #pragma warning restore CS1998

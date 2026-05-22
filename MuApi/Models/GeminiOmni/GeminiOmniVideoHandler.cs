@@ -27,13 +27,21 @@ namespace MuApiPlugin.Models.GeminiOmni
                 return new VideoResponse() { Success = false, ErrorMsg = "Prompt missing" };
             }
 
-            var audioIds = CollectIds(typedTrackPayload.AudioIds.AudioIds.Select(i => i.AudioId), MaxAudioIdCount, "audio IDs");
+            var audioIds = CollectIds(
+                new[] { typedItemPayload.AudioId1, typedItemPayload.AudioId2, typedItemPayload.AudioId3 }
+                    .Select(connectionSettings.ResolveGeminiOmniAudioId),
+                MaxAudioIdCount,
+                "audio IDs");
             if (!audioIds.Success)
             {
                 return new VideoResponse() { Success = false, ErrorMsg = audioIds.Error };
             }
 
-            var characterIds = CollectIds(typedTrackPayload.CharacterIds.CharacterIds.Select(i => i.CharacterId), MaxCharacterIdCount, "character IDs");
+            var characterIds = CollectIds(
+                new[] { typedItemPayload.CharacterId1, typedItemPayload.CharacterId2, typedItemPayload.CharacterId3 }
+                    .Select(connectionSettings.ResolveGeminiOmniCharacterId),
+                MaxCharacterIdCount,
+                "character IDs");
             if (!characterIds.Success)
             {
                 return new VideoResponse() { Success = false, ErrorMsg = characterIds.Error };

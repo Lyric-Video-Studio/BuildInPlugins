@@ -1,4 +1,5 @@
 using MuApiPlugin.Models.GptImage2;
+using MuApiPlugin.Models.GeminiOmni;
 using MuApiPlugin.Models.MidjourneyV8;
 using PluginBase;
 
@@ -14,7 +15,28 @@ namespace MuApiPlugin
         {
             GptImage2.Prompt = text;
             MidjourneyV8.Prompt = text;
+            GeminiOmniCharacter.Descriptions = text;
         }
+
+        public ImageItemPayload(string text, bool isImageSource)
+        {
+            if (isImageSource)
+            {
+                GptImage2.ImageReferences.ImageSources.Add(new ImageReferenceItem() { ImageFile = text });
+                MidjourneyV8.ImageReferences.ImageSources.Add(new ImageReferenceItem() { ImageFile = text });
+                GeminiOmniCharacter.ImageReferences.ImageSources.Add(new ImageReferenceItem() { ImageFile = text });
+            }
+            else
+            {
+                GptImage2.Prompt = text;
+                MidjourneyV8.Prompt = text;
+                GeminiOmniCharacter.Descriptions = text;
+            }
+        }
+
+        [HideAllChildren]
+        [ParentName("")]
+        public GeminiOmniCharacterItemPayload GeminiOmniCharacter { get; set; } = new();
 
         [HideAllChildren]
         [ParentName("")]
@@ -31,12 +53,19 @@ namespace MuApiPlugin
             {
                 switch (propertyName)
                 {
+                    case nameof(GeminiOmniCharacter):
+                        return ImageTrackPayload.IsGeminiOmniCharacter(tp);
                     case nameof(GptImage2):
                         return ImageTrackPayload.IsGptImage2(tp);
                     case nameof(MidjourneyV8):
                         return ImageTrackPayload.IsMidjourneyV8(tp);
                     default:
                         break;
+                }
+
+                if (ImageTrackPayload.IsGeminiOmniCharacter(tp))
+                {
+                    return GeminiOmniCharacter.ShouldPropertyBeVisible(propertyName, tp.Model);
                 }
 
                 if (ImageTrackPayload.IsGptImage2(tp))

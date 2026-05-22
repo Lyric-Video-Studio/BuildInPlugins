@@ -21,10 +21,6 @@ namespace MuApiPlugin.Models.GeminiOmni
         [Description("Same seed and same prompt can give similar results. Leave zero for random behavior.")]
         public int Seed { get; set; } = 0;
 
-        public AudioIdContainer AudioIds { get; set; } = new();
-
-        public CharacterIdContainer CharacterIds { get; set; } = new();
-
         public ImageReferenceContainer ImageReferences { get; set; } = new();
 
         public bool ShouldPropertyBeVisible(string propertyName, string model)
