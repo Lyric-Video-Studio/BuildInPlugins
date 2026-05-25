@@ -228,13 +228,13 @@ namespace MuApiPlugin
                         return (false, "Prompt missing");
                     }
 
-                    var audioIdCount = CountIds(item.GeminiOmni.AudioId1, item.GeminiOmni.AudioId2, item.GeminiOmni.AudioId3);
+                    var audioIdCount = CountIds(track.GeminiOmni.GetEffectiveAudioIds(item.GeminiOmni));
                     if (audioIdCount > 3)
                     {
                         return (false, "Gemini Omni supports up to 3 audio IDs");
                     }
 
-                    var characterIdCount = CountIds(item.GeminiOmni.CharacterId1, item.GeminiOmni.CharacterId2, item.GeminiOmni.CharacterId3);
+                    var characterIdCount = CountIds(track.GeminiOmni.GetEffectiveCharacterIds(item.GeminiOmni));
                     if (characterIdCount > 3)
                     {
                         return (false, "Gemini Omni supports up to 3 character IDs");
@@ -810,9 +810,14 @@ namespace MuApiPlugin
             return additionalFiles.Count(file => !string.IsNullOrWhiteSpace(file));
         }
 
-        private static int CountIds(params string[] ids)
+        private static int CountIds(IEnumerable<string> ids)
         {
             return ids.Count(id => !string.IsNullOrWhiteSpace(id) && !string.Equals(id, GeminiOmniProfileOptions.None, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static int CountIds(params string[] ids)
+        {
+            return CountIds(ids.AsEnumerable());
         }
 
         private static string ReplacePath(string currentPath, List<string> originalPath, List<string> newPath)

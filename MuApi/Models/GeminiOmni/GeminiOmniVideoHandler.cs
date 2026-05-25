@@ -28,7 +28,7 @@ namespace MuApiPlugin.Models.GeminiOmni
             }
 
             var audioIds = CollectIds(
-                new[] { typedItemPayload.AudioId1, typedItemPayload.AudioId2, typedItemPayload.AudioId3 }
+                typedTrackPayload.GetEffectiveAudioIds(typedItemPayload)
                     .Select(connectionSettings.ResolveGeminiOmniAudioId),
                 MaxAudioIdCount,
                 "audio IDs");
@@ -38,7 +38,7 @@ namespace MuApiPlugin.Models.GeminiOmni
             }
 
             var characterIds = CollectIds(
-                new[] { typedItemPayload.CharacterId1, typedItemPayload.CharacterId2, typedItemPayload.CharacterId3 }
+                typedTrackPayload.GetEffectiveCharacterIds(typedItemPayload)
                     .Select(connectionSettings.ResolveGeminiOmniCharacterId),
                 MaxCharacterIdCount,
                 "character IDs");
