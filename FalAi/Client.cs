@@ -2,6 +2,7 @@
 using System.Buffers.Text;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace FalAiPlugin
@@ -17,6 +18,11 @@ namespace FalAiPlugin
         public VideoResp image { get; set; }
 
         public VideoResp audio { get; set; }
+    }
+
+    public class ContentResponseAudios
+    {
+        public VideoResp[] audio { get; set; }
     }
 
     public class VideoResp
@@ -122,6 +128,22 @@ namespace FalAiPlugin
         public List<SpeakerRequest> speakers { get; set; }
     }
 
+    public class VideoToAudioRequest
+    {
+        public string video_url { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string text_prompt { get; set; }
+
+        public int num_samples { get; set; } = 2;
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? seed { get; set; }
+
+        public float duration { get; set; } = 10;
+        public float start_offset { get; set; }
+    }
+
     public class SpeakerRequest
     {
         public string preset { get; set; }
@@ -206,7 +228,7 @@ namespace FalAiPlugin
                     baseUrl = baseUrl.Replace("fal-ai", "decart");
                     model = model.Replace("decart/", "");
                     request.sync_mode = false; // Set the sync mode to false, we like to get the response as cdn link
-                }                
+                }
 
                 if (model.Contains("wan/v2.6"))
                 {
@@ -473,15 +495,22 @@ namespace FalAiPlugin
                     try
                     {
                         respSerialized = JsonHelper.DeserializeString<ContentResponse>(respString);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(ex.ToString());
+                    }
 
-                        /*if (respSerialized.status == "FAILED")
-                        {
-                            return new VideoResponse() { Success = false, ErrorMsg = "Runway ML backend reported that video generating failed. " + respSerialized.failure };
-                        }*/
+                    /*if (respSerialized.status == "FAILED")
+                    {
+                        return new VideoResponse() { Success = false, ErrorMsg = "Runway ML backend reported that video generating failed. " + respSerialized.failure };
+                    }*/
 
-                        //System.Diagnostics.Debug.WriteLine($"State: {respSerialized.status}");
-                        //textualProgressAction.Invoke(respSerialized.status);
-
+                    //System.Diagnostics.Debug.WriteLine($"State: {respSerialized.status}");
+                    //textualProgressAction.Invoke(respSerialized.status);
+                    // 
+                    if (respSerialized != null)
+                    {
                         videoUrl = respSerialized.images != null && respSerialized.images.Count > 0 ? respSerialized.images[0].url : respSerialized.video?.url;
 
                         if (string.IsNullOrEmpty(videoUrl))
@@ -495,16 +524,32 @@ namespace FalAiPlugin
                         }
 
                         maskUrl = respSerialized?.mask?.url;
-
-                        if (string.IsNullOrEmpty(videoUrl))
-                        {
-                            await Task.Delay(pollingDelay, cancelToken.GetValueOrDefault());
-                        }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        System.Diagnostics.Debug.WriteLine(ex.ToString());
+                        try
+                        {
+                            // Maybe it's audios
+                            var audios = JsonHelper.DeserializeString<ContentResponseAudios>(respString);
+
+                            if (audios != null)
+                            {
+                                videoUrl = audios.audio.FirstOrDefault()?.url;
+                                maskUrl = audios.audio.LastOrDefault()?.url;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine(ex.ToString());
+                        }
+                    }                        
+
+                    if (string.IsNullOrEmpty(videoUrl))
+                    {
+                        await Task.Delay(pollingDelay, cancelToken.GetValueOrDefault());
                     }
+                    
+                    
                 }
                 catch (Exception)
                 {
@@ -545,6 +590,15 @@ namespace FalAiPlugin
 
             if (videoResp.StatusCode == HttpStatusCode.OK)
             {
+                var fileExtension = ".mp4";
+
+                var extFromPath = Path.GetExtension(file);
+
+                if (!string.IsNullOrEmpty(extFromPath))
+                {
+                    fileExtension = extFromPath;
+                }
+
                 var respBytes = await videoResp.Content.ReadAsByteArrayAsync();
                 if (isActuallyImage)
                 {
@@ -553,7 +607,7 @@ namespace FalAiPlugin
                 }
                 else
                 {
-                    var pathToVideo = Path.Combine(folderToSave, $"{id}.mp4");
+                    var pathToVideo = Path.Combine(folderToSave, $"{id}{fileExtension}");
                     await File.WriteAllBytesAsync(pathToVideo, respBytes);
                     textualProgressAction.Invoke("");
 
@@ -581,7 +635,7 @@ namespace FalAiPlugin
                         if (videoResp.StatusCode == HttpStatusCode.OK)
                         {
                             respBytes = await videoResp.Content.ReadAsByteArrayAsync();
-                            var pathToVideoMask = Path.Combine(folderToSave, $"{id}_mask.mp4");
+                            var pathToVideoMask = Path.Combine(folderToSave, $"{id}_mask{fileExtension}");
                             await File.WriteAllBytesAsync(pathToVideoMask, respBytes);
                             textualProgressAction.Invoke("");
                             return new VideoResponse() { Success = true, VideoFile = pathToVideo, VideoMask = pathToVideoMask };
@@ -598,7 +652,7 @@ namespace FalAiPlugin
             }
         }
 
-        internal static async Task<AudioResponse> GetAudio(AudioRequest request, string folderToSaveAudio, AudioItemPayload refItemPlayload, ConnectionSettings connectionSettings, string model,
+        internal static async Task<AudioResponse> GetAudio(object request, string folderToSaveAudio, AudioItemPayload refItemPlayload, ConnectionSettings connectionSettings, string model,
             Action<bool> saveAndRefreshCallback, Action<string> textualProgress)
         {
             try
@@ -606,11 +660,22 @@ namespace FalAiPlugin
                 using var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.Remove("accept");
 
+                var baseUrl = connectionSettings.Url;
+
+                if (model.Contains("mirelo-ai"))
+                {
+                    // Need to prop out the fal-ai
+                    baseUrl = baseUrl.Replace("fal-ai", "mirelo-ai");
+                    model = model.Replace("mirelo-ai/", "");
+                }
+
                 // It's best to keep these here: use can change these from item settings
-                httpClient.BaseAddress = new Uri(connectionSettings.Url);
+                httpClient.BaseAddress = new Uri(baseUrl);
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Key {connectionSettings.AccessToken}");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
+
+                
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
@@ -659,12 +724,10 @@ namespace FalAiPlugin
                     saveAndRefreshCallback.Invoke(true);
 
                     var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model);
-                    return new AudioResponse() { Success = res.Success, ErrorMsg = res.ErrorMsg, AudioFile = res.VideoFile, AudioFormat = "wav" };
+                    return new AudioResponse() { Success = res.Success, ErrorMsg = res.ErrorMsg, AudioFile = res.VideoFile, AudioFormat = "wav", AlternativeAudioFile = res.VideoMask };
                 }
-                else
-                {
-                    return new AudioResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
-                }
+
+                return new AudioResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
             }
             catch (Exception ex)
             {

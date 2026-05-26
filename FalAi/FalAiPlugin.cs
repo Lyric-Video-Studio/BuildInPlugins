@@ -444,6 +444,27 @@ namespace FalAiPlugin
         {
             if (trackPayload is AudioTrackPayload ap && itemsPayload is AudioItemPayload ip)
             {
+                if (AudioTrackPayload.IsSfxModel(ap.Model))
+                {
+                    var uploadedVideo = await UploadSource(ip.VideoSource);
+                    if (!uploadedVideo.Success)
+                    {
+                        return new AudioResponse() { Success = false, ErrorMsg = uploadedVideo.ErrorMsg };
+                    }
+
+                    var prompt = $"{ap.Prompt} {ip.Prompt}".Trim();
+                    var sfxReg = new VideoToAudioRequest()
+                    {
+                        video_url = uploadedVideo.VideoFile,
+                        text_prompt = string.IsNullOrWhiteSpace(prompt) ? null : prompt,
+                        seed = ip.Seed == 0 ? null : ip.Seed,
+                        duration = ip.Duration,
+                        start_offset = ip.StartOffset
+                    };
+
+                    return await Client.GetAudio(sfxReg, folderToSaveAudio, ip, _connectionSettings, ap.Model, saveAndRefreshCallback, textualProgressAction);
+                }
+
                 var audioReg = new AudioRequest() { cfg_scale = ap.Cfg, script = $"{ap.Prompt} {ip.Prompt}".Trim(), speakers = new() };
                 foreach (var item in ap.Speakers)
                 {
@@ -716,8 +737,9 @@ namespace FalAiPlugin
             {
                 if (propertyName == nameof(AudioTrackPayload.Model))
                 {
-                    return ["vibevoice/7b", "vibevoice"];
+                    return [AudioTrackPayload.VideoToAudioSfxModel, "vibevoice/7b", "vibevoice"];
                 }
+
                 if (propertyName == nameof(Speaker.Preset))
                 {
                     return ["Alice [EN]", "Alice [EN] (Background Music)", "Carter [EN]", "Frank [EN]", "Maya [EN]", "Anchen [ZH] (Background Music)", "Bowen [ZH]", "Xinran [ZH]"];
@@ -1035,9 +1057,9 @@ namespace FalAiPlugin
                     {
                         if (payload is AudioItemPayload ip)
                         {
-                            if (string.IsNullOrEmpty(ip.Prompt))
+                            if (string.IsNullOrEmpty(ip.Prompt) && string.IsNullOrEmpty(ip.VideoSource))
                             {
-                                return (false, "Promp empty");
+                                return (false, "Prompt empty or video source empty");
                             }
 
                             var speakerIndex = ip.Prompt.IndexOf("speaker", StringComparison.CurrentCultureIgnoreCase);
@@ -1076,6 +1098,13 @@ namespace FalAiPlugin
                 return new List<string>() { ip.ImageSource, ip.AudioSource };
             }
 
+            if (trackPayload is AudioTrackPayload at && itemPayload is AudioItemPayload ai)
+            {
+                var files = new List<string>() { ai.VideoSource };
+                files.AddRange(at.Speakers.Select(s => s.AudioFile));
+                return files.Where(f => !string.IsNullOrEmpty(f)).ToList();
+            }
+
             return new List<string>();
         }
 
@@ -1097,6 +1126,22 @@ namespace FalAiPlugin
                     }
                 }
             }
+
+            if (trackPayload is AudioTrackPayload at && itemPayload is AudioItemPayload ai)
+            {
+                for (int i = 0; i < originalPath.Count; i++)
+                {
+                    if (originalPath[i] == ai.VideoSource)
+                    {
+                        ai.VideoSource = newPath[i];
+                    }
+
+                    foreach (var speaker in at.Speakers.Where(s => s.AudioFile == originalPath[i]))
+                    {
+                        speaker.AudioFile = newPath[i];
+                    }
+                }
+            }
         }
 
         public object ItemPayloadFromVideoSource(string videoSource)
@@ -1105,11 +1150,50 @@ namespace FalAiPlugin
             {
                 return new ItemPayload() { VideoSource = videoSource };
             }
+            if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                return new AudioItemPayload() { VideoSource = videoSource };
+            }
             return new ImageItemPayload();
         }
 
         public (bool payloadOk, string reasonIfNot) ValidatePayloads(object trackPaylod, object itemPayload)
         {
+            if (CurrentTrackType == IPluginBase.TrackType.Audio && trackPaylod is AudioTrackPayload at && itemPayload is AudioItemPayload ai)
+            {
+                if (AudioTrackPayload.IsSfxModel(at.Model))
+                {
+                    if (string.IsNullOrWhiteSpace(ai.VideoSource))
+                    {
+                        return (false, "Video source is required");
+                    }
+
+                    if (ai.Duration < 1 || ai.Duration > 10)
+                    {
+                        return (false, "Duration must be between 1 and 10 seconds");
+                    }
+
+                    if (ai.StartOffset < 0)
+                    {
+                        return (false, "Start offset cannot be negative");
+                    }
+
+                    return (true, "");
+                }
+
+                var script = $"{at.Prompt}\n{ai.Prompt}".Trim();
+                var speakerIndex = script.IndexOf("speaker", StringComparison.CurrentCultureIgnoreCase);
+                while (speakerIndex >= 0)
+                {
+                    if (speakerIndex > 0 && script[speakerIndex - 1] != '\n')
+                    {
+                        return (false, "Speaker must be also separated by new line");
+                    }
+
+                    speakerIndex = script.IndexOf("speaker", speakerIndex + 1, StringComparison.CurrentCultureIgnoreCase);
+                }
+            }
+
             return (true, "");
         }
 
@@ -1162,6 +1246,10 @@ namespace FalAiPlugin
             if (CurrentTrackType == IPluginBase.TrackType.Video)
             {
                 return new TrackPayload() { Model = model };
+            }
+            if (CurrentTrackType == IPluginBase.TrackType.Audio)
+            {
+                return new AudioTrackPayload() { Model = model };
             }
             return null;
         }

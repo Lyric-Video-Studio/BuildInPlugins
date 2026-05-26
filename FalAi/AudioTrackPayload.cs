@@ -9,8 +9,10 @@ using System.Threading.Tasks;
 
 namespace FalAiPlugin
 {
-    public class AudioTrackPayload
+    public class AudioTrackPayload : IPayloadPropertyVisibility
     {
+        public const string VideoToAudioSfxModel = "mirelo-ai/sfx-v1.5/video-to-audio";
+
         public AudioTrackPayload()
         {
             Speaker.Remove += (s, e) => Speakers.Remove((Speaker)s);
@@ -35,6 +37,27 @@ namespace FalAiPlugin
         public void ModelInfo()
         {
             IUriLauncher.Launcher.LaunchUrl($"https://fal.ai/explore/search?q={Model}");
+        }
+
+        public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
+        {
+            if (IsSfxModel(Model))
+            {
+                return propertyName switch
+                {
+                    nameof(Cfg) => false,
+                    nameof(Speakers) => false,
+                    nameof(Add) => false,
+                    _ => true
+                };
+            }
+
+            return true;
+        }
+
+        public static bool IsSfxModel(string model)
+        {
+            return model == VideoToAudioSfxModel;
         }
     }
 
