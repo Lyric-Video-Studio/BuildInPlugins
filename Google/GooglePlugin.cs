@@ -1,5 +1,6 @@
 ﻿using Google.GenAI;
 using Google.GenAI.Types;
+using Newtonsoft.Json.Bson;
 using PluginBase;
 using System.Reflection;
 using System.Text;
@@ -428,7 +429,29 @@ namespace GooglePlugin
 
             if (trackPayload is VideoTrackPayload tp && itemsPayload is VideoItemPayload ip)
             {
-                var effectiveImage = !string.IsNullOrEmpty(ip.ImageSource) ? ip.ImageSource : tp.ImageSource;
+                var effectiveImages = new List<string>();
+
+                var img = !string.IsNullOrEmpty(ip.ImageSource) ? ip.ImageSource : tp.ImageSource;
+
+                if (!string.IsNullOrEmpty(img))
+                {
+                    effectiveImages.Add(img);
+                }
+
+                img = !string.IsNullOrEmpty(ip.ImageSource2) ? ip.ImageSource2 : tp.ImageSource2;
+
+                if (!string.IsNullOrEmpty(img))
+                {
+                    effectiveImages.Add(img);
+                }
+
+                img = !string.IsNullOrEmpty(ip.ImageSource3) ? ip.ImageSource3 : tp.ImageSource3;
+
+                if (!string.IsNullOrEmpty(img))
+                {
+                    effectiveImages.Add(img);
+                }
+
                 var prompt = (tp.Prompt + " " + ip.Prompt).Trim();
                 var getCOnfig = new GenerateVideosConfig
                 {
@@ -443,9 +466,19 @@ namespace GooglePlugin
                     Prompt = prompt
                 };
 
-                if (!string.IsNullOrEmpty(effectiveImage))
+                if (effectiveImages.Count == 1)
                 {
-                    source.Image = Image.FromFile(effectiveImage);
+                    source.Image = Image.FromFile(effectiveImages.FirstOrDefault());
+                }
+                else if (effectiveImages.Count > 1)
+                {
+                    getCOnfig.ReferenceImages = new List<VideoGenerationReferenceImage>();
+                    foreach(var refImg in effectiveImages)
+                    {
+                        var gRefImg = new VideoGenerationReferenceImage();
+                        gRefImg.Image = Image.FromFile(refImg);
+                        getCOnfig.ReferenceImages.Add(gRefImg);
+                    }
                 }
 
                 var res = await _googleAi.Models.GenerateVideosAsync(tp.Model, source, getCOnfig);
@@ -829,14 +862,14 @@ namespace GooglePlugin
 
             if (trackPayload is VideoTrackPayload vi && itemPayload is VideoItemPayload vi2)
             {
-                return new List<string> { vi.ImageSource, vi2.ImageSource };
+                return new List<string> { vi.ImageSource, vi2.ImageSource, vi.ImageSource2, vi2.ImageSource2, vi.ImageSource3, vi2.ImageSource3 };
             }
             return new List<string>();
         }
 
         public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
         {
-            if (trackPayload is ImageTrackPayload ip && itemPayload is ImageItemPayload tp)
+            if (trackPayload is VideoTrackPayload ip && itemPayload is VideoItemPayload tp)
             {
                 for (int i = 0; i < originalPath.Count; i++)
                 {
@@ -848,6 +881,26 @@ namespace GooglePlugin
                     if (originalPath[i] == tp.ImageSource)
                     {
                         tp.ImageSource = newPath[i];
+                    }
+
+                    if (originalPath[i] == ip.ImageSource2)
+                    {
+                        ip.ImageSource2 = newPath[i];
+                    }
+
+                    if (originalPath[i] == tp.ImageSource2)
+                    {
+                        tp.ImageSource2 = newPath[i];
+                    }
+
+                    if (originalPath[i] == ip.ImageSource3)
+                    {
+                        ip.ImageSource3 = newPath[i];
+                    }
+
+                    if (originalPath[i] == tp.ImageSource)
+                    {
+                        tp.ImageSource3 = newPath[i];
                     }
                 }
             }
