@@ -499,7 +499,7 @@ namespace GooglePlugin
 
                 if (res.Response?.GeneratedVideos?.Count == 0 || res.Response?.GeneratedVideos == null)
                 {
-                    return new VideoResponse { Success = false, ErrorMsg = "failed to generate video" };
+                    return new VideoResponse { Success = false, ErrorMsg = res?.Error != null ? string.Join(", ", res?.Error?.Values.Select(s => s.ToString())): "Unknown server errror (google API's)" };
                 }
 
                 // Download the video file.

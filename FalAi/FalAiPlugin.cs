@@ -37,6 +37,7 @@ namespace FalAiPlugin
             new HappyHorseI2VHandler(),
             new HappyHorseR2VHandler(),
             new HappyHorseVideoEditHandler(),
+            new LtxAudioToVideoHandler(),
             new Seedance2T2VHandler(),
             new Seedance2Handler(),
             new Seedance2R2VHandler()
@@ -1159,6 +1160,22 @@ namespace FalAiPlugin
 
         public (bool payloadOk, string reasonIfNot) ValidatePayloads(object trackPaylod, object itemPayload)
         {
+            if (CurrentTrackType == IPluginBase.TrackType.Video && trackPaylod is TrackPayload vt && itemPayload is ItemPayload vi)
+            {
+                if (vt.Model == LtxAudioToVideoHandler.Model)
+                {
+                    if (string.IsNullOrWhiteSpace(vi.AudioSource))
+                    {
+                        return (false, "Audio source is required");
+                    }
+
+                    if (string.IsNullOrWhiteSpace($"{vt.Prompt} {vi.Prompt}".Trim()))
+                    {
+                        return (false, "Prompt is required");
+                    }
+                }
+            }
+
             if (CurrentTrackType == IPluginBase.TrackType.Audio && trackPaylod is AudioTrackPayload at && itemPayload is AudioItemPayload ai)
             {
                 if (AudioTrackPayload.IsSfxModel(at.Model))
