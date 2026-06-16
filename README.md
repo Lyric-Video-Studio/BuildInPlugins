@@ -89,7 +89,7 @@ That makes this repo especially useful if you are researching how to support mul
 
 ## Why Developers and GenAI Teams Use This Repo
 
-- The `PluginInterface` project gives you typed contracts for `IImagePlugin`, `IVideoPlugin`, and `IAudioPlugin`
+- The `PluginInterface` (https://github.com/Lyric-Video-Studio/PluginInterface) project gives you typed contracts for `IImagePlugin`, `IVideoPlugin`, and `IAudioPlugin`
 - Create your own plugins and join Lyric Video Studio ecosystem. Keep the revenue from users, Lyric Video Studio has no part in it :)
 - Plugin settings and payloads are reflected dynamically into the app UI from public serializable objects
 - The examples show validation, async generation, cancellation, progress reporting, file reference tracking, and settings persistence
@@ -161,6 +161,7 @@ dotnet publish .\Google\GooglePlugin.csproj -c Release -o publish\plugins
 ## Creating Your Own Lyric Video Studio Plugin
 
 Start with `BuildInPlugins\PluginInterface`.
+https://github.com/Lyric-Video-Studio/PluginInterface
 
 The developer flow is:
 
@@ -198,6 +199,6 @@ This repo is especially helpful because it includes examples for:
 - Download & pricing: `https://lyricvideo.studio/buy/`
 - FAQ: `https://lyricvideo.studio/f-a-q/`
 - Releases: `https://github.com/Lyric-Video-Studio/BuildInPlugins/releases`
-- Plugin interface examples: `BuildInPlugins\PluginInterface`
+- Plugin interface: (https://github.com/Lyric-Video-Studio/PluginInterface)
 
 If you want Lyric Video Studio to function as an extensible AI video editor, AI music workflow tool, or GenAI media production frontend, this repository is the reference implementation for that plugin layer.
