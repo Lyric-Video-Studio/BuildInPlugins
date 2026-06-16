@@ -4,7 +4,7 @@ using PluginBase;
 
 namespace FalAiPlugin
 {
-    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
+    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing, IAllowMcpGeneration
     {
         private static string accessTokenKey = "FalAiImgToVidPlugin.accessKey";
         private string url = "https://queue.fal.run/fal-ai/";
@@ -18,6 +18,8 @@ namespace FalAiPlugin
         [EditorWidth(300)]
         [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
+
+        public bool AlloMcpAccess { get; set; } = true;
 
         public void OnDeserialized()
         {

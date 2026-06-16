@@ -4,7 +4,7 @@ using PluginBase;
 
 namespace GooglePlugin
 {
-    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
+    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing, IAllowMcpGeneration
     {
         private static string accessTokenKey = "GoogleVeoImgToVidPlugin.accessKey";
 
@@ -36,6 +36,8 @@ namespace GooglePlugin
 
         [Description("Requests per minute limit, adjust this if your Google quota is higher")]
         public int ImageRpmLimit { get; set; } = 20;
+
+        public bool AlloMcpAccess { get; set; } = false;
 
         public void OnSerialized()
         {
