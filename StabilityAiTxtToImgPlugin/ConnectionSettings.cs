@@ -4,7 +4,7 @@ using PluginBase;
 
 namespace StabilityAiTxtToImgPlugin
 {
-    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
+    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing, IAllowMcpGeneration
     {
         private static string accessTokenKey = "StabilityAiTxtToImgPlugin.accessKey";
         private string url = "https://api.stability.ai";
@@ -18,6 +18,8 @@ namespace StabilityAiTxtToImgPlugin
         [EditorWidth(300)]
         [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
+
+        public bool AlloMcpAccess { get; set; } = false;
 
         public void OnDeserialized()
         {

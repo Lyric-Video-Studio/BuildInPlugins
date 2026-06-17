@@ -4,7 +4,7 @@ using PluginBase;
 
 namespace LumaAiDreamMachinePlugin
 {
-    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
+    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing, IAllowMcpGeneration
     {
         private static string accessTokenKey = "LumaAiDreamMachineImgToVidPlugin.accessKey";
         private string url = "https://api.lumalabs.ai";
@@ -29,6 +29,8 @@ namespace LumaAiDreamMachinePlugin
         [EditorWidth(300)]
         [MaskInput]
         public string AccessTokenUni { get => accessTokenUni; set => accessTokenUni = value; }
+
+        public bool AlloMcpAccess { get; set; } = false;
 
         public void OnDeserialized()
         {

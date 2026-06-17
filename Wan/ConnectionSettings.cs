@@ -4,7 +4,7 @@ using PluginBase;
 
 namespace WanPlugin
 {
-    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
+    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing, IAllowMcpGeneration
     {
         private static string accessTokenKey = "WanImgToVidPlugin.accessKey";
         private string url = "https://dashscope-intl.aliyuncs.com/api/v1/";
@@ -18,6 +18,8 @@ namespace WanPlugin
         [EditorWidth(300)]
         [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
+
+        public bool AlloMcpAccess { get; set; } = false;
 
         public void OnDeserialized()
         {

@@ -4,7 +4,7 @@ using PluginBase;
 
 namespace LTXPlugin
 {
-    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
+    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing, IAllowMcpGeneration
     {
         private static string accessTokenKey = "LTXlugin.accessKey";
         private string url = "https://api.ltx.video";
@@ -18,6 +18,8 @@ namespace LTXPlugin
         [EditorWidth(300)]
         [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
+
+        public bool AlloMcpAccess { get; set; } = false;
 
         public void OnDeserialized()
         {

@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace MuApiPlugin
 {
-    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
+    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing, IAllowMcpGeneration
     {
         private const string AccessTokenKey = "MuApiPlugin.accessKey";
         private string url = "https://api.muapi.ai/api/v1/";
@@ -23,6 +23,8 @@ namespace MuApiPlugin
 
         [IgnoreDynamicEdit]
         public List<GeminiOmniCharacterProfileInfo> GeminiOmniCharacterProfiles { get; set; } = new();
+
+        public bool AlloMcpAccess { get; set; } = false;
 
         public void OnDeserialized()
         {

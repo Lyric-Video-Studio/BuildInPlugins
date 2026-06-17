@@ -4,7 +4,7 @@ using PluginBase;
 
 namespace MinimaxPlugin
 {
-    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
+    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing, IAllowMcpGeneration
     {
         private static string accessTokenKey = "MinimaxImgToVidPlugin.accessKey";
         private string url = "https://api.minimaxi.chat";
@@ -21,6 +21,7 @@ namespace MinimaxPlugin
 
         [IgnoreDynamicEdit]
         public List<string> SpeechVoices { get; set; } = new List<string>();
+        public bool AlloMcpAccess { get; set; } = false;
 
         public void OnDeserialized()
         {

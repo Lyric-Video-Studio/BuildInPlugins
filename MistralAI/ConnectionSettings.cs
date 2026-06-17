@@ -4,7 +4,7 @@ using PluginBase;
 
 namespace MistralTxtToImgPlugin
 {
-    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
+    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing, IAllowMcpGeneration
     {
         private static string accessTokenKey = "MistralTxtToImgPlugin.accessKey";
         private string accessToken;
@@ -18,6 +18,8 @@ namespace MistralTxtToImgPlugin
         [Description("Mistral AI needs to create AI Agent to create images. It is created automatically on first image generation, only change this if you have make custom agent yourself. " +
             "Clear this is something goes wrong and prass 'Save'")]
         public string AgentId { get; set; }
+
+        public bool AlloMcpAccess { get; set; } = false;
 
         public void OnDeserialized()
         {

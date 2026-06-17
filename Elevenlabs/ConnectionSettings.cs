@@ -4,7 +4,7 @@ using PluginBase;
 
 namespace ElevenLabsPlugin
 {
-    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
+    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing, IAllowMcpGeneration
     {
         private static string accessTokenKey = "ElevenLabsPlugin.accessKey";
         private string url = "https://api.elevenlabs.io";
@@ -18,6 +18,8 @@ namespace ElevenLabsPlugin
         [EditorWidth(300)]
         [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
+
+        public bool AlloMcpAccess { get; set; } = false;
 
         [IgnoreDynamicEdit]
         public string Voices { get; set; }

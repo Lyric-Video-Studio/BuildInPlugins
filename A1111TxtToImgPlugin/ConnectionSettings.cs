@@ -1,9 +1,10 @@
-﻿using System.ComponentModel;
+﻿using PluginBase;
+using System.ComponentModel;
 
 
 namespace A1111TxtToImgPlugin
 {
-    public class ConnectionSettings
+    public class ConnectionSettings: IAllowMcpGeneration
     {
         private string a1111Url = "http://127.0.0.1:7861";
         private string a1111Executable = "";
@@ -16,6 +17,7 @@ namespace A1111TxtToImgPlugin
         public string A1111Executable { get => a1111Executable; set => a1111Executable = value; }
 
         [Description("Extra arguments to pass for a1111 when starting. Note that --api and --nowebui are added automatically")]
-        public string A1111Args { get => a1111Args; set => a1111Args = value; }        
+        public string A1111Args { get => a1111Args; set => a1111Args = value; }
+        public bool AlloMcpAccess { get; set; } = true;
     }
 }

@@ -4,7 +4,7 @@ using PluginBase;
 
 namespace MusicGptPlugin
 {
-    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
+    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing, IAllowMcpGeneration
     {
         private static string accessTokenKey = "MusicGptPlugin.accessKey";
         private string url = "https://api.musicgpt.com/api/public/v1/";
@@ -18,6 +18,8 @@ namespace MusicGptPlugin
         [EditorWidth(300)]
         [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
+
+        public bool AlloMcpAccess { get; set; } = false;
 
         [IgnoreDynamicEdit]
         public string Voices { get; set; }

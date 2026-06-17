@@ -4,7 +4,7 @@ using PluginBase;
 
 namespace RunwayMlPlugin
 {
-    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing
+    public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonOnSerializing, IAllowMcpGeneration
     {
         private static string accessTokenKey = "RunwayMlImgToVidPlugin.accessKey";
         private string url = "https://api.dev.runwayml.com/";
@@ -18,6 +18,8 @@ namespace RunwayMlPlugin
         [EditorWidth(300)]
         [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
+
+        public bool AlloMcpAccess { get; set; } = false;
 
         public void OnDeserialized()
         {
