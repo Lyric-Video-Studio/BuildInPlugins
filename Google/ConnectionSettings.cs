@@ -37,7 +37,7 @@ namespace GooglePlugin
         [Description("Requests per minute limit, adjust this if your Google quota is higher")]
         public int ImageRpmLimit { get; set; } = 20;
 
-        public bool AlloMcpAccess { get; set; } = false;
+        public bool AllowMcpAccess { get; set; } = false;
 
         public void OnSerialized()
         {

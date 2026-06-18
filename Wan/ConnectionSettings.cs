@@ -19,7 +19,7 @@ namespace WanPlugin
         [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
-        public bool AlloMcpAccess { get; set; } = false;
+        public bool AllowMcpAccess { get; set; } = false;
 
         public void OnDeserialized()
         {

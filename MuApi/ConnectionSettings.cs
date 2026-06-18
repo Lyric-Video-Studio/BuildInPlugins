@@ -24,7 +24,7 @@ namespace MuApiPlugin
         [IgnoreDynamicEdit]
         public List<GeminiOmniCharacterProfileInfo> GeminiOmniCharacterProfiles { get; set; } = new();
 
-        public bool AlloMcpAccess { get; set; } = false;
+        public bool AllowMcpAccess { get; set; } = false;
 
         public void OnDeserialized()
         {

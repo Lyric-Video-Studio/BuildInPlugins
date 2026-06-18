@@ -19,7 +19,7 @@ namespace FalAiPlugin
         [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
-        public bool AlloMcpAccess { get; set; } = true;
+        public bool AllowMcpAccess { get; set; } = true;
 
         public void OnDeserialized()
         {

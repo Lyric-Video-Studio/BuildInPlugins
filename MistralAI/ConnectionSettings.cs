@@ -19,7 +19,7 @@ namespace MistralTxtToImgPlugin
             "Clear this is something goes wrong and prass 'Save'")]
         public string AgentId { get; set; }
 
-        public bool AlloMcpAccess { get; set; } = false;
+        public bool AllowMcpAccess { get; set; } = false;
 
         public void OnDeserialized()
         {

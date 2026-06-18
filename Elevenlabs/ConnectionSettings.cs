@@ -19,7 +19,7 @@ namespace ElevenLabsPlugin
         [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
-        public bool AlloMcpAccess { get; set; } = false;
+        public bool AllowMcpAccess { get; set; } = false;
 
         [IgnoreDynamicEdit]
         public string Voices { get; set; }

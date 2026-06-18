@@ -21,7 +21,7 @@ namespace MinimaxPlugin
 
         [IgnoreDynamicEdit]
         public List<string> SpeechVoices { get; set; } = new List<string>();
-        public bool AlloMcpAccess { get; set; } = false;
+        public bool AllowMcpAccess { get; set; } = false;
 
         public void OnDeserialized()
         {
