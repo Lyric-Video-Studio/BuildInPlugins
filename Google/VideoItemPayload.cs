@@ -10,12 +10,15 @@ namespace GooglePlugin
         public string Duration { get; set; } = "8";
 
         [EnableFileDrop]
+        [EnableDoodling]
         public string ImageSource { get; set; }
 
         [EnableFileDrop]
+        [EnableDoodling]
         public string ImageSource2 { get; set; }
 
         [EnableFileDrop]
+        [EnableDoodling]
         public string ImageSource3 { get; set; }
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)

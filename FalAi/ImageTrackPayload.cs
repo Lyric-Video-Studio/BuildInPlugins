@@ -191,6 +191,7 @@ namespace FalAiPlugin
         public static event EventHandler RemoveReference;
 
         [EnableFileDrop]
+        [EnableDoodling]
         public string ImageFile { get; set; }
 
         [CustomAction("Remove", false, nameof(ImageFile))]

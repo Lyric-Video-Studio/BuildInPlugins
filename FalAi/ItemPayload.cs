@@ -66,6 +66,7 @@ namespace FalAiPlugin
         public int DurationLtx2 { get; set; } = 6;
 
         [EnableFileDrop]
+        [EnableDoodling]
         public string ImageSource { get; set; }
 
         [EnableFileDrop]
