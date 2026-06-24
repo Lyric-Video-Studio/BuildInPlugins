@@ -23,30 +23,62 @@ namespace MuApiPlugin.Models.HappyHorse1
             {
                 prompt = prompt,
                 aspect_ratio = string.IsNullOrWhiteSpace(typedTrackPayload.AspectRatio) ? null : typedTrackPayload.AspectRatio,
-                duration = typedItemPayload.Duration > 0 ? typedItemPayload.Duration : null
+                duration = typedItemPayload.Duration <= 0 ? null : typedItemPayload.Duration,
+                seed = HappyHorse1TrackPayload.SupportsSeed(model) && typedTrackPayload.Seed > 0 ? typedTrackPayload.Seed : null
             };
 
-            if (model == HappyHorse1TrackPayload.ModelI2V1080p)
-            {
-                var imageFiles = typedTrackPayload.ImageReferences.ImageSources.Select(i => i.ImageFile)
-                    .Concat(typedItemPayload.ImageReferences.ImageSources.Select(i => i.ImageFile))
-                    .Where(i => !string.IsNullOrWhiteSpace(i))
-                    .ToList();
+            var imageFiles = typedTrackPayload.ImageReferences.ImageSources.Select(i => i.ImageFile)
+                .Concat(typedItemPayload.ImageReferences.ImageSources.Select(i => i.ImageFile))
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .ToList();
 
+            if (HappyHorse1TrackPayload.IsImageToVideoModel(model))
+            {
                 if (imageFiles.Count == 0)
                 {
-                    return new VideoResponse() { Success = false, ErrorMsg = "Happy Horse 1 image-to-video requires an input image" };
+                    return new VideoResponse() { Success = false, ErrorMsg = "Happy Horse 1.1 image-to-video requires an input image" };
                 }
 
                 if (imageFiles.Count > 1)
                 {
-                    return new VideoResponse() { Success = false, ErrorMsg = "Happy Horse 1 image-to-video supports a single input image" };
+                    return new VideoResponse() { Success = false, ErrorMsg = "Happy Horse 1.1 image-to-video supports a single input image" };
                 }
 
                 try
                 {
                     var uploadedImage = await client.UploadFile(imageFiles[0], connectionSettings, MuApiVideoPlugin._cancellationToken);
                     request.images_list = [uploadedImage];
+                }
+                catch (OperationCanceledException)
+                {
+                    return new VideoResponse() { Success = false, ErrorMsg = "User cancelled" };
+                }
+                catch (Exception ex)
+                {
+                    return new VideoResponse() { Success = false, ErrorMsg = ex.Message };
+                }
+            }
+            else if (HappyHorse1TrackPayload.IsReferenceToVideoModel(model))
+            {
+                if (imageFiles.Count == 0)
+                {
+                    return new VideoResponse() { Success = false, ErrorMsg = "Happy Horse 1.1 reference-to-video requires at least one reference image" };
+                }
+
+                if (imageFiles.Count > 9)
+                {
+                    return new VideoResponse() { Success = false, ErrorMsg = "Happy Horse 1.1 reference-to-video supports up to 9 reference images" };
+                }
+
+                try
+                {
+                    var uploadedImages = new List<string>();
+                    foreach (var imageFile in imageFiles)
+                    {
+                        uploadedImages.Add(await client.UploadFile(imageFile, connectionSettings, MuApiVideoPlugin._cancellationToken));
+                    }
+
+                    request.images_list = uploadedImages;
                 }
                 catch (OperationCanceledException)
                 {

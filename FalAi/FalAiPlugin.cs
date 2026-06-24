@@ -38,9 +38,11 @@ namespace FalAiPlugin
             new HappyHorseR2VHandler(),
             new HappyHorseVideoEditHandler(),
             new LtxAudioToVideoHandler(),
+            new Scail2Handler(),
             new Seedance2T2VHandler(),
             new Seedance2Handler(),
-            new Seedance2R2VHandler()
+            new Seedance2R2VHandler(),
+            new SyncLipsyncHandler()
         };
 
         public static List<ModelVisibilityHandlerBase> ImageVisibilityHandlers = new List<ModelVisibilityHandlerBase>()
@@ -426,9 +428,15 @@ namespace FalAiPlugin
                     reg.duration = null;
                 }
 
+                if (newTp.Model == SyncLipsyncHandler.Model)
+                {
+                    reg.prompt = null;
+                    reg.negative_prompt = null;
+                }
+
                 if (FalAiImgToVidPlugin.VisibilityHandlers.FirstOrDefault(f => f.ModelPath == newTp.Model) is ModelVisibilityHandlerBase mb)
                 {
-                    mb.ConvertRequest(reg);
+                    mb.ConvertRequest(reg, newTp, newIp);
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
@@ -1172,6 +1180,37 @@ namespace FalAiPlugin
                     if (string.IsNullOrWhiteSpace($"{vt.Prompt} {vi.Prompt}".Trim()))
                     {
                         return (false, "Prompt is required");
+                    }
+                }
+
+                if (vt.Model == Scail2Handler.Model)
+                {
+                    if (string.IsNullOrWhiteSpace(vi.VideoSource))
+                    {
+                        return (false, "Video source is required");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(vi.ImageSource) && string.IsNullOrWhiteSpace(vt.ImageSource))
+                    {
+                        return (false, "Image source is required");
+                    }
+
+                    if (string.IsNullOrWhiteSpace($"{vt.Prompt} {vi.Prompt}".Trim()))
+                    {
+                        return (false, "Prompt is required");
+                    }
+                }
+
+                if (vt.Model == SyncLipsyncHandler.Model)
+                {
+                    if (string.IsNullOrWhiteSpace(vi.ImageSource) && string.IsNullOrWhiteSpace(vt.ImageSource))
+                    {
+                        return (false, "Image source is required");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(vi.AudioSource))
+                    {
+                        return (false, "Audio source is required");
                     }
                 }
             }

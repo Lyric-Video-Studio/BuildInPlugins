@@ -56,6 +56,11 @@ namespace FalAiPlugin.ModelVisibilityHandlers
         {            
         }
 
+        public virtual void ConvertRequest(VideoRequest reg, object trackPayload, object itemPayload)
+        {
+            ConvertRequest(reg);
+        }
+
         public virtual void ConvertRequest(Request reg)
         {
         }

@@ -83,6 +83,11 @@ namespace LumaAiDreamMachinePlugin
         public string url { get; set; }
         public string data { get; set; }
         public string media_type { get; set; }
+        public string generation_id { get; set; }
+    }
+
+    public class LumaAgentsMediaReference : LumaAgentsImageReference
+    {
     }
 
     public class ImageRequestRefCharacter
@@ -162,6 +167,42 @@ namespace LumaAiDreamMachinePlugin
 
     internal class Client
     {
+        public async Task<VideoResponse> GetRayVideo(LumaAgentsVideoRequest request, string folderToSave, ConnectionSettings connectionSettings,
+            ItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction)
+        {
+            try
+            {
+                using var httpClient = CreateJsonClient(connectionSettings.AgentsUrl, connectionSettings.AccessTokenUni);
+
+                if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
+                {
+                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave, textualProgressAction, id => $"v1/generations/{id}");
+                }
+
+                var serialized = JsonHelper.Serialize(request);
+                using var stringContent = new StringContent(serialized);
+                stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+                var resp = await httpClient.PostAsync("v1/generations", stringContent);
+                var respString = await resp.Content.ReadAsStringAsync();
+                var respSerialized = JsonHelper.DeserializeString<Response>(respString);
+
+                if (respSerialized != null && resp.IsSuccessStatusCode)
+                {
+                    refItemPlayload.PollingId = respSerialized.id.ToString();
+                    saveAndRefreshCallback.Invoke(true);
+                    return await PollVideoResults(httpClient, respSerialized, respSerialized.id, folderToSave, textualProgressAction, id => $"v1/generations/{id}");
+                }
+
+                return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
+                return new VideoResponse() { ErrorMsg = ex.Message, Success = false };
+            }
+        }
+
         public async Task<VideoResponse> GetImgToVid(object request, string folderToSave, ConnectionSettings connectionSettings,
             ItemPayload refItemPlayload, Action<bool> saveAndRefreshCallback, Action<string> textualProgressAction)
         {
@@ -171,7 +212,7 @@ namespace LumaAiDreamMachinePlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave, textualProgressAction);
+                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave, textualProgressAction, id => $"dream-machine/v1/generations/{id}");
                 }
 
                 if (request is Request req)
@@ -208,7 +249,7 @@ namespace LumaAiDreamMachinePlugin
                 {
                     refItemPlayload.PollingId = respSerialized.id.ToString();
                     saveAndRefreshCallback.Invoke(true);
-                    return await PollVideoResults(httpClient, respSerialized.assets, respSerialized.id, folderToSave, textualProgressAction);
+                    return await PollVideoResults(httpClient, respSerialized, respSerialized.id, folderToSave, textualProgressAction, id => $"dream-machine/v1/generations/{id}");
                 }
 
                 return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
@@ -301,7 +342,7 @@ namespace LumaAiDreamMachinePlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave, textualProgress);
+                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave, textualProgress, id => $"dream-machine/v1/generations/{id}");
                 }
 
                 using var stringContent = new StringContent("{\"resolution\":\"" + resolution + "\"}");
@@ -315,7 +356,7 @@ namespace LumaAiDreamMachinePlugin
                 {
                     refItemPlayload.PollingId = respSerialized.id.ToString();
                     saveAndRefreshCallback.Invoke(true);
-                    return await PollVideoResults(httpClient, respSerialized.assets, respSerialized.id, folderToSave, textualProgress);
+                    return await PollVideoResults(httpClient, respSerialized, respSerialized.id, folderToSave, textualProgress, id => $"dream-machine/v1/generations/{id}");
                 }
 
                 return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
@@ -336,7 +377,7 @@ namespace LumaAiDreamMachinePlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave, textualProgress);
+                    return await PollVideoResults(httpClient, null, Guid.Parse(refItemPlayload.PollingId), folderToSave, textualProgress, id => $"dream-machine/v1/generations/{id}");
                 }
 
                 var payload = "{\"prompt\":\"" + positivePrompt.Trim() + "\",\"negative_prompt\":\"" + megativePrompt.Trim() + "\"}";
@@ -351,7 +392,7 @@ namespace LumaAiDreamMachinePlugin
                 {
                     refItemPlayload.PollingId = respSerialized.id.ToString();
                     saveAndRefreshCallback.Invoke(true);
-                    return await PollVideoResults(httpClient, respSerialized.assets, respSerialized.id, folderToSave, textualProgress);
+                    return await PollVideoResults(httpClient, respSerialized, respSerialized.id, folderToSave, textualProgress, id => $"dream-machine/v1/generations/{id}");
                 }
 
                 return new VideoResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
@@ -374,28 +415,32 @@ namespace LumaAiDreamMachinePlugin
             return httpClient;
         }
 
-        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, Asset assets, Guid id, string folderToSave, Action<string> textualProgressAction)
+        private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, Response initialResponse, Guid id, string folderToSave,
+            Action<string> textualProgressAction, Func<Guid, string> generationPathFactory)
         {
             var pollingDelay = TimeSpan.FromSeconds(7);
+            var currentResponse = initialResponse ?? new Response();
+            var videoUrl = GetVideoUrl(currentResponse);
 
-            while (string.IsNullOrEmpty(assets?.video))
+            while (string.IsNullOrWhiteSpace(videoUrl))
             {
                 try
                 {
-                    var generationResp = await httpClient.GetAsync($"dream-machine/v1/generations/{id}");
+                    var generationResp = await httpClient.GetAsync(generationPathFactory(id));
                     var respString = await generationResp.Content.ReadAsStringAsync();
-                    var respSerialized = JsonHelper.DeserializeString<Response>(respString);
-                    assets = respSerialized.assets;
+                    currentResponse = JsonHelper.DeserializeString<Response>(respString);
+                    videoUrl = GetVideoUrl(currentResponse);
 
-                    if (respSerialized.state == "failed")
+                    if (currentResponse.state == "failed")
                     {
-                        return new VideoResponse() { Success = false, ErrorMsg = $"Luma Ai backend reported that video generating failed: {respSerialized.failure_reason}" };
+                        var reason = string.IsNullOrWhiteSpace(currentResponse.failure_reason) ? currentResponse.failure_code : currentResponse.failure_reason;
+                        return new VideoResponse() { Success = false, ErrorMsg = $"Luma Ai backend reported that video generating failed: {reason}" };
                     }
 
-                    System.Diagnostics.Debug.WriteLine($"State: {respSerialized.state}");
-                    textualProgressAction.Invoke(respSerialized.state);
+                    System.Diagnostics.Debug.WriteLine($"State: {currentResponse.state}");
+                    textualProgressAction?.Invoke(currentResponse.state);
 
-                    if (string.IsNullOrEmpty(assets?.video))
+                    if (string.IsNullOrWhiteSpace(videoUrl))
                     {
                         await Task.Delay(pollingDelay);
                     }
@@ -406,26 +451,23 @@ namespace LumaAiDreamMachinePlugin
                 }
             }
 
-            var videoUrl = assets.video;
-            var file = Path.GetFileName(videoUrl);
-
-            using var downloadClient = new HttpClient { BaseAddress = new Uri(videoUrl.Replace(file, "")), Timeout = Timeout.InfiniteTimeSpan };
+            using var downloadClient = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
             downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
 
-            textualProgressAction.Invoke("Downloading");
+            textualProgressAction?.Invoke("Downloading");
 
-            var videoResp = await downloadClient.GetAsync(file);
+            var videoResp = await downloadClient.GetAsync(videoUrl);
 
             while (videoResp.StatusCode != HttpStatusCode.OK)
             {
                 await Task.Delay(pollingDelay);
-                videoResp = await downloadClient.GetAsync(file);
+                videoResp = await downloadClient.GetAsync(videoUrl);
             }
 
             if (videoResp.StatusCode == HttpStatusCode.OK)
             {
                 var respBytes = await videoResp.Content.ReadAsByteArrayAsync();
-                var pathToVideo = Path.Combine(folderToSave, $"{id}{Path.GetExtension(file)}");
+                var pathToVideo = Path.Combine(folderToSave, $"{id}{GetVideoExtension(videoUrl)}");
                 await File.WriteAllBytesAsync(pathToVideo, respBytes);
                 return new VideoResponse() { Success = true, VideoFile = pathToVideo };
             }
@@ -539,6 +581,30 @@ namespace LumaAiDreamMachinePlugin
             }
 
             return response?.output?.FirstOrDefault(s => s.type == "image")?.url ?? "";
+        }
+
+        private static string GetVideoUrl(Response response)
+        {
+            if (!string.IsNullOrWhiteSpace(response?.assets?.video))
+            {
+                return response.assets.video;
+            }
+
+            return response?.output?.FirstOrDefault(s => s.type == "video")?.url ?? "";
+        }
+
+        private static string GetVideoExtension(string videoUrl)
+        {
+            if (Uri.TryCreate(videoUrl, UriKind.Absolute, out var uri))
+            {
+                var extension = Path.GetExtension(uri.AbsolutePath);
+                if (!string.IsNullOrWhiteSpace(extension))
+                {
+                    return extension;
+                }
+            }
+
+            return ".mp4";
         }
 
         private static string GetImageFormat(string imageUrl, string contentType, string requestedOutputFormat)

@@ -295,19 +295,32 @@ namespace MuApiPlugin
                         return (false, "Prompt missing");
                     }
 
-                    if (track.Model == HappyHorse1TrackPayload.ModelI2V1080p)
-                    {
-                        var imageCount = CountFiles(track.HappyHorse1.ImageReferences.ImageSources.Select(i => i.ImageFile))
-                            + CountFiles(item.HappyHorse1.ImageReferences.ImageSources.Select(i => i.ImageFile));
+                    var imageCount = CountFiles(track.HappyHorse1.ImageReferences.ImageSources.Select(i => i.ImageFile))
+                        + CountFiles(item.HappyHorse1.ImageReferences.ImageSources.Select(i => i.ImageFile));
 
+                    if (HappyHorse1TrackPayload.IsImageToVideoModel(track.Model))
+                    {
                         if (imageCount == 0)
                         {
-                            return (false, "Happy Horse 1 image-to-video requires an input image");
+                            return (false, "Happy Horse 1.1 image-to-video requires an input image");
                         }
 
                         if (imageCount > 1)
                         {
-                            return (false, "Happy Horse 1 image-to-video supports a single input image");
+                            return (false, "Happy Horse 1.1 image-to-video supports a single input image");
+                        }
+                    }
+
+                    if (HappyHorse1TrackPayload.IsReferenceToVideoModel(track.Model))
+                    {
+                        if (imageCount == 0)
+                        {
+                            return (false, "Happy Horse 1.1 reference-to-video requires at least one reference image");
+                        }
+
+                        if (imageCount > 9)
+                        {
+                            return (false, "Happy Horse 1.1 reference-to-video supports up to 9 reference images");
                         }
                     }
                 }

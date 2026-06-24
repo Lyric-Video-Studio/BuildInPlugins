@@ -65,6 +65,30 @@ namespace FalAiPlugin
         [CustomName("Duration")]
         public int DurationLtx2 { get; set; } = 6;
 
+        [CustomName("Mode")]
+        [PropertyComboOptions(["animation", "replacement"])]
+        public string Scail2Mode { get; set; } = "animation";
+
+        [CustomName("DrivingType")]
+        [PropertyComboOptions(["end_to_end", "pose"])]
+        public string Scail2DrivingType { get; set; } = "end_to_end";
+
+        [CustomName("SubjectType")]
+        [PropertyComboOptions(["human", "animal"])]
+        public string Scail2SubjectType { get; set; } = "human";
+
+        [Description("Number of diffusion sampling steps. Must be between 2 and 50")]
+        [CustomName("InferenceSteps")]
+        public int Scail2NumInferenceSteps { get; set; } = 40;
+
+        [Description("Guidance scale. Must be between 1 and 10")]
+        [CustomName("GuidanceScale")]
+        public float Scail2GuidanceScale { get; set; } = 5;
+
+        [Description("Flow-matching noise schedule shift. Must be between 1 and 10")]
+        [CustomName("Shift")]
+        public float Scail2Shift { get; set; } = 3;
+
         [EnableFileDrop]
         [EnableDoodling]
         public string ImageSource { get; set; }

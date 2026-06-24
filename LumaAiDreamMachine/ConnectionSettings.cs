@@ -15,7 +15,7 @@ namespace LumaAiDreamMachinePlugin
         [Description("Url to luma ai API")]
         public string Url { get => url; set => url = value; }
 
-        [Description("Url to the Luma Agents image API used by uni-1 and uni-1-max")]
+        [Description("Url to the Luma Agents API used by uni-1 image models and ray-3.2 video")]
         public string AgentsUrl { get => agentsUrl; set => agentsUrl = value; }
 
         [Description("Access token. Each video creation uses credits. Access token is found from https://lumalabs.ai/dream-machine/api/keys " +
@@ -24,10 +24,11 @@ namespace LumaAiDreamMachinePlugin
         [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
 
-        [Description("Access token for UNI image. Uses credits. Access token is found from https://platform.lumalabs.ai/keys " +
+        [Description("Access token for the Luma Agents API, including uni image and ray-3.2 video. Uses credits. Access token is found from https://platform.lumalabs.ai/keys " +
             "This application is not resposible for possible usage of credits and will not in any way refund any used credits!!!")]
         [EditorWidth(300)]
         [MaskInput]
+        [CustomName("Access token agents / platform")]
         public string AccessTokenUni { get => accessTokenUni; set => accessTokenUni = value; }
 
         public bool AllowMcpAccess { get; set; } = false;
@@ -68,6 +69,7 @@ namespace LumaAiDreamMachinePlugin
         internal void DeleteTokens()
         {
             SecureStorageWrapper.SecStorage.DeleteKey(accessTokenKey);
+            SecureStorageWrapper.SecStorage.DeleteKey(accessTokenKey + ".uni");
         }
     }
 }

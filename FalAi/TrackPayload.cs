@@ -61,6 +61,10 @@ namespace FalAiPlugin
         [CustomName("Resolution")]
         public string ResolutionLtx2 { get; set; } = "1080p";
 
+        [CustomName("Resolution")]
+        [PropertyComboOptions(["512p", "704p"])]
+        public string ResolutionScail2 { get; set; } = "512p";
+
         public string Resolution { get; set; } = "1080p";
 
         [CustomName("AudioSetting")]

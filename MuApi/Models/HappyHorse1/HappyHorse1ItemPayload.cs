@@ -6,7 +6,7 @@ namespace MuApiPlugin.Models.HappyHorse1
 {
     public class HappyHorse1ItemPayload
     {
-        [Description("Item-level prompt suffix for Happy Horse 1 video generation.")]
+        [Description("Item-level prompt suffix for Happy Horse video generation.")]
         [EditorWidth(360)]
         public string Prompt { get; set; }
 
@@ -22,7 +22,7 @@ namespace MuApiPlugin.Models.HappyHorse1
                 return false;
             }
 
-            if (model is HappyHorse1TrackPayload.ModelT2V1080p or HappyHorse1TrackPayload.ModelT2V720p && (propertyName == nameof(ImageReferences) || ImageReferenceContainer.IsImageRefName(propertyName)))
+            if (HappyHorse1TrackPayload.IsTextToVideoModel(model) && (propertyName == nameof(ImageReferences) || ImageReferenceContainer.IsImageRefName(propertyName)))
             {
                 return false;
             }

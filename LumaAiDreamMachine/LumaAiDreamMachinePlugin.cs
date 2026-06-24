@@ -18,7 +18,7 @@ namespace LumaAiDreamMachinePlugin
 
         public bool IsInitialized => _isInitialized;
 
-        public string SettingsHelpText => "Hosted by Luma AI. You need to have your authorization token";
+        public string SettingsHelpText => "Hosted by Luma AI. You need to have your authorization token or Luma Agents token";
 
         public bool AsynchronousGeneration { get; } = true;
 
@@ -33,7 +33,7 @@ namespace LumaAiDreamMachinePlugin
 
         public object DefaultPayloadForVideoItem()
         {
-            return new ItemPayload();
+            return SetVideoSubs(new ItemPayload());
         }
 
         public object DefaultPayloadForVideoTrack()
@@ -43,7 +43,10 @@ namespace LumaAiDreamMachinePlugin
 
         public async Task<VideoResponse> GetVideo(object trackPayload, object itemsPayload, string folderToSaveVideo)
         {
-            if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            var needsAgentsToken = trackPayload is TrackPayload tokenTp && IsRayVideoModel(tokenTp);
+            var tokenToUse = needsAgentsToken ? _connectionSettings?.AccessTokenUni : _connectionSettings?.AccessToken;
+
+            if (_connectionSettings == null || string.IsNullOrEmpty(tokenToUse))
             {
                 return new VideoResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
@@ -59,12 +62,19 @@ namespace LumaAiDreamMachinePlugin
             {
                 if (JsonHelper.DeepCopy<TrackPayload>(trackPayload) is TrackPayload newTp && JsonHelper.DeepCopy<ItemPayload>(itemsPayload) is ItemPayload newIp)
                 {
+                    newTp.Settings.prompt = (newTp.Settings.prompt + " " + newIp.Prompt).Trim();
+
+                    if (IsRayVideoModel(newTp))
+                    {
+                        var rayRequest = await BuildRayVideoRequestAsync(newTp, newIp);
+                        return await _wrapper.GetRayVideo(rayRequest, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
+                    }
+
                     if (!string.IsNullOrEmpty(newIp.VideoFile))
                     {
                         return await ModifyVideo(newTp, newIp, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback, textualProgressAction);
                     }
 
-                    newTp.Settings.prompt = (newTp.Settings.prompt + " " + newIp.Prompt).Trim();
                     newTp.Settings.keyframes = newIp.KeyFrames;
 
                     if (!string.IsNullOrEmpty(newTp.Settings.keyframes.frame0.url))
@@ -142,7 +152,7 @@ namespace LumaAiDreamMachinePlugin
             }
             else if (!string.IsNullOrEmpty(newTp.FirstFrame))
             {
-                modifyRequest.first_frame.url = await UploadedPathAsync(newIp.FirstFrame);
+                modifyRequest.first_frame.url = await UploadedPathAsync(newTp.FirstFrame);
             }
             else
             {
@@ -154,7 +164,7 @@ namespace LumaAiDreamMachinePlugin
 
         public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
         {
-            if (_connectionSettings == null || string.IsNullOrEmpty(_connectionSettings.AccessToken))
+            if (_connectionSettings == null || (string.IsNullOrEmpty(_connectionSettings.AccessToken) && string.IsNullOrEmpty(_connectionSettings.AccessTokenUni)))
             {
                 return new ImageResponse { Success = false, ErrorMsg = "Uninitialized" };
             }
@@ -278,7 +288,7 @@ namespace LumaAiDreamMachinePlugin
             if (JsonHelper.DeepCopy<ConnectionSettings>(settings) is ConnectionSettings s)
             {
                 _connectionSettings = s;
-                _isInitialized = !string.IsNullOrEmpty(s.AccessToken);
+                _isInitialized = !string.IsNullOrEmpty(s.AccessToken) || !string.IsNullOrEmpty(s.AccessTokenUni);
                 return "";
             }
 
@@ -313,7 +323,7 @@ namespace LumaAiDreamMachinePlugin
 
             if (propertyName == nameof(Request.duration))
             {
-                return ["5s", "9s"];
+                return ["5s", "9s", "10s"];
             }
 
             if (propertyName == nameof(TrackPayload.VideoEditMode))
@@ -329,14 +339,14 @@ namespace LumaAiDreamMachinePlugin
                         return ["uni-1", "uni-1-max", "photon-1", "photon-flash-1"];
 
                     case IPluginBase.TrackType.Video:
-                        return ["ray-2", "ray-flash-2", "ray-1-6"];
+                        return ["ray-3.2", "ray-2", "ray-flash-2", "ray-1-6"];
                 }
             }
 
             return Array.Empty<string>();
         }
 
-        private static List<string> resolutions = ["720p", "1080p", "4k", "540p"];
+        private static List<string> resolutions = ["360p", "540p", "720p", "1080p", "4k"];
 
         public object CopyPayloadForVideoTrack(object obj)
         {
@@ -351,7 +361,7 @@ namespace LumaAiDreamMachinePlugin
         {
             if (JsonHelper.DeepCopy<ItemPayload>(obj) is ItemPayload set)
             {
-                return set;
+                return SetVideoSubs(set);
             }
             return DefaultPayloadForVideoItem();
         }
@@ -382,10 +392,6 @@ namespace LumaAiDreamMachinePlugin
         {
             if (payload is ItemPayload ip)
             {
-                if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
-                {
-                    return (false, "Auth token empty!!!");
-                }
                 if (string.IsNullOrEmpty(ip.Prompt))
                 {
                     return (false, "Prompt empty");
@@ -394,6 +400,46 @@ namespace LumaAiDreamMachinePlugin
 
             if (payload is TrackPayload tp)
             {
+                if (IsRayVideoModel(tp))
+                {
+                    if (string.IsNullOrEmpty(_connectionSettings.AccessTokenUni))
+                    {
+                        return (false, "Luma Agents auth token empty!!!");
+                    }
+
+                    var validAspectRatios = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "9:16", "3:4", "1:1", "4:3", "16:9", "21:9" };
+                    if (!string.IsNullOrWhiteSpace(tp.Settings?.aspect_ratio) && !validAspectRatios.Contains(tp.Settings.aspect_ratio))
+                    {
+                        return (false, "ray-3.2 supports aspect ratios 9:16, 3:4, 1:1, 4:3, 16:9 and 21:9");
+                    }
+
+                    var validResolutions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "360p", "540p", "720p", "1080p" };
+                    if (!string.IsNullOrWhiteSpace(tp.Settings?.resolution) && !validResolutions.Contains(tp.Settings.resolution))
+                    {
+                        return (false, "ray-3.2 supports resolutions 360p, 540p, 720p and 1080p");
+                    }
+
+                    var validDurations = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "5s", "10s" };
+                    if (!string.IsNullOrWhiteSpace(tp.Settings?.duration) && !validDurations.Contains(tp.Settings.duration))
+                    {
+                        return (false, "ray-3.2 supports durations 5s and 10s");
+                    }
+
+                    if (tp.ExrExport && !tp.Hdr)
+                    {
+                        return (false, "EXR export requires HDR");
+                    }
+
+                    if (tp.Hdr && tp.Settings?.resolution is "360p" or "540p")
+                    {
+                        return (false, "HDR requires 720p or 1080p");
+                    }
+                }
+                else if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
+                {
+                    return (false, "Auth token empty!!!");
+                }
+
                 if (tp.Settings.model == "ray-1-6" && resolutions.IndexOf(tp.Settings.resolution) > 0)
                 {
                     return (false, "Ray-2 model supports only 720p");
@@ -437,12 +483,18 @@ namespace LumaAiDreamMachinePlugin
             _uploader = uploader;
         }
 
+        private ItemPayload SetVideoSubs(ItemPayload pl)
+        {
+            pl.OnDeserialized();
+            pl.ImageModeChanged += (_, __) => saveAndRefreshCallback?.Invoke(false);
+            return pl;
+        }
+
         public object ObjectToItemPayload(JsonObject obj)
         {
             if (obj[nameof(ItemPayload.IsVideo)].AsValue().TryGetValue<bool>(out var isVid) && isVid)
             {
-                var resp = JsonHelper.ToExactType<ItemPayload>(obj);
-                return resp;
+                return SetVideoSubs(JsonHelper.ToExactType<ItemPayload>(obj));
             }
 
             return JsonHelper.ToExactType<ImageItemPayload>(obj);
@@ -632,7 +684,11 @@ namespace LumaAiDreamMachinePlugin
         {
             if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
-                return new List<string>() { ip.KeyFrames.frame0.url, ip.KeyFrames.frame1.url };
+                var output = new List<string>() { ip.KeyFrames.frame0.url, ip.KeyFrames.frame1.url, ip.VideoFile, ip.FirstFrame, tp.FirstFrame };
+                output.AddRange(ip.MultiKeyFrames.Select(s => s.ImageSource));
+                return output
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .ToList();
             }
 
             if (trackPayload is ImageTrackPayload && itemPayload is ImageItemPayload imgIp)
@@ -648,7 +704,7 @@ namespace LumaAiDreamMachinePlugin
 
         public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
         {
-            if (trackPayload is TrackPayload && itemPayload is ItemPayload ip)
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
                 for (int i = 0; i < originalPath.Count; i++)
                 {
@@ -660,6 +716,29 @@ namespace LumaAiDreamMachinePlugin
                     if (originalPath[i] == ip.KeyFrames.frame1.url)
                     {
                         ip.KeyFrames.frame1.url = newPath[i];
+                    }
+
+                    if (originalPath[i] == ip.VideoFile)
+                    {
+                        ip.VideoFile = newPath[i];
+                    }
+
+                    if (originalPath[i] == ip.FirstFrame)
+                    {
+                        ip.FirstFrame = newPath[i];
+                    }
+
+                    if (originalPath[i] == tp.FirstFrame)
+                    {
+                        tp.FirstFrame = newPath[i];
+                    }
+
+                    foreach (var item in ip.MultiKeyFrames)
+                    {
+                        if (originalPath[i] == item.ImageSource)
+                        {
+                            item.ImageSource = newPath[i];
+                        }
                     }
                 }
             }
@@ -711,9 +790,101 @@ namespace LumaAiDreamMachinePlugin
         {
             if (trackPaylod is TrackPayload tp && itemPayload is ItemPayload ip)
             {
+                var hasSourceVideo = HasSourceVideo(ip);
+                var hasStartFrame = HasFrameReference(ip.KeyFrames?.frame0);
+                var hasEndFrame = HasFrameReference(ip.KeyFrames?.frame1);
+
                 if (!string.IsNullOrEmpty(ip.VideoFile) && tp.Settings.model == "ray-1-6")
                 {
                     return (false, "ray-1-6 is not supported for video modify");
+                }
+
+                if (!string.IsNullOrWhiteSpace(ip.SourceGenerationId) && !IsRayVideoModel(tp))
+                {
+                    return (false, "Source generation id is only supported by ray-3.2");
+                }
+
+                if (hasSourceVideo && tp.SourceVideoMode == TrackPayload.SourceVideoModeReframe && !IsRayVideoModel(tp))
+                {
+                    return (false, "Video reframing is only supported by ray-3.2");
+                }
+
+                if (IsRayVideoModel(tp))
+                {
+                    if (!hasSourceVideo && ip.ImageMode == ItemPayload.ImageModeMultiFrame)
+                    {
+                        if (ip.MultiKeyFrames.Count == 0)
+                        {
+                            return (false, "Add at least one multiframe keyframe");
+                        }
+
+                        if (ip.MultiKeyFrames.Count > 64)
+                        {
+                            return (false, "ray-3.2 multiframe mode supports up to 64 keyframes");
+                        }
+
+                        if (ip.MultiKeyFrames.Any(s => string.IsNullOrWhiteSpace(s.ImageSource) && string.IsNullOrWhiteSpace(s.GenerationId)))
+                        {
+                            return (false, "Each multiframe keyframe needs either image source or generation id");
+                        }
+
+                        if (ip.MultiKeyFrames.Select(s => s.FrameIndex).Distinct().Count() != ip.MultiKeyFrames.Count)
+                        {
+                            return (false, "Multiframe keyframe indexes must be unique");
+                        }
+
+                        if (ip.MultiKeyFrames.Any(s => s.FrameIndex < 0))
+                        {
+                            return (false, "Multiframe keyframe indexes must be non-negative");
+                        }
+
+                        var maxIndex = tp.Settings.duration == "10s" ? 240 : 120;
+                        if (ip.MultiKeyFrames.Any(s => s.FrameIndex > maxIndex))
+                        {
+                            return (false, $"Multiframe keyframe indexes must be within 0-{maxIndex} for {tp.Settings.duration ?? "5s"} duration");
+                        }
+
+                        if (tp.Settings.loop)
+                        {
+                            return (false, "ray-3.2 does not support loop together with multiframe mode");
+                        }
+                    }
+
+                    if (hasSourceVideo && tp.SourceVideoMode == TrackPayload.SourceVideoModeReframe)
+                    {
+                        if (tp.Hdr || tp.ExrExport)
+                        {
+                            return (false, "ray-3.2 video reframe does not support HDR or EXR");
+                        }
+                    }
+
+                    if (!hasSourceVideo)
+                    {
+                        if (tp.Settings.duration == "10s" && (hasStartFrame || hasEndFrame))
+                        {
+                            return (false, "ray-3.2 does not support start or end frames with 10s duration");
+                        }
+
+                        if (tp.Settings.duration == "10s" && tp.Hdr)
+                        {
+                            return (false, "ray-3.2 does not support HDR with 10s duration");
+                        }
+
+                        if (tp.Settings.duration == "10s" && tp.Settings.loop)
+                        {
+                            return (false, "ray-3.2 does not support looping with 10s duration");
+                        }
+
+                        if (tp.Settings.loop && hasEndFrame)
+                        {
+                            return (false, "ray-3.2 does not support loop together with an end frame");
+                        }
+
+                        if (tp.Settings.loop && tp.Hdr)
+                        {
+                            return (false, "ray-3.2 does not support loop together with HDR");
+                        }
+                    }
                 }
             }
 
@@ -753,6 +924,172 @@ namespace LumaAiDreamMachinePlugin
         private static bool IsUniImageModel(string model)
         {
             return model == "uni-1" || model == "uni-1-max";
+        }
+
+        private static bool IsRayVideoModel(TrackPayload payload)
+        {
+            return payload?.Settings?.model == "ray-3.2";
+        }
+
+        private static bool HasSourceVideo(ItemPayload payload)
+        {
+            return !string.IsNullOrWhiteSpace(payload?.VideoFile) || !string.IsNullOrWhiteSpace(payload?.SourceGenerationId);
+        }
+
+        private static bool HasFrameReference(KeyFrame keyFrame)
+        {
+            return keyFrame != null && (!string.IsNullOrWhiteSpace(keyFrame.url) || !string.IsNullOrWhiteSpace(keyFrame.id));
+        }
+
+        private async Task<LumaAgentsVideoRequest> BuildRayVideoRequestAsync(TrackPayload trackPayload, ItemPayload itemPayload)
+        {
+            var request = new LumaAgentsVideoRequest
+            {
+                model = "ray-3.2",
+                prompt = trackPayload.Settings.prompt,
+                video = new LumaAgentsVideoOptions
+                {
+                    resolution = string.IsNullOrWhiteSpace(trackPayload.Settings.resolution) ? null : trackPayload.Settings.resolution
+                }
+            };
+
+            if (HasSourceVideo(itemPayload))
+            {
+                request.source = await BuildRayVideoSourceAsync(itemPayload);
+
+                if (trackPayload.SourceVideoMode == TrackPayload.SourceVideoModeReframe)
+                {
+                    request.type = "video_reframe";
+                    request.aspect_ratio = string.IsNullOrWhiteSpace(trackPayload.Settings.aspect_ratio) ? null : trackPayload.Settings.aspect_ratio;
+
+                    if (trackPayload.UseCustomSourcePosition)
+                    {
+                        request.video.source_position = new LumaAgentsVideoSourcePosition
+                        {
+                            x_norm = trackPayload.SourcePositionXNorm,
+                            y_norm = trackPayload.SourcePositionYNorm,
+                            w_norm = trackPayload.SourcePositionWNorm,
+                            h_norm = trackPayload.SourcePositionHNorm
+                        };
+                    }
+                }
+                else
+                {
+                    request.type = "video_edit";
+                    request.video.edit = string.IsNullOrWhiteSpace(trackPayload.VideoEditMode)
+                        ? new LumaAgentsVideoEditOptions { auto_controls = true }
+                        : new LumaAgentsVideoEditOptions { strength = trackPayload.VideoEditMode };
+
+                    if (trackPayload.Hdr)
+                    {
+                        request.video.hdr = true;
+                    }
+
+                    if (trackPayload.ExrExport)
+                    {
+                        request.video.exr_export = true;
+                    }
+
+                    var guideFramePath = !string.IsNullOrWhiteSpace(itemPayload.FirstFrame) ? itemPayload.FirstFrame : trackPayload.FirstFrame;
+                    request.video.start_frame = await BuildRayImageReferenceAsync(guideFramePath, null);
+                }
+
+                return request;
+            }
+
+            request.type = "video";
+            request.aspect_ratio = string.IsNullOrWhiteSpace(trackPayload.Settings.aspect_ratio) ? null : trackPayload.Settings.aspect_ratio;
+            request.video.duration = string.IsNullOrWhiteSpace(trackPayload.Settings.duration) ? null : trackPayload.Settings.duration;
+
+            if (trackPayload.Settings.loop)
+            {
+                request.video.loop = true;
+            }
+
+            if (trackPayload.Hdr)
+            {
+                request.video.hdr = true;
+            }
+
+            if (trackPayload.ExrExport)
+            {
+                request.video.exr_export = true;
+            }
+
+            if (itemPayload.ImageMode == ItemPayload.ImageModeMultiFrame)
+            {
+                var keyframeReferences = new List<LumaAgentsMediaReference>();
+                var keyframeIndexes = new List<int>();
+
+                foreach (var keyframe in itemPayload.MultiKeyFrames)
+                {
+                    keyframeReferences.Add(await BuildRayImageReferenceAsync(keyframe.ImageSource, keyframe.GenerationId));
+                    keyframeIndexes.Add(keyframe.FrameIndex);
+                }
+
+                request.video.keyframes = keyframeReferences.ToArray();
+                request.video.keyframe_indexes = keyframeIndexes.ToArray();
+            }
+            else
+            {
+                request.video.start_frame = await BuildRayImageReferenceAsync(itemPayload.KeyFrames?.frame0?.url, itemPayload.KeyFrames?.frame0?.id);
+                request.video.end_frame = await BuildRayImageReferenceAsync(itemPayload.KeyFrames?.frame1?.url, itemPayload.KeyFrames?.frame1?.id);
+            }
+
+            return request;
+        }
+
+        private async Task<LumaAgentsMediaReference> BuildRayImageReferenceAsync(string sourcePath, string generationId)
+        {
+            if (!string.IsNullOrWhiteSpace(generationId))
+            {
+                return new LumaAgentsMediaReference { generation_id = generationId.Trim() };
+            }
+
+            if (string.IsNullOrWhiteSpace(sourcePath))
+            {
+                return null;
+            }
+
+            var resp = await _uploader.RequestContentUpload(sourcePath);
+            if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+            {
+                return new LumaAgentsMediaReference { url = resp.uploadedUrl };
+            }
+
+            throw new Exception($"Failed to upload image to cloud, {resp.responseCode}");
+        }
+
+        private async Task<LumaAgentsMediaReference> BuildRayVideoSourceAsync(ItemPayload itemPayload)
+        {
+            if (!string.IsNullOrWhiteSpace(itemPayload.SourceGenerationId))
+            {
+                return new LumaAgentsMediaReference { generation_id = itemPayload.SourceGenerationId.Trim() };
+            }
+
+            var resp = await _uploader.RequestContentUpload(itemPayload.VideoFile);
+            if (resp.responseCode == System.Net.HttpStatusCode.OK && !resp.isLocalFile)
+            {
+                return new LumaAgentsMediaReference
+                {
+                    url = resp.uploadedUrl,
+                    media_type = GetVideoMediaType(itemPayload.VideoFile)
+                };
+            }
+
+            throw new Exception($"Failed to upload video to cloud, {resp.responseCode}");
+        }
+
+        private static string GetVideoMediaType(string sourcePath)
+        {
+            return Path.GetExtension(sourcePath)?.ToLowerInvariant() switch
+            {
+                ".mov" => "video/quicktime",
+                ".webm" => "video/webm",
+                ".mkv" => "video/x-matroska",
+                ".avi" => "video/x-msvideo",
+                _ => "video/mp4"
+            };
         }
 
         private async Task<LumaAgentsImageRequest> BuildUniImageRequestAsync(ImageTrackPayload trackPayload, ImageItemPayload itemPayload)

@@ -65,7 +65,7 @@ namespace MinimaxPlugin.Audio
         /// </summary>
         [JsonPropertyName("model")]
         [PropertyComboOptions(["speech-2.8-hd", "speech-2.8-turbo", "speech-2.6-hd", "speech-2.6-turbo", MusicRequest.MusicModel, MusicRequest.MusicCover, MusicRequest.MusicModelFree, MusicRequest.MusicCoverFree])]
-        public string Model { get; set; } = "speech-02-hd";
+        public string Model { get; set; } = MusicRequest.MusicModelFree;
 
         /// <summary>
         /// Text to be synthesized. Character limit < 5000 chars.
