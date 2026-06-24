@@ -20,12 +20,12 @@ namespace MuApiPlugin.Models.Seedance2
 
         public bool ShouldPropertyBeVisible(string propertyName, string model)
         {
-            if (model is Seedance2TrackPayload.ModelI2V or Seedance2TrackPayload.ModelI2V480p && (AudioReferenceContainer.IsAudioRefName(propertyName) || VideoReferenceContainer.IsVideoRefName(propertyName)))
+            if (Seedance2TrackPayload.IsImageToVideoModel(model) && (AudioReferenceContainer.IsAudioRefName(propertyName) || VideoReferenceContainer.IsVideoRefName(propertyName)))
             {
                 return false;
             }
 
-            if (model is Seedance2TrackPayload.ModelT2V or Seedance2TrackPayload.ModelT2V480p && (AudioReferenceContainer.IsAudioRefName(propertyName) || ImageReferenceContainer.IsImageRefName(propertyName) || VideoReferenceContainer.IsVideoRefName(propertyName)))
+            if (Seedance2TrackPayload.IsTextToVideoModel(model) && (AudioReferenceContainer.IsAudioRefName(propertyName) || ImageReferenceContainer.IsImageRefName(propertyName) || VideoReferenceContainer.IsVideoRefName(propertyName)))
             {
                 return false;
             }
