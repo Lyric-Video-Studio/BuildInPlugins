@@ -1,4 +1,4 @@
-﻿using Google.GenAI;
+using Google.GenAI;
 using Google.GenAI.Types;
 using Newtonsoft.Json.Bson;
 using PluginBase;
@@ -51,7 +51,35 @@ namespace GooglePlugin
 
             if (trackPayload is ImageTrackPayload tp && itemsPayload is ImageItemPayload ip)
             {
-                var effectiveImage = !string.IsNullOrEmpty(ip.ImageSource) ? ip.ImageSource : tp.ImageSource;
+                var effectiveImages = new List<string>();
+                var img = !string.IsNullOrEmpty(ip.ImageSource) ? ip.ImageSource : tp.ImageSource;
+
+                if (!string.IsNullOrEmpty(img))
+                {
+                    effectiveImages.Add(img);
+                }
+
+                img = !string.IsNullOrEmpty(ip.ImageSource2) ? ip.ImageSource2 : tp.ImageSource2;
+
+                if (!string.IsNullOrEmpty(img))
+                {
+                    effectiveImages.Add(img);
+                }
+
+                img = !string.IsNullOrEmpty(ip.ImageSource3) ? ip.ImageSource3 : tp.ImageSource3;
+
+                if (!string.IsNullOrEmpty(img))
+                {
+                    effectiveImages.Add(img);
+                }
+
+                img = !string.IsNullOrEmpty(ip.ImageSource4) ? ip.ImageSource4 : tp.ImageSource4;
+
+                if (!string.IsNullOrEmpty(img))
+                {
+                    effectiveImages.Add(img);
+                }
+
                 var prompt = (tp.Prompt + " " + ip.Prompt).Trim();
                 var getCOnfig = new GenerateContentConfig
                 {
@@ -82,7 +110,7 @@ namespace GooglePlugin
                     },
                 };
 
-                if (!string.IsNullOrEmpty(effectiveImage))
+                foreach (var effectiveImage in effectiveImages)
                 {
                     var imageBytes = await System.IO.File.ReadAllBytesAsync(effectiveImage);
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
@@ -451,6 +479,7 @@ namespace GooglePlugin
                 {
                     effectiveImages.Add(img);
                 }
+
 
                 var prompt = (tp.Prompt + " " + ip.Prompt).Trim();
                 var getCOnfig = new GenerateVideosConfig
@@ -857,7 +886,7 @@ namespace GooglePlugin
         {
             if (trackPayload is ImageTrackPayload ip && itemPayload is ImageItemPayload tp)
             {
-                return new List<string> { ip.ImageSource, tp.ImageSource };
+                return new List<string> { ip.ImageSource, tp.ImageSource, ip.ImageSource2, tp.ImageSource2, ip.ImageSource3, tp.ImageSource3, ip.ImageSource4, tp.ImageSource4 };
             }
 
             if (trackPayload is VideoTrackPayload vi && itemPayload is VideoItemPayload vi2)
@@ -898,7 +927,7 @@ namespace GooglePlugin
                         ip.ImageSource3 = newPath[i];
                     }
 
-                    if (originalPath[i] == tp.ImageSource)
+                    if (originalPath[i] == tp.ImageSource3)
                     {
                         tp.ImageSource3 = newPath[i];
                     }
@@ -917,6 +946,36 @@ namespace GooglePlugin
                     if (originalPath[i] == vi2.ImageSource)
                     {
                         vi2.ImageSource = newPath[i];
+                    }
+
+                    if (originalPath[i] == vi.ImageSource2)
+                    {
+                        vi.ImageSource2 = newPath[i];
+                    }
+
+                    if (originalPath[i] == vi2.ImageSource2)
+                    {
+                        vi2.ImageSource2 = newPath[i];
+                    }
+
+                    if (originalPath[i] == vi.ImageSource3)
+                    {
+                        vi.ImageSource3 = newPath[i];
+                    }
+
+                    if (originalPath[i] == vi2.ImageSource3)
+                    {
+                        vi2.ImageSource3 = newPath[i];
+                    }
+
+                    if (originalPath[i] == vi.ImageSource4)
+                    {
+                        vi.ImageSource4 = newPath[i];
+                    }
+
+                    if (originalPath[i] == vi2.ImageSource4)
+                    {
+                        vi2.ImageSource4 = newPath[i];
                     }
                 }
             }
@@ -973,3 +1032,7 @@ namespace GooglePlugin
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 }
+
+
+
+
