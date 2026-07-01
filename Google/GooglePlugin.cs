@@ -4,6 +4,7 @@ using Newtonsoft.Json.Bson;
 using PluginBase;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace GooglePlugin
@@ -457,36 +458,19 @@ namespace GooglePlugin
 
             if (trackPayload is VideoTrackPayload tp && itemsPayload is VideoItemPayload ip)
             {
-                var effectiveImages = new List<string>();
-
-                var img = !string.IsNullOrEmpty(ip.ImageSource) ? ip.ImageSource : tp.ImageSource;
-
-                if (!string.IsNullOrEmpty(img))
-                {
-                    effectiveImages.Add(img);
-                }
-
-                img = !string.IsNullOrEmpty(ip.ImageSource2) ? ip.ImageSource2 : tp.ImageSource2;
-
-                if (!string.IsNullOrEmpty(img))
-                {
-                    effectiveImages.Add(img);
-                }
-
-                img = !string.IsNullOrEmpty(ip.ImageSource3) ? ip.ImageSource3 : tp.ImageSource3;
-
-                if (!string.IsNullOrEmpty(img))
-                {
-                    effectiveImages.Add(img);
-                }
-
-
+                var effectiveImages = CollectEffectiveVideoImages(tp, ip);
                 var prompt = (tp.Prompt + " " + ip.Prompt).Trim();
+
+                if (IsOmniVideoModel(tp.Model))
+                {
+                    return await GetOmniVideo(tp, ip, prompt, effectiveImages, folderToSaveVideo);
+                }
+
                 var getCOnfig = new GenerateVideosConfig
                 {
-                    PersonGeneration =  null, 
-                    AspectRatio = tp.AspectRatio, 
-                    DurationSeconds = int.Parse(ip.Duration), 
+                    PersonGeneration =  null,
+                    AspectRatio = tp.AspectRatio == "Auto" ? null : tp.AspectRatio,
+                    DurationSeconds = int.Parse(ip.Duration),
                     Resolution = tp.Resolution
                 };
 
@@ -495,14 +479,15 @@ namespace GooglePlugin
                     Prompt = prompt
                 };
 
-                if (effectiveImages.Count == 1)
+                var veoImages = effectiveImages.Take(3).ToList();
+                if (veoImages.Count == 1)
                 {
-                    source.Image = Image.FromFile(effectiveImages.FirstOrDefault());
+                    source.Image = Image.FromFile(veoImages.FirstOrDefault());
                 }
-                else if (effectiveImages.Count > 1)
+                else if (veoImages.Count > 1)
                 {
                     getCOnfig.ReferenceImages = new List<VideoGenerationReferenceImage>();
-                    foreach(var refImg in effectiveImages)
+                    foreach(var refImg in veoImages)
                     {
                         var gRefImg = new VideoGenerationReferenceImage();
                         gRefImg.Image = Image.FromFile(refImg);
@@ -548,6 +533,281 @@ namespace GooglePlugin
             
         }
 
+        private static bool IsOmniVideoModel(string model)
+        {
+            return string.Equals(model, VideoTrackPayload.ModelGeminiOmniFlashPreview, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async Task<VideoResponse> GetOmniVideo(VideoTrackPayload tp, VideoItemPayload ip, string prompt, List<string> effectiveImages, string folderToSaveVideo)
+        {
+            using var httpClient = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
+            var request = await BuildOmniVideoRequest(tp, ip, prompt, effectiveImages);
+            var url = $"https://generativelanguage.googleapis.com/v1beta/interactions?key={Uri.EscapeDataString(_connectionSettings.AccessToken)}";
+            using var content = new StringContent(request.ToJsonString(), Encoding.UTF8, "application/json");
+            using var response = await httpClient.PostAsync(url, content, ct);
+            var responsePayload = await response.Content.ReadAsStringAsync(ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new VideoResponse { Success = false, ErrorMsg = GetGoogleJsonError(responsePayload) };
+            }
+
+            var responseJson = JsonNode.Parse(responsePayload);
+            ip.LastInteractionId = responseJson?["id"]?.ToString() ?? ip.LastInteractionId;
+            var outputVideo = FindOmniOutputVideo(responseJson);
+            if (outputVideo == null)
+            {
+                return new VideoResponse { Success = false, ErrorMsg = GetGoogleJsonError(responsePayload) };
+            }
+
+            var targetFile = Path.Combine(folderToSaveVideo, $"{Guid.NewGuid()}.mp4");
+            var inlineData = outputVideo["data"]?.ToString();
+            if (!string.IsNullOrWhiteSpace(inlineData))
+            {
+                await System.IO.File.WriteAllBytesAsync(targetFile, Convert.FromBase64String(inlineData), ct);
+                return new VideoResponse() { Success = true, Fps = 24, VideoFile = targetFile };
+            }
+
+            var uri = outputVideo["uri"]?.ToString();
+            if (!string.IsNullOrWhiteSpace(uri))
+            {
+                await DownloadOmniVideo(httpClient, uri, targetFile);
+                return new VideoResponse() { Success = true, Fps = 24, VideoFile = targetFile };
+            }
+
+            return new VideoResponse { Success = false, ErrorMsg = "Google Omni response did not contain video data" };
+        }
+
+        private async Task<JsonObject> BuildOmniVideoRequest(VideoTrackPayload tp, VideoItemPayload ip, string prompt, List<string> effectiveImages)
+        {
+            var previousInteractionId = ip.PreviousInteractionId?.Trim();
+            var videoSource = !string.IsNullOrWhiteSpace(ip.VideoSource) ? ip.VideoSource : tp.VideoSource;
+            var hasVideoSource = !string.IsNullOrWhiteSpace(videoSource);
+            var hasPreviousInteraction = !string.IsNullOrWhiteSpace(previousInteractionId);
+            var task = ResolveOmniTask(tp.VideoTask, effectiveImages.Count, hasVideoSource, hasPreviousInteraction);
+            var request = new JsonObject
+            {
+                ["model"] = tp.Model,
+                ["response_format"] = BuildOmniResponseFormat(tp, task == "edit"),
+                ["background"] = false,
+                ["stream"] = false
+            };
+
+            if (hasPreviousInteraction)
+            {
+                request["previous_interaction_id"] = previousInteractionId;
+            }
+
+            var omniPrompt = AddOmniDurationToPrompt(prompt, ip.Duration);
+            request["input"] = await BuildOmniInput(omniPrompt, effectiveImages, videoSource);
+
+            if (!string.IsNullOrWhiteSpace(task))
+            {
+                request["generation_config"] = new JsonObject
+                {
+                    ["video_config"] = new JsonObject
+                    {
+                        ["task"] = task
+                    }
+                };
+            }
+            return request;
+        }
+
+        private static JsonObject BuildOmniResponseFormat(VideoTrackPayload tp, bool omitAspectRatio)
+        {
+            var responseFormat = new JsonObject
+            {
+                ["type"] = "video",
+                ["delivery"] = "uri"
+            };
+
+            if (!omitAspectRatio && !string.IsNullOrWhiteSpace(tp.AspectRatio) && tp.AspectRatio != "Auto")
+            {
+                responseFormat["aspect_ratio"] = tp.AspectRatio;
+            }
+
+            return responseFormat;
+        }
+        private async Task<JsonNode> BuildOmniInput(string prompt, List<string> effectiveImages, string videoSource)
+        {
+            if (effectiveImages.Count == 0 && string.IsNullOrWhiteSpace(videoSource))
+            {
+                return JsonValue.Create(prompt);
+            }
+
+            var content = new JsonArray();
+            if (!string.IsNullOrWhiteSpace(videoSource))
+            {
+                content.Add(await BuildOmniMediaPart("video", videoSource));
+            }
+
+            foreach (var image in effectiveImages.Take(6))
+            {
+                content.Add(await BuildOmniMediaPart("image", image));
+            }
+
+            content.Add(new JsonObject
+            {
+                ["type"] = "text",
+                ["text"] = prompt
+            });
+
+            if (!string.IsNullOrWhiteSpace(videoSource))
+            {
+                return new JsonArray
+                {
+                    new JsonObject
+                    {
+                        ["type"] = "user_input",
+                        ["content"] = content
+                    }
+                };
+            }
+
+            return content;
+        }
+
+        private async Task<JsonObject> BuildOmniMediaPart(string type, string path)
+        {
+            var bytes = await System.IO.File.ReadAllBytesAsync(path, ct);
+            return new JsonObject
+            {
+                ["type"] = type,
+                ["data"] = Convert.ToBase64String(bytes),
+                ["mime_type"] = CommonConstants.GetMimeType(Path.GetExtension(path))
+            };
+        }
+
+        private static string AddOmniDurationToPrompt(string prompt, string duration)
+        {
+            var seconds = GetSelectedVideoDurationSeconds(duration);
+            var durationInstruction = $"Create a video that is about {seconds} seconds long.";
+            if (string.IsNullOrWhiteSpace(prompt))
+            {
+                return durationInstruction;
+            }
+
+            return prompt.Trim() + " " + durationInstruction;
+        }
+
+        private static int GetSelectedVideoDurationSeconds(string duration)
+        {
+            if (!int.TryParse(duration, out var seconds))
+            {
+                seconds = 8;
+            }
+
+            return Math.Clamp(seconds, 3, 10);
+        }
+
+        private static string ResolveOmniTask(string selectedTask, int imageCount, bool hasVideo, bool hasPreviousInteraction)
+        {
+            return selectedTask switch
+            {
+                VideoTrackPayload.VideoTaskUnspecified => null,
+                VideoTrackPayload.VideoTaskTextToVideo => "text_to_video",
+                VideoTrackPayload.VideoTaskImageToVideo => "image_to_video",
+                VideoTrackPayload.VideoTaskReferenceToVideo => "reference_to_video",
+                VideoTrackPayload.VideoTaskEdit => "edit",
+                _ when hasVideo || hasPreviousInteraction => "edit",
+                _ when imageCount > 1 => "reference_to_video",
+                _ when imageCount == 1 => "image_to_video",
+                _ => "text_to_video"
+            };
+        }
+
+        private static List<string> CollectEffectiveVideoImages(VideoTrackPayload tp, VideoItemPayload ip)
+        {
+            var effectiveImages = new List<string>();
+            AddEffectivePath(effectiveImages, ip.ImageSource, tp.ImageSource);
+            AddEffectivePath(effectiveImages, ip.ImageSource2, tp.ImageSource2);
+            AddEffectivePath(effectiveImages, ip.ImageSource3, tp.ImageSource3);
+            AddEffectivePath(effectiveImages, ip.ImageSource4, tp.ImageSource4);
+            AddEffectivePath(effectiveImages, ip.ImageSource5, tp.ImageSource5);
+            AddEffectivePath(effectiveImages, ip.ImageSource6, tp.ImageSource6);
+            return effectiveImages;
+        }
+
+        private static void AddEffectivePath(List<string> paths, string itemPath, string trackPath)
+        {
+            var path = !string.IsNullOrEmpty(itemPath) ? itemPath : trackPath;
+            if (!string.IsNullOrEmpty(path))
+            {
+                paths.Add(path);
+            }
+        }
+
+        private static JsonNode FindOmniOutputVideo(JsonNode responseJson)
+        {
+            var directOutput = responseJson?["output_video"];
+            if (directOutput != null)
+            {
+                return directOutput;
+            }
+
+            var steps = responseJson?["steps"]?.AsArray();
+            if (steps == null)
+            {
+                return null;
+            }
+
+            foreach (var step in steps)
+            {
+                var content = step?["content"]?.AsArray();
+                if (content == null)
+                {
+                    continue;
+                }
+
+                foreach (var part in content)
+                {
+                    if (part?["type"]?.ToString() == "video")
+                    {
+                        return part;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private async Task DownloadOmniVideo(HttpClient httpClient, string uri, string targetFile)
+        {
+            var downloadUri = uri.Contains("key=", StringComparison.OrdinalIgnoreCase)
+                ? uri
+                : uri + (uri.Contains('?') ? "&" : "?") + $"key={Uri.EscapeDataString(_connectionSettings.AccessToken)}";
+            using var downloadResponse = await httpClient.GetAsync(downloadUri, ct);
+            var bytes = await downloadResponse.Content.ReadAsByteArrayAsync(ct);
+            if (!downloadResponse.IsSuccessStatusCode)
+            {
+                var errorPayload = Encoding.UTF8.GetString(bytes);
+                throw new Exception(GetGoogleJsonError(errorPayload));
+            }
+
+            await System.IO.File.WriteAllBytesAsync(targetFile, bytes, ct);
+        }
+
+        private static string GetGoogleJsonError(string payload)
+        {
+            if (string.IsNullOrWhiteSpace(payload))
+            {
+                return "Unknown Google API error";
+            }
+
+            try
+            {
+                var node = JsonNode.Parse(payload);
+                return node?["error"]?["message"]?.ToString() ??
+                    node?["message"]?.ToString() ??
+                    node?["status"]?.ToString() ??
+                    payload;
+            }
+            catch
+            {
+                return payload;
+            }
+        }
         private async Task WaitForRequestSlotAsync(int requestsPerMinute, Queue<DateTimeOffset> requestTimes, object requestLock, CancellationToken cancellationToken)
         {
             if (requestsPerMinute <= 0)
@@ -891,7 +1151,16 @@ namespace GooglePlugin
 
             if (trackPayload is VideoTrackPayload vi && itemPayload is VideoItemPayload vi2)
             {
-                return new List<string> { vi.ImageSource, vi2.ImageSource, vi.ImageSource2, vi2.ImageSource2, vi.ImageSource3, vi2.ImageSource3 };
+                return new List<string>
+                {
+                    vi.ImageSource, vi2.ImageSource,
+                    vi.ImageSource2, vi2.ImageSource2,
+                    vi.ImageSource3, vi2.ImageSource3,
+                    vi.ImageSource4, vi2.ImageSource4,
+                    vi.ImageSource5, vi2.ImageSource5,
+                    vi.ImageSource6, vi2.ImageSource6,
+                    vi.VideoSource, vi2.VideoSource
+                };
             }
             return new List<string>();
         }
@@ -900,87 +1169,52 @@ namespace GooglePlugin
         {
             if (trackPayload is VideoTrackPayload ip && itemPayload is VideoItemPayload tp)
             {
-                for (int i = 0; i < originalPath.Count; i++)
-                {
-                    if (originalPath[i] == ip.ImageSource)
-                    {
-                        ip.ImageSource = newPath[i];
-                    }
-
-                    if (originalPath[i] == tp.ImageSource)
-                    {
-                        tp.ImageSource = newPath[i];
-                    }
-
-                    if (originalPath[i] == ip.ImageSource2)
-                    {
-                        ip.ImageSource2 = newPath[i];
-                    }
-
-                    if (originalPath[i] == tp.ImageSource2)
-                    {
-                        tp.ImageSource2 = newPath[i];
-                    }
-
-                    if (originalPath[i] == ip.ImageSource3)
-                    {
-                        ip.ImageSource3 = newPath[i];
-                    }
-
-                    if (originalPath[i] == tp.ImageSource3)
-                    {
-                        tp.ImageSource3 = newPath[i];
-                    }
-                }
+                ip.ImageSource = ReplacePayloadPath(originalPath, newPath, ip.ImageSource);
+                tp.ImageSource = ReplacePayloadPath(originalPath, newPath, tp.ImageSource);
+                ip.ImageSource2 = ReplacePayloadPath(originalPath, newPath, ip.ImageSource2);
+                tp.ImageSource2 = ReplacePayloadPath(originalPath, newPath, tp.ImageSource2);
+                ip.ImageSource3 = ReplacePayloadPath(originalPath, newPath, ip.ImageSource3);
+                tp.ImageSource3 = ReplacePayloadPath(originalPath, newPath, tp.ImageSource3);
+                ip.ImageSource4 = ReplacePayloadPath(originalPath, newPath, ip.ImageSource4);
+                tp.ImageSource4 = ReplacePayloadPath(originalPath, newPath, tp.ImageSource4);
+                ip.ImageSource5 = ReplacePayloadPath(originalPath, newPath, ip.ImageSource5);
+                tp.ImageSource5 = ReplacePayloadPath(originalPath, newPath, tp.ImageSource5);
+                ip.ImageSource6 = ReplacePayloadPath(originalPath, newPath, ip.ImageSource6);
+                tp.ImageSource6 = ReplacePayloadPath(originalPath, newPath, tp.ImageSource6);
+                ip.VideoSource = ReplacePayloadPath(originalPath, newPath, ip.VideoSource);
+                tp.VideoSource = ReplacePayloadPath(originalPath, newPath, tp.VideoSource);
             }
 
             if (trackPayload is ImageTrackPayload vi && itemPayload is ImageItemPayload vi2)
             {
-                for (int i = 0; i < originalPath.Count; i++)
-                {
-                    if (originalPath[i] == vi.ImageSource)
-                    {
-                        vi.ImageSource = newPath[i];
-                    }
-
-                    if (originalPath[i] == vi2.ImageSource)
-                    {
-                        vi2.ImageSource = newPath[i];
-                    }
-
-                    if (originalPath[i] == vi.ImageSource2)
-                    {
-                        vi.ImageSource2 = newPath[i];
-                    }
-
-                    if (originalPath[i] == vi2.ImageSource2)
-                    {
-                        vi2.ImageSource2 = newPath[i];
-                    }
-
-                    if (originalPath[i] == vi.ImageSource3)
-                    {
-                        vi.ImageSource3 = newPath[i];
-                    }
-
-                    if (originalPath[i] == vi2.ImageSource3)
-                    {
-                        vi2.ImageSource3 = newPath[i];
-                    }
-
-                    if (originalPath[i] == vi.ImageSource4)
-                    {
-                        vi.ImageSource4 = newPath[i];
-                    }
-
-                    if (originalPath[i] == vi2.ImageSource4)
-                    {
-                        vi2.ImageSource4 = newPath[i];
-                    }
-                }
+                vi.ImageSource = ReplacePayloadPath(originalPath, newPath, vi.ImageSource);
+                vi2.ImageSource = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource);
+                vi.ImageSource2 = ReplacePayloadPath(originalPath, newPath, vi.ImageSource2);
+                vi2.ImageSource2 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource2);
+                vi.ImageSource3 = ReplacePayloadPath(originalPath, newPath, vi.ImageSource3);
+                vi2.ImageSource3 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource3);
+                vi.ImageSource4 = ReplacePayloadPath(originalPath, newPath, vi.ImageSource4);
+                vi2.ImageSource4 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource4);
             }
         }
 
+        private static string ReplacePayloadPath(List<string> originalPath, List<string> newPath, string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return path;
+            }
+
+            for (int i = 0; i < originalPath.Count; i++)
+            {
+                if (originalPath[i] == path)
+                {
+                    return newPath[i];
+                }
+            }
+
+            return path;
+        }
         private CancellationToken ct;
 
         public void SetCancallationToken(CancellationToken cancellationToken)
@@ -1032,6 +1266,15 @@ namespace GooglePlugin
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 }
+
+
+
+
+
+
+
+
+
 
 
 
