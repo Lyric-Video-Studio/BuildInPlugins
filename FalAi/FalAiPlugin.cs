@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using FalAiPlugin.ModelVisibilityHandlers;
 using PluginBase;
 using System.Linq;
@@ -9,7 +9,7 @@ namespace FalAiPlugin
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
     public class FalAiImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IRequestContentUploader, ITextualProgressIndication,
-        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAudioPlugin, ICancellableGeneration, IGenerationCost, IContentId, ITrackPayloadFromModel, IMenuSelectionOptionsForProperty
+        IImportFromVideo, IImagePlugin, IValidateBothPayloads, IAudioPlugin, ICancellableGeneration, IGenerationCost, IContentId, ITrackPayloadFromModel, IPluginSupportedModels, IMenuSelectionOptionsForProperty
     {
         public string UniqueName { get => "FalAiBuildIn"; }
         public string DisplayName { get => "Fal AI (multi-model)"; }
@@ -1292,6 +1292,47 @@ namespace FalAiPlugin
             return "";
         }
 
+
+        public IReadOnlyList<SupportedPluginModel> GetSupportedModels()
+        {
+            var originalTrackType = CurrentTrackType;
+            try
+            {
+                var models = new List<SupportedPluginModel>();
+                AddMenuModels(models, IPluginBase.TrackType.Video, nameof(TrackPayload.Model));
+                AddMenuModels(models, IPluginBase.TrackType.Image, nameof(ImageTrackPayload.Model));
+
+                models.Add(new SupportedPluginModel { TrackType = IPluginBase.TrackType.Audio, Category = "General", Model = "vibevoice/7b", DisplayName = "vibevoice/7b" });
+                models.Add(new SupportedPluginModel { TrackType = IPluginBase.TrackType.Audio, Category = "SFX", Model = AudioTrackPayload.VideoToAudioSfxModel, DisplayName = AudioTrackPayload.VideoToAudioSfxModel });
+
+                return models
+                    .DistinctBy(model => $"{model.TrackType}|{model.Category}|{model.Model}", StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+            }
+            finally
+            {
+                CurrentTrackType = originalTrackType;
+            }
+        }
+
+        private void AddMenuModels(List<SupportedPluginModel> models, IPluginBase.TrackType trackType, string propertyName)
+        {
+            CurrentTrackType = trackType;
+            var groupedModels = MenuSelectionOptionsForProperty(propertyName).GetAwaiter().GetResult();
+            foreach (var group in groupedModels)
+            {
+                foreach (var model in group.Value ?? [])
+                {
+                    models.Add(new SupportedPluginModel
+                    {
+                        TrackType = trackType,
+                        Category = group.Key,
+                        Model = model,
+                        DisplayName = model
+                    });
+                }
+            }
+        }
         public object TrackPayloadFromModel(string model)
         {
             if (CurrentTrackType == IPluginBase.TrackType.Image)

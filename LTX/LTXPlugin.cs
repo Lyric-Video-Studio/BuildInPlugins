@@ -1,11 +1,11 @@
-﻿using PluginBase;
+using PluginBase;
 using System.Text.Json.Nodes;
 
 namespace LTXPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class LtxPlugin : IVideoPlugin, IImportFromImage, IValidateBothPayloads, ICancellableGeneration, IRequireMp3Converter
+    public class LtxPlugin : IVideoPlugin, IImportFromImage, IValidateBothPayloads, ICancellableGeneration, IRequireMp3Converter, ITrackPayloadFromModel, IPluginSupportedModels
     {
         public string UniqueName { get => "LTXBuildIn"; }
         public string DisplayName { get => "LTX (API)"; }
@@ -249,6 +249,33 @@ namespace LTXPlugin
             return "";
         }
 
+
+        public IReadOnlyList<SupportedPluginModel> GetSupportedModels()
+        {
+            return
+            [
+                Model("ltx-2-3-pro"),
+                Model("ltx-2-3-fast"),
+                Model(TrackPayload.FastModel),
+                Model("ltx-2-pro")
+            ];
+        }
+
+        public object TrackPayloadFromModel(string model)
+        {
+            return new TrackPayload { Model = model };
+        }
+
+        private static SupportedPluginModel Model(string model)
+        {
+            return new SupportedPluginModel
+            {
+                TrackType = IPluginBase.TrackType.Video,
+                Category = "LTX",
+                Model = model,
+                DisplayName = model
+            };
+        }
         public object DefaultPayloadForTrack()
         {
             switch (CurrentTrackType)

@@ -11,7 +11,7 @@ namespace GooglePlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class GooglePlugin : IImagePlugin, IAudioPlugin, ICancellableGeneration, IVideoPlugin, IImportFromImage
+    public class GooglePlugin : IImagePlugin, IAudioPlugin, ICancellableGeneration, IVideoPlugin, IImportFromImage, ITrackPayloadFromModel, IPluginSupportedModels
     {
         public const string PluginName = "GooglePluginBuildIn";
         public string UniqueName { get => PluginName; }
@@ -1025,6 +1025,46 @@ namespace GooglePlugin
             return "";
         }
 
+
+        public IReadOnlyList<SupportedPluginModel> GetSupportedModels()
+        {
+            return
+            [
+                Model(IPluginBase.TrackType.Image, "Gemini", "gemini-3.1-flash-image-preview"),
+                Model(IPluginBase.TrackType.Image, "Gemini", "gemini-3-pro-image-preview"),
+                Model(IPluginBase.TrackType.Image, "Gemini", "gemini-2.5-flash-image"),
+                Model(IPluginBase.TrackType.Image, "Imagen", "models/imagen-4.0-generate-001"),
+                Model(IPluginBase.TrackType.Video, "Veo", "veo-3.1-fast-generate-preview"),
+                Model(IPluginBase.TrackType.Video, "Veo", "veo-3.1-generate-preview"),
+                Model(IPluginBase.TrackType.Video, "Veo", "veo-3.1-lite-generate-preview"),
+                Model(IPluginBase.TrackType.Video, "Gemini Omni", VideoTrackPayload.ModelGeminiOmniFlashPreview),
+                Model(IPluginBase.TrackType.Audio, "Gemini TTS", GoogleAudioTrackPayload.ModelTts),
+                Model(IPluginBase.TrackType.Audio, "Lyria", GoogleAudioTrackPayload.ModelLyriaClip),
+                Model(IPluginBase.TrackType.Audio, "Lyria", GoogleAudioTrackPayload.ModelLyriaPro)
+            ];
+        }
+
+        public object TrackPayloadFromModel(string model)
+        {
+            return CurrentTrackType switch
+            {
+                IPluginBase.TrackType.Image => new ImageTrackPayload { Model = model },
+                IPluginBase.TrackType.Video => new VideoTrackPayload { Model = model },
+                IPluginBase.TrackType.Audio => new GoogleAudioTrackPayload { Model = model },
+                _ => null
+            };
+        }
+
+        private static SupportedPluginModel Model(IPluginBase.TrackType trackType, string category, string model)
+        {
+            return new SupportedPluginModel
+            {
+                TrackType = trackType,
+                Category = category,
+                Model = model,
+                DisplayName = model
+            };
+        }
         public object DefaultPayloadForTrack()
         {
             switch (CurrentTrackType)

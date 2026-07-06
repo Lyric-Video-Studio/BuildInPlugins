@@ -1,4 +1,4 @@
-﻿using PluginBase;
+using PluginBase;
 using OpenAI;
 using OpenAI.Images;
 using System.Text.Json.Nodes;
@@ -7,7 +7,7 @@ namespace OpenAiTxtToImgPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class OpenAiTxtToImgPlugin : IImagePlugin
+    public class OpenAiTxtToImgPlugin : IImagePlugin, ITrackPayloadFromModel, IPluginSupportedModels
     {
         public string UniqueName { get => "OpenAiTxtToImageBuildIn"; }
         public string DisplayName { get => "Open Ai TxtToImg (dall-e-3)"; }
@@ -218,6 +218,22 @@ namespace OpenAiTxtToImgPlugin
             return "";
         }
 
+
+        public IReadOnlyList<SupportedPluginModel> GetSupportedModels()
+        {
+            return [new SupportedPluginModel
+            {
+                TrackType = IPluginBase.TrackType.Image,
+                Category = "OpenAI",
+                Model = "gpt-image-1",
+                DisplayName = "gpt-image-1"
+            }];
+        }
+
+        public object TrackPayloadFromModel(string model)
+        {
+            return new TrackPayload { Model = model };
+        }
         public object DefaultPayloadForTrack()
         {
             switch (CurrentTrackType)

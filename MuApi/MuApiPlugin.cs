@@ -1,4 +1,4 @@
-using MuApiPlugin.Models.GptImage2;
+﻿using MuApiPlugin.Models.GptImage2;
 using MuApiPlugin.Models.GeminiOmni;
 using MuApiPlugin.Models.HappyHorse1;
 using MuApiPlugin.Models.MidjourneyV8;
@@ -10,7 +10,7 @@ using System.Text.Json.Nodes;
 namespace MuApiPlugin
 {
 #pragma warning disable CS1998
-    public class MuApiVideoPlugin : IVideoPlugin, IImagePlugin, IAudioPlugin, ISaveAndRefresh, ISaveConnectionSettings, IImportFromImage, IValidateBothPayloads, ICancellableGeneration, ITextualProgressIndication, ITrackPayloadFromModel
+    public class MuApiVideoPlugin : IVideoPlugin, IImagePlugin, IAudioPlugin, ISaveAndRefresh, ISaveConnectionSettings, IImportFromImage, IValidateBothPayloads, ICancellableGeneration, ITextualProgressIndication, ITrackPayloadFromModel, IPluginSupportedModels
     {
         public string UniqueName => "MuApiBuildIn";
 
@@ -873,6 +873,42 @@ namespace MuApiPlugin
             return tp;
         }
 
+
+        public IReadOnlyList<SupportedPluginModel> GetSupportedModels()
+        {
+            return
+            [
+                Model(IPluginBase.TrackType.Video, "Seedance 2", Seedance2TrackPayload.ModelT2V),
+                Model(IPluginBase.TrackType.Video, "Seedance 2", Seedance2TrackPayload.ModelI2V),
+                Model(IPluginBase.TrackType.Video, "Seedance 2", Seedance2TrackPayload.ModelOmniRef),
+                Model(IPluginBase.TrackType.Video, "Seedance 2 Mini", Seedance2TrackPayload.ModelMiniT2V),
+                Model(IPluginBase.TrackType.Video, "Seedance 2 Mini", Seedance2TrackPayload.ModelMiniI2V),
+                Model(IPluginBase.TrackType.Video, "Seedance 2 Mini", Seedance2TrackPayload.ModelMiniOmniRef),
+                Model(IPluginBase.TrackType.Video, "Seedance 2 480p", Seedance2TrackPayload.ModelT2V480p),
+                Model(IPluginBase.TrackType.Video, "Seedance 2 480p", Seedance2TrackPayload.ModelI2V480p),
+                Model(IPluginBase.TrackType.Video, "Happy Horse 1.1", HappyHorse1TrackPayload.ModelI2V1080p),
+                Model(IPluginBase.TrackType.Video, "Happy Horse 1.1", HappyHorse1TrackPayload.ModelReferenceToVideo1080p),
+                Model(IPluginBase.TrackType.Video, "Vidu Q2 Turbo", ViduQ2TurboTrackPayload.ModelT2V),
+                Model(IPluginBase.TrackType.Video, "Vidu Q2 Turbo", ViduQ2TurboTrackPayload.ModelI2V),
+                Model(IPluginBase.TrackType.Video, "Vidu Q2 Turbo", ViduQ2TurboTrackPayload.ModelStartEnd),
+                Model(IPluginBase.TrackType.Image, "GPT Image 2", GptImage2TrackPayload.ModelTxtToImg),
+                Model(IPluginBase.TrackType.Image, "GPT Image 2", GptImage2TrackPayload.ModelImgToImg),
+                Model(IPluginBase.TrackType.Image, "Midjourney", MidjourneyV8TrackPayload.ModelTxtToImg),
+                Model(IPluginBase.TrackType.Image, "Gemini Omni", GeminiOmniCharacterTrackPayload.ModelCharacter),
+                Model(IPluginBase.TrackType.Audio, "Gemini Omni", GeminiOmniAudioTrackPayload.ModelAudioProfile)
+            ];
+        }
+
+        private static SupportedPluginModel Model(IPluginBase.TrackType trackType, string category, string model)
+        {
+            return new SupportedPluginModel
+            {
+                TrackType = trackType,
+                Category = category,
+                Model = model,
+                DisplayName = model
+            };
+        }
         public object TrackPayloadFromModel(string model)
         {
             return CurrentTrackType switch
