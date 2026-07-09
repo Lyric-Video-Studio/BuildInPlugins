@@ -48,7 +48,9 @@ namespace FalAiPlugin
         public static List<ModelVisibilityHandlerBase> ImageVisibilityHandlers = new List<ModelVisibilityHandlerBase>()
         {
             new HidreamO1ImageHandler(),
-            new HidreamO1ImageEditHandler()
+            new HidreamO1ImageEditHandler(),
+            new Seedream5ProTextToImageHandler(),
+            new Seedream5ProEditHandler()
         };
 
         public async Task<VideoResponse> GetVideo(object trackPayload, object itemsPayload, string folderToSaveVideo)
@@ -1247,6 +1249,15 @@ namespace FalAiPlugin
                     }
 
                     speakerIndex = script.IndexOf("speaker", speakerIndex + 1, StringComparison.CurrentCultureIgnoreCase);
+                }
+            }
+
+            if (CurrentTrackType == IPluginBase.TrackType.Image && trackPaylod is ImageTrackPayload it && itemPayload is ImageItemPayload ii)
+            {
+                if (it.Model == Seedream5ProEditHandler.Model &&
+                    !it.ImageSource.ImageSources.Concat(ii.ImageSources.ImageSources).Any(f => !string.IsNullOrWhiteSpace(f.ImageFile)))
+                {
+                    return (false, "At least one image source is required");
                 }
             }
 

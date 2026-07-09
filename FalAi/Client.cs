@@ -363,6 +363,13 @@ namespace FalAiPlugin
                     baseUrl = baseUrl.Replace("fal-ai", "imagineart");
                 }
 
+                if (model.Contains("seedream/v5/pro/"))
+                {
+                    // Need to prop out the fal-ai
+                    baseUrl = baseUrl.Replace("fal-ai", "bytedance");
+                    model = string.Join('/', model.Split('/').Skip(1));
+                }
+
                 httpClient.BaseAddress = new Uri(baseUrl);
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Key {connectionSettings.AccessToken}");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
