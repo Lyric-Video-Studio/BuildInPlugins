@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <!--
+      Plugin projects default to win-x64 when built on their own, but the Linux
+      desktop debug build overrides RuntimeIdentifier and places their output
+      beside the application. Restore assets for both supported desktop RIDs.
+    -->
+    <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+</Project>
