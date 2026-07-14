@@ -138,17 +138,11 @@ jobs:
 
         Remove-Item -LiteralPath $certificatePath -Force
       
-    - name: Zip artifacts
-      shell: pwsh
-      run: |
-        cd publish
-        Compress-Archive -Path ./* -DestinationPath ./plugins.zip
-
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: Plugins
-        path: .\publish\plugins.zip
+        path: .\publish\**
 
   build-linux:
     runs-on: ubuntu-latest
@@ -168,7 +162,7 @@ jobs:
     - name: Install Linux signing tools
       run: |
         sudo apt-get update
-        sudo apt-get install -y osslsigncode zip
+        sudo apt-get install -y osslsigncode
 
     - name: Publish and sign Linux plugins
       env:
@@ -176,16 +170,11 @@ jobs:
         BUILD_SIGNING_CERT_PASSWORD: ${{ secrets.BUILD_SIGNING_CERT_PASSWORD }}
       run: ./publish.sh publish-linux/plugins linux-x64
 
-    - name: Zip Linux artifacts
-      run: |
-        cd publish-linux
-        zip -qr plugins-linux-x64.zip plugins
-
     - name: Upload Linux build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: Plugins-linux-x64
-        path: publish-linux/plugins-linux-x64.zip
+        path: publish-linux/plugins/**
 
   release:
     needs: [build, build-linux]
@@ -196,18 +185,27 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: Plugins
-          path: publish/
+          path: publish/windows
 
       - name: Download Linux artifacts
         uses: actions/download-artifact@v4
         with:
           name: Plugins-linux-x64
-          path: publish/
+          path: publish/linux
+
+      - name: Zip release assets
+        run: |
+          cd publish/windows
+          zip -qr ../plugins.zip .
+          cd ../linux
+          zip -qr ../plugins-linux-x64.zip .
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: publish/*
+          files: |
+            publish/plugins.zip
+            publish/plugins-linux-x64.zip
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_KEY }}
