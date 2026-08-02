@@ -20,6 +20,7 @@ namespace MinimaxPlugin.Audio
 
         [JsonPropertyName("lyrics")]
         [Description("Song lyrics, using \n to separate lines. Supports structure tags: [Intro], [Verse], [Pre Chorus], [Chorus], [Interlude], [Bridge], [Outro], [Post Chorus], [Transition], [Break], [Hook], [Build Up], [Inst], [Solo]")]
+        [EnableTextEditExpand]
         public string Lyrics { get; set; } = "";
 
         [JsonPropertyName("prompt")]
