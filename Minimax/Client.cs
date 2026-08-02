@@ -1,4 +1,4 @@
-﻿using PluginBase;
+using PluginBase;
 using System.ComponentModel;
 using System.Net;
 using System.Net.Http.Headers;
@@ -8,7 +8,7 @@ namespace MinimaxPlugin
 {
     public class Request
     {
-        [TriggerReload]
+        [IgnoreDynamicEdit]
         public string model { get; set; } = "MiniMax-Hailuo-02";
 
         public string prompt { get; set; } = "";
@@ -356,5 +356,34 @@ namespace MinimaxPlugin
                 return new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
             }
         }
-    }
+            public async Task<VideoResponse> GetH3Video(H3Request request, string folder, ConnectionSettings settings, ItemPayload item, Action<bool> save, Action<string> progress)
+        {
+            try
+            {
+                using var client = new HttpClient { BaseAddress = new Uri(settings.Url.Replace("minimaxi.chat", "minimax.io")) };
+                client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {settings.AccessToken}");
+                if (!string.IsNullOrEmpty(item.PollingId)) return await PollH3(client, item.PollingId, folder, progress);
+                var body = new StringContent(JsonHelper.Serialize(request)); body.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+                var response = await client.PostAsync("v2/video_generation", body); var text = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode) return new VideoResponse { Success = false, ErrorMsg = $"Error: {response.StatusCode}, details: {text}" };
+                var created = JsonHelper.DeserializeString<H3CreateResponse>(text);
+                if (string.IsNullOrEmpty(created?.task_id)) return new VideoResponse { Success = false, ErrorMsg = $"Invalid H3 response: {text}" };
+                item.PollingId = created.task_id; save?.Invoke(true); return await PollH3(client, created.task_id, folder, progress);
+            }
+            catch (Exception ex) { return new VideoResponse { Success = false, ErrorMsg = ex.Message }; }
+        }
+        private static async Task<VideoResponse> PollH3(HttpClient client, string id, string folder, Action<string> progress)
+        {
+            while (true)
+            {
+                var response = await client.GetAsync($"v2/query/video_generation/{Uri.EscapeDataString(id)}"); var text = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode) return new VideoResponse { Success = false, ErrorMsg = $"H3 query failed: {response.StatusCode}, {text}" };
+                var task = JsonHelper.DeserializeString<H3QueryResponse>(text)?.task;
+                if (task == null) return new VideoResponse { Success = false, ErrorMsg = $"Invalid H3 query response: {text}" };
+                progress?.Invoke(task.status);
+                if (task.status == "failed" || task.status == "cancelled" || task.status == "expired") return new VideoResponse { Success = false, ErrorMsg = task.error?.message ?? $"H3 task {task.status}" };
+                if (task.status == "succeeded" && !string.IsNullOrEmpty(task.content?.url)) { using var download = new HttpClient(); var output = Path.Combine(folder, $"{id}.mp4"); await File.WriteAllBytesAsync(output, await download.GetByteArrayAsync(task.content.url)); return new VideoResponse { Success = true, VideoFile = output }; }
+                await Task.Delay(TimeSpan.FromSeconds(7));
+            }
+        }}
 }

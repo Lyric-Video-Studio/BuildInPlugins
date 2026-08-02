@@ -1,4 +1,4 @@
-﻿using PluginBase;
+using PluginBase;
 using System.Reflection.Metadata.Ecma335;
 using System.Text.Json.Nodes;
 
@@ -60,6 +60,9 @@ namespace MinimaxPlugin
             {
                 if (JsonHelper.DeepCopy<TrackPayload>(trackPayload) is TrackPayload newTp && JsonHelper.DeepCopy<ItemPayload>(itemsPayload) is ItemPayload newIp)
                 {
+                    newTp.VideoModel ??= newTp.Settings.model;
+                    if (newTp.VideoModel == "MiniMax-H3") return await GetH3Video(newTp, newIp, folderToSaveVideo, itemsPayload as ItemPayload);
+                    newTp.Settings.model = newTp.VideoModel;
                     // combine prompts
 
                     // Also, when img2Vid
@@ -135,6 +138,34 @@ namespace MinimaxPlugin
             }
         }
 
+        private async Task<VideoResponse> GetH3Video(TrackPayload track, ItemPayload item, string folder, ItemPayload original)
+        {
+            var prompt = (item.Prompt + " " + track.Settings.prompt).Trim();
+            var frames = new[] { item.ImagePath, item.LastFramePath }.Count(x => !string.IsNullOrWhiteSpace(x));
+            var refs = track.H3References.ReferenceImages.Concat(track.H3References.ReferenceVideos).Concat(track.H3References.ReferenceAudio)
+                .Concat(item.H3References.ReferenceImages).Concat(item.H3References.ReferenceVideos).Concat(item.H3References.ReferenceAudio).Where(x => !string.IsNullOrWhiteSpace(x.Source)).ToList();
+            if (string.IsNullOrWhiteSpace(prompt)) return new VideoResponse { Success = false, ErrorMsg = "Prompt empty" };
+            if (refs.Count > 0 && frames > 0) return new VideoResponse { Success = false, ErrorMsg = "H3 references cannot be combined with first or last frames." };
+            if (frames == 0 && refs.Count == 0 && track.H3Settings.ratio == "adaptive") return new VideoResponse { Success = false, ErrorMsg = "H3 text-to-video requires a concrete aspect ratio." };
+            if (!string.IsNullOrWhiteSpace(item.LastFramePath) && string.IsNullOrWhiteSpace(item.ImagePath)) return new VideoResponse { Success = false, ErrorMsg = "H3 last frame requires a first frame." };
+            if (refs.Count > 0 && refs.All(x => track.H3References.ReferenceAudio.Contains(x) || item.H3References.ReferenceAudio.Contains(x))) return new VideoResponse { Success = false, ErrorMsg = "H3 reference audio requires a reference image or video." };
+            var request = new H3Request { resolution = track.H3Settings.resolution, duration = track.H3Settings.duration, ratio = track.H3Settings.ratio };
+            if (request.duration < 4 || request.duration > 15) return new VideoResponse { Success = false, ErrorMsg = "H3 duration must be between 4 and 15 seconds." };
+            request.content.Add(new H3Content { type = "text", text = prompt });
+            if (!string.IsNullOrWhiteSpace(item.ImagePath)) request.content.Add(new H3Content { type = "image_url", image_url = new H3Url { url = await H3Source(item.ImagePath) }, role = "first_frame" });
+            if (!string.IsNullOrWhiteSpace(item.LastFramePath)) request.content.Add(new H3Content { type = "image_url", image_url = new H3Url { url = await H3Source(item.LastFramePath) }, role = "last_frame" });
+            foreach (var reference in track.H3References.ReferenceImages.Concat(item.H3References.ReferenceImages).Where(r => !string.IsNullOrWhiteSpace(r.Source))) request.content.Add(new H3Content { type = "image_url", image_url = new H3Url { url = await H3Source(reference.Source) }, role = "reference_image" });
+            foreach (var reference in track.H3References.ReferenceVideos.Concat(item.H3References.ReferenceVideos).Where(r => !string.IsNullOrWhiteSpace(r.Source))) request.content.Add(new H3Content { type = "video_url", video_url = new H3Url { url = await H3Source(reference.Source) }, role = "reference_video" });
+            foreach (var reference in track.H3References.ReferenceAudio.Concat(item.H3References.ReferenceAudio).Where(r => !string.IsNullOrWhiteSpace(r.Source))) request.content.Add(new H3Content { type = "audio_url", audio_url = new H3Url { url = await H3Source(reference.Source) }, role = "reference_audio" });
+            return await _wrapper.GetH3Video(request, folder, _connectionSettings, original, saveAndRefreshCallback, textualProgressAction);
+        }
+        private async Task<string> H3Source(string source)
+        {
+            if (source.StartsWith("data:", StringComparison.OrdinalIgnoreCase) || source.StartsWith("mm_file://", StringComparison.OrdinalIgnoreCase) || Uri.TryCreate(source, UriKind.Absolute, out var uri) && !uri.IsFile) return source;
+            var uploaded = await _uploader.RequestContentUpload(source);
+            if (uploaded.responseCode != System.Net.HttpStatusCode.OK || uploaded.isLocalFile) throw new InvalidOperationException("Media must be a public URL or uploaded through content delivery.");
+            return uploaded.uploadedUrl;
+        }
         private Random rnd = new Random();
 
         public async Task<ImageResponse> GetImage(object trackPayload, object itemsPayload)
@@ -245,12 +276,12 @@ namespace MinimaxPlugin
                 return Array.Empty<string>();
             }
 
-            if (propertyName == nameof(Request.model))
+            if (propertyName == nameof(TrackPayload.VideoModel))
             {
                 switch (CurrentTrackType)
                 {
                     case IPluginBase.TrackType.Video:
-                        return ["MiniMax-Hailuo-2.3", "MiniMax-Hailuo-02", "S2V-01", "T2V-01", "T2V-01-Director", "I2V-01", "I2V-01-Director", "I2V-01-live"];
+                        return ["MiniMax-H3", "MiniMax-Hailuo-2.3", "MiniMax-Hailuo-02", "S2V-01", "T2V-01", "T2V-01-Director", "I2V-01", "I2V-01-Director", "I2V-01-live"];
 
                     default:
                         break;
@@ -572,8 +603,10 @@ namespace MinimaxPlugin
         {
             if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
-                return (new List<string>() { ip.ImagePath, tp.Settings.first_frame_image }.Concat(tp.SubjectReferences.SubjectReferences.Select(s => s.Path))
-                    .Concat(ip.SubjectReferences.SubjectReferences.Select(s => s.Path))).ToList();
+                return (new List<string>() { ip.ImagePath, ip.LastFramePath, tp.Settings.first_frame_image }.Where(path => !string.IsNullOrWhiteSpace(path))
+                    .Concat(tp.SubjectReferences.SubjectReferences.Select(s => s.Path)).Concat(ip.SubjectReferences.SubjectReferences.Select(s => s.Path))
+                    .Concat(tp.H3References.ReferenceImages.Concat(tp.H3References.ReferenceVideos).Concat(tp.H3References.ReferenceAudio).Select(s => s.Source))
+                    .Concat(ip.H3References.ReferenceImages.Concat(ip.H3References.ReferenceVideos).Concat(ip.H3References.ReferenceAudio).Select(s => s.Source))).ToList();
             }
 
             return new List<string>();
@@ -602,6 +635,12 @@ namespace MinimaxPlugin
                         {
                             item.Path = newPath[i];
                         }
+                    }
+
+                    if (originalPath[i] == ip.LastFramePath) ip.LastFramePath = newPath[i];
+                    foreach (var reference in tp.H3References.ReferenceImages.Concat(tp.H3References.ReferenceVideos).Concat(tp.H3References.ReferenceAudio).Concat(ip.H3References.ReferenceImages).Concat(ip.H3References.ReferenceVideos).Concat(ip.H3References.ReferenceAudio))
+                    {
+                        if (originalPath[i] == reference.Source) reference.Source = newPath[i];
                     }
 
                     foreach (var item in ip.SubjectReferences.SubjectReferences)
