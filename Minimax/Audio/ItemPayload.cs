@@ -1,4 +1,4 @@
-﻿using PluginBase;
+using PluginBase;
 
 namespace MinimaxPlugin.Audio
 {
@@ -20,7 +20,7 @@ namespace MinimaxPlugin.Audio
                 }
                 else if (propertyName == nameof(ItemPayload.Prompt) || propertyName is nameof(MusicRequest.Lyrics) 
                     or nameof(MusicRequest.IsInstrumental) 
-                    or nameof(MusicRequest.LyricsOptimizer) or nameof(MusicRequest.AudioSetting))
+                    or nameof(MusicRequest.LyricsOptimizer) or nameof(MusicRequest.AudioSetting) or nameof(MusicRequest.UseCoverPreprocess) or nameof(MusicRequest.CoverFeatureId))
                 {
                     return MusicRequest.IsMusicModel(tp.Model);
                 } 

@@ -1,4 +1,4 @@
-﻿using PluginBase;
+using PluginBase;
 using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
 
@@ -73,7 +73,31 @@ namespace MinimaxPlugin.Audio
                         {
                             newIp.MusicReq.Audio = Convert.ToBase64String(await File.ReadAllBytesAsync(newIp.MusicReq.Audio));
                         }
+                        if (tp.Model.Contains("cover", StringComparison.OrdinalIgnoreCase) && newIp.MusicReq.UseCoverPreprocess && string.IsNullOrEmpty(newIp.MusicReq.CoverFeatureId))
+                        {
+                            var preprocessRequest = new MusicCoverPreprocessRequest();
+                            if (Uri.TryCreate(newIp.MusicReq.Audio, UriKind.Absolute, out var audioUri) && !audioUri.IsFile)
+                                preprocessRequest.AudioUrl = newIp.MusicReq.Audio;
+                            else
+                                preprocessRequest.AudioBase64 = newIp.MusicReq.Audio;
+                            if (string.IsNullOrEmpty(preprocessRequest.AudioUrl) && string.IsNullOrEmpty(preprocessRequest.AudioBase64))
+                                return new AudioResponse { Success = false, ErrorMsg = "A reference audio file or public URL is required for a music cover." };
+                            var preBody = new StringContent(JsonHelper.Serialize(preprocessRequest));
+                            preBody.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+                            var preResponse = await httpClient.PostAsync("v1/music_cover_preprocess", preBody);
+                            var preText = await preResponse.Content.ReadAsStringAsync();
+                            var pre = JsonHelper.DeserializeString<MusicCoverPreprocessResponse>(preText);
+                            if (!preResponse.IsSuccessStatusCode || pre?.BaseResp?.StatusCode != 0 || string.IsNullOrEmpty(pre?.CoverFeatureId))
+                                return new AudioResponse { Success = false, ErrorMsg = $"Cover preprocessing failed: {pre?.BaseResp?.StatusMsg ?? preText}" };
+                            newIp.MusicReq.CoverFeatureId = pre.CoverFeatureId;
+                            if (string.IsNullOrWhiteSpace(newIp.MusicReq.Lyrics)) newIp.MusicReq.Lyrics = pre.FormattedLyrics;
+                            newIp.MusicReq.Audio = null;
+                            ip.MusicReq.CoverFeatureId = newIp.MusicReq.CoverFeatureId;
+                            if (string.IsNullOrWhiteSpace(ip.MusicReq.Lyrics)) ip.MusicReq.Lyrics = newIp.MusicReq.Lyrics;
+                            saveAndRefreshCallback?.Invoke(true);
+                        }
 
+                        if (!string.IsNullOrWhiteSpace(newIp.MusicReq.CoverFeatureId)) { newIp.MusicReq.Audio = null; }
                         serialized = JsonHelper.Serialize(newIp.MusicReq);
                     }
                     else
@@ -354,12 +378,12 @@ namespace MinimaxPlugin.Audio
 
         public List<string> FilePathsOnPayloads(object T2ARequest, object itemPayload)
         {
-            return new List<string>();
+            return itemPayload is ItemPayload ip && !string.IsNullOrWhiteSpace(ip.MusicReq.Audio) ? [ip.MusicReq.Audio] : new List<string>();
         }
 
         public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object T2ARequest, object itemPayload)
         {
-            // No need to do anything
+            if (itemPayload is ItemPayload ip) for (var i = 0; i < originalPath.Count; i++) if (ip.MusicReq.Audio == originalPath[i]) ip.MusicReq.Audio = newPath[i];
         }
 
         private Action<object> saveConnectionSettings;
@@ -387,6 +411,9 @@ namespace MinimaxPlugin.Audio
                         return (false, "Lyrics too long, max 3500 characters");
                     }
 
+                    if (tp.Model.Contains("cover") && ip.Prompt.Length < 10) return (false, "Cover style prompt must be at least 10 characters.");
+                    if (!string.IsNullOrEmpty(ip.MusicReq.CoverFeatureId) && (ip.MusicReq.Lyrics?.Length < 10 || ip.MusicReq.Lyrics.Length > 1000)) return (false, "Advanced cover lyrics must be 10–1000 characters.");
+                    if (tp.Model.Contains("cover") && string.IsNullOrWhiteSpace(ip.MusicReq.Audio) && string.IsNullOrWhiteSpace(ip.MusicReq.CoverFeatureId)) return (false, "Cover requires reference audio or a cover feature ID.");
                     if (!string.IsNullOrEmpty(ip.Prompt) && ip.Prompt.Length > 300)
                     {
                         return (false, "Prompt too long, max 300 characters");

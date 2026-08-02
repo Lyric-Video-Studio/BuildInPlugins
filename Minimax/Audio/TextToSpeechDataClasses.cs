@@ -1,4 +1,4 @@
-﻿using PluginBase;
+using PluginBase;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -7,14 +7,16 @@ namespace MinimaxPlugin.Audio
 {
     public class MusicRequest
     {
-        public const string MusicModel = "music-2.6";
+        public const string MusicModel = "music-3.0";
+        public const string MusicModelLegacy = "music-2.6";
         public const string MusicCover = "music-cover";
-        public const string MusicModelFree = "music-2.6-free";
+        public const string MusicModelFree = "music-3.0-free";
+        public const string MusicModelLegacyFree = "music-2.6-free";
         public const string MusicCoverFree = "music-cover-free";
 
         [JsonPropertyName("model")]
         [IgnoreDynamicEdit]
-        public string Model { get; set; } = MusicModelFree;
+        public string Model { get; set; } = MusicModel;
 
         [JsonPropertyName("lyrics")]
         [Description("Song lyrics, using \n to separate lines. Supports structure tags: [Intro], [Verse], [Pre Chorus], [Chorus], [Interlude], [Bridge], [Outro], [Post Chorus], [Transition], [Break], [Hook], [Build Up], [Inst], [Solo]")]
@@ -35,6 +37,14 @@ namespace MinimaxPlugin.Audio
         [JsonPropertyName("audio_base64")]
         public string Audio { get; set; }
 
+        [Description("For music-cover, use the free audio preprocessing stage to extract the feature ID and editable lyrics.")]
+        [JsonIgnore]
+        public bool UseCoverPreprocess { get; set; } = true;
+
+        [Description("Advanced cover feature ID, filled by free preprocessing and valid for 24 hours.")]
+        [JsonIgnore]
+        public string CoverFeatureId { get; set; }
+
         /// <summary>
         /// Audio setting for the output audio file.
         /// </summary>
@@ -51,10 +61,22 @@ namespace MinimaxPlugin.Audio
 
         public static bool IsMusicModel(string model)
         {
-            return model is MusicModel or MusicCover or MusicModelFree or MusicCoverFree;
+            return model is MusicModel or MusicModelLegacy or MusicCover or MusicModelFree or MusicModelLegacyFree or MusicCoverFree;
         }
     }
 
+    public class MusicCoverPreprocessRequest
+    {
+        [JsonPropertyName("model")] public string Model { get; set; } = MusicRequest.MusicCover;
+        [JsonPropertyName("audio_url")] [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string AudioUrl { get; set; }
+        [JsonPropertyName("audio_base64")] [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string AudioBase64 { get; set; }
+    }
+    public class MusicCoverPreprocessResponse
+    {
+        [JsonPropertyName("cover_feature_id")] public string CoverFeatureId { get; set; }
+        [JsonPropertyName("formatted_lyrics")] public string FormattedLyrics { get; set; }
+        [JsonPropertyName("base_resp")] public BaseResponse BaseResp { get; set; }
+    }
     /// <summary>
     /// Represents the request payload for the Text-to-Speech API.
     /// </summary>
@@ -64,8 +86,8 @@ namespace MinimaxPlugin.Audio
         /// Desired model. Includes: speech-02-hd, speech-01-turbo, speech-01-hd, speech-01-turbo.
         /// </summary>
         [JsonPropertyName("model")]
-        [PropertyComboOptions(["speech-2.8-hd", "speech-2.8-turbo", "speech-2.6-hd", "speech-2.6-turbo", MusicRequest.MusicModel, MusicRequest.MusicCover, MusicRequest.MusicModelFree, MusicRequest.MusicCoverFree])]
-        public string Model { get; set; } = MusicRequest.MusicModelFree;
+        [PropertyComboOptions(["speech-2.8-hd", "speech-2.8-turbo", "speech-2.6-hd", "speech-2.6-turbo", MusicRequest.MusicModel, MusicRequest.MusicModelLegacy, MusicRequest.MusicCover, MusicRequest.MusicModelFree, MusicRequest.MusicModelLegacyFree, MusicRequest.MusicCoverFree])]
+        public string Model { get; set; } = MusicRequest.MusicModel;
 
         /// <summary>
         /// Text to be synthesized. Character limit < 5000 chars.
@@ -274,6 +296,14 @@ namespace MinimaxPlugin.Audio
         /// </summary>
         [JsonPropertyName("audio")]
         public string Audio { get; set; }
+
+        [Description("For music-cover, use the free audio preprocessing stage to extract the feature ID and editable lyrics.")]
+        [JsonIgnore]
+        public bool UseCoverPreprocess { get; set; } = true;
+
+        [Description("Advanced cover feature ID, filled by free preprocessing and valid for 24 hours.")]
+        [JsonIgnore]
+        public string CoverFeatureId { get; set; }
 
         /// <summary>
         /// The status of the audio generation.
