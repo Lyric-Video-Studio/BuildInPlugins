@@ -1,18 +1,16 @@
-﻿using Bfl;
+using Bfl;
 using PluginBase;
-using System.Linq;
 using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace BflTxtToImgPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class BflTxtToImgPlugin : IImagePlugin, ICancellableGeneration, ISaveAndRefresh, IImportFromImage, IGenerationCost, ITextualProgressIndication, IValidateBothPayloads
+    public class BflTxtToImgPlugin : IImagePlugin, IVideoPlugin, ICancellableGeneration, ISaveAndRefresh, IImportFromImage, IGenerationCost, ITextualProgressIndication, IValidateBothPayloads
     {
         public string UniqueName { get => "BflTxtToImageBuildIn"; }
-        public string DisplayName { get => "Black Forest Labs"; }
+        public string DisplayName { get => "Bfl.ai (Flux models)"; }
 
         public object GeneralDefaultSettings => new ConnectionSettings();
 
@@ -41,6 +39,16 @@ namespace BflTxtToImgPlugin
         public object DefaultPayloadForImageTrack()
         {
             return new TrackPayload();
+        }
+
+        public object DefaultPayloadForVideoItem()
+        {
+            return new VideoItemPayload();
+        }
+
+        public object DefaultPayloadForVideoTrack()
+        {
+            return new VideoTrackPayload();
         }
 
         private void EnsureClients()
@@ -140,6 +148,22 @@ namespace BflTxtToImgPlugin
             }
         }
 
+        public async Task<VideoResponse> GetVideo(object trackPayload, object itemsPayload, string folderToSaveVideo)
+        {
+            var flux3 = CreateFlux3VideoPlugin();
+            return await flux3.GetVideo(trackPayload, itemsPayload, folderToSaveVideo);
+        }
+
+        private BflFlux3VideoPlugin CreateFlux3VideoPlugin()
+        {
+            var flux3 = new BflFlux3VideoPlugin { CurrentTrackType = IPluginBase.TrackType.Video };
+            flux3.Initialize(_connectionSettings).GetAwaiter().GetResult();
+            flux3.SetCancallationToken(cancelToken);
+            flux3.SetSaveAndRefreshCallback(saveCallback);
+            flux3.SetShowCostAction(costAction);
+            flux3.SetTextProgressCallback(progressAction);
+            return flux3;
+        }
         private async Task<ImageResponse> PollImage(string pollingUrl)
         {
             try
@@ -265,7 +289,9 @@ namespace BflTxtToImgPlugin
 
         public object DeserializePayload(string fileName)
         {
-            return JsonHelper.Deserialize<TrackPayload>(fileName);
+            return CurrentTrackType == IPluginBase.TrackType.Video
+                ? JsonHelper.Deserialize<VideoTrackPayload>(fileName)
+                : JsonHelper.Deserialize<TrackPayload>(fileName);
         }
 
         public IPluginBase CreateNewInstance()
@@ -275,7 +301,9 @@ namespace BflTxtToImgPlugin
 
         public object ItemPayloadFromLyrics(string lyric)
         {
-            return new ItemPayload() { Prompt = lyric };
+            return CurrentTrackType == IPluginBase.TrackType.Video
+                ? new VideoItemPayload() { Prompt = lyric }
+                : new ItemPayload() { Prompt = lyric };
         }
 
         public async Task<string> TestInitialization()
@@ -312,6 +340,10 @@ namespace BflTxtToImgPlugin
 
         public (bool payloadOk, string reasonIfNot) ValidatePayloads(object trackPaylod, object itemPayload)
         {
+            if (CurrentTrackType == IPluginBase.TrackType.Video)
+            {
+                return CreateFlux3VideoPlugin().ValidatePayloads(trackPaylod, itemPayload);
+            }
             if (string.IsNullOrEmpty(_connectionSettings.AccessToken))
             {
                 return (false, "Auth token missing");
@@ -368,12 +400,16 @@ namespace BflTxtToImgPlugin
 
         public object ObjectToItemPayload(JsonObject obj)
         {
-            return JsonHelper.ToExactType<ItemPayload>(obj);
+            return CurrentTrackType == IPluginBase.TrackType.Video
+                ? JsonHelper.ToExactType<VideoItemPayload>(obj)
+                : JsonHelper.ToExactType<ItemPayload>(obj);
         }
 
         public object ObjectToTrackPayload(JsonObject obj)
         {
-            return JsonHelper.ToExactType<TrackPayload>(obj);
+            return CurrentTrackType == IPluginBase.TrackType.Video
+                ? JsonHelper.ToExactType<VideoTrackPayload>(obj)
+                : JsonHelper.ToExactType<TrackPayload>(obj);
         }
 
         public object ObjectToGeneralSettings(JsonObject obj)
@@ -383,7 +419,9 @@ namespace BflTxtToImgPlugin
 
         public object ItemPayloadFromImageSource(string imgSource)
         {
-            return new ItemPayload() { InputImage = imgSource };
+            return CurrentTrackType == IPluginBase.TrackType.Video
+                ? new VideoItemPayload() { InputImage = imgSource }
+                : new ItemPayload() { InputImage = imgSource };
         }
 
         public string TextualRepresentation(object itemPayload)
@@ -391,6 +429,10 @@ namespace BflTxtToImgPlugin
             if (itemPayload is ItemPayload ip)
             {
                 return ip.Prompt;
+            }
+            if (itemPayload is VideoItemPayload videoItem)
+            {
+                return videoItem.Prompt;
             }
             return "";
         }
@@ -401,6 +443,9 @@ namespace BflTxtToImgPlugin
             {
                 case IPluginBase.TrackType.Image:
                     return DefaultPayloadForImageTrack();
+
+                case IPluginBase.TrackType.Video:
+                    return DefaultPayloadForVideoTrack();
 
                 default:
                     break;
@@ -415,6 +460,9 @@ namespace BflTxtToImgPlugin
                 case IPluginBase.TrackType.Image:
                     return DefaultPayloadForImageItem();
 
+                case IPluginBase.TrackType.Video:
+                    return DefaultPayloadForVideoItem();
+
                 default:
                     break;
             }
@@ -427,6 +475,9 @@ namespace BflTxtToImgPlugin
             {
                 case IPluginBase.TrackType.Image:
                     return CopyPayloadForImageTrack(obj);
+
+                case IPluginBase.TrackType.Video:
+                    return JsonHelper.DeepCopy<VideoTrackPayload>(obj);
 
                 default:
                     break;
@@ -441,6 +492,9 @@ namespace BflTxtToImgPlugin
                 case IPluginBase.TrackType.Image:
                     return CopyPayloadForImageItem(obj);
 
+                case IPluginBase.TrackType.Video:
+                    return JsonHelper.DeepCopy<VideoItemPayload>(obj);
+
                 default:
                     break;
             }
@@ -454,6 +508,9 @@ namespace BflTxtToImgPlugin
                 case IPluginBase.TrackType.Image:
                     return ValidateImagePayload(payload);
 
+                case IPluginBase.TrackType.Video:
+                    return CreateFlux3VideoPlugin().ValidatePayload(payload);
+
                 case IPluginBase.TrackType.Audio:
                     return (true, "");
 
@@ -465,6 +522,11 @@ namespace BflTxtToImgPlugin
 
         public List<string> FilePathsOnPayloads(object trackPayload, object itemPayload)
         {
+            if (trackPayload is VideoTrackPayload)
+            {
+                return CreateFlux3VideoPlugin().FilePathsOnPayloads(trackPayload, itemPayload);
+            }
+
             if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
                 return new List<string>() { ip.InputImage, ip.InputImage2, ip.InputImage3, ip.InputImage4, ip.InputImage5, ip.InputImage6, ip.InputImage7, ip.InputImage8 };
@@ -472,10 +534,15 @@ namespace BflTxtToImgPlugin
 
             return new List<string>();
         }
-
         public void ReplaceFilePathsOnPayloads(List<string> originalPath, List<string> newPath, object trackPayload, object itemPayload)
         {
             // No need to do anything
+            if (trackPayload is VideoTrackPayload)
+            {
+                CreateFlux3VideoPlugin().ReplaceFilePathsOnPayloads(originalPath, newPath, trackPayload, itemPayload);
+                return;
+            }
+
             if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
                 for (int i = 0; i < originalPath.Count; i++)
@@ -528,6 +595,10 @@ namespace BflTxtToImgPlugin
             if (payload is ItemPayload ip)
             {
                 ip.Prompt = text;
+            }
+            else if (payload is VideoItemPayload videoItem)
+            {
+                videoItem.Prompt = text;
             }
         }
 
