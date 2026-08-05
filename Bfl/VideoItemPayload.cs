@@ -10,6 +10,9 @@ namespace BflTxtToImgPlugin
         [Description("Only modify if you know what you are doing. This URL is used to resume polling a submitted generation. Clear it to create a new generation.")]
         public string PollingUrl { get; set; } = "";
 
+        // Keeps a completed draft from being mistaken for a pending Draft Enhance job.
+        public string SubmittedMode { get; set; } = "";
+
         [EnableFileDrop] public string InputImage { get; set; }
         [EnableFileDrop] public string InputImage2 { get; set; }
         [EnableFileDrop] public string InputImage3 { get; set; }
@@ -22,11 +25,20 @@ namespace BflTxtToImgPlugin
         [EnableFileDrop] public string InputImage10 { get; set; }
         [EnableFileDrop] public string InputVideo { get; set; }
 
+        [EnableFileDrop]
+        [Description("Local draft-cache .bin bundle returned by BFL. Draft Enhance uses this to render the matching full-quality video.")]
+        public string DraftCache { get; set; }
+
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             if (trackPayload is not VideoTrackPayload track)
             {
                 return true;
+            }
+
+            if (propertyName == nameof(SubmittedMode))
+            {
+                return false;
             }
 
             var imageProperty = propertyName is nameof(InputImage) or nameof(InputImage2) or nameof(InputImage3) or nameof(InputImage4) or nameof(InputImage5)
@@ -37,7 +49,12 @@ namespace BflTxtToImgPlugin
                 return track.Mode == VideoTrackPayload.ModeImageToVideo;
             }
 
-            return propertyName != nameof(InputVideo) || track.Mode == VideoTrackPayload.ModeVideoContinuation;
+            if (propertyName == nameof(InputVideo))
+            {
+                return track.Mode == VideoTrackPayload.ModeVideoContinuation;
+            }
+
+            return propertyName != nameof(DraftCache) || track.Mode == VideoTrackPayload.ModeDraftEnhance;
         }
     }
 }

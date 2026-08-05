@@ -39,14 +39,19 @@ namespace BflTxtToImgPlugin
 
             try
             {
-                if (!string.IsNullOrWhiteSpace(item.PollingUrl))
+                var shouldResumePolling = !string.IsNullOrWhiteSpace(item.PollingUrl) &&
+                    (item.SubmittedMode == track.Mode || (string.IsNullOrWhiteSpace(item.SubmittedMode) && track.Mode != VideoTrackPayload.ModeDraftEnhance));
+                if (shouldResumePolling)
                 {
-                    return await PollVideoAsync(item.PollingUrl, folderToSaveVideo);
+                    return await PollVideoAsync(item.PollingUrl, folderToSaveVideo, item);
                 }
 
+                // Switching a draft to Draft Enhance must create a new task, not re-poll the completed draft.
+                item.PollingUrl = "";
                 var request = CreateRequest(track, item);
                 var submitted = await SubmitVideoAsync(request);
                 item.PollingUrl = submitted.PollingUrl;
+                item.SubmittedMode = track.Mode;
                 saveAndRefreshCallback?.Invoke(true);
 
                 if (submitted.Cost is > 0)
@@ -54,7 +59,7 @@ namespace BflTxtToImgPlugin
                     showCostAction?.Invoke((submitted.Cost.Value / 100).ToString("0.00") + "€");
                 }
 
-                return await PollVideoAsync(submitted.PollingUrl, folderToSaveVideo);
+                return await PollVideoAsync(submitted.PollingUrl, folderToSaveVideo, item);
             }
             catch (OperationCanceledException)
             {
@@ -70,6 +75,15 @@ namespace BflTxtToImgPlugin
         private static Dictionary<string, object> CreateRequest(VideoTrackPayload track, VideoItemPayload item)
         {
             var prompt = $"{item.Prompt} {track.Prompt}".Trim();
+            if (track.Mode == VideoTrackPayload.ModeDraftEnhance)
+            {
+                return new Dictionary<string, object>
+                {
+                    ["mode"] = "draft_enhance",
+                    ["draft_cache"] = Convert.ToBase64String(File.ReadAllBytes(GetExistingPath(item.DraftCache))),
+                };
+            }
+
             if (string.IsNullOrWhiteSpace(prompt))
             {
                 throw new InvalidOperationException("Prompt missing");
@@ -81,6 +95,7 @@ namespace BflTxtToImgPlugin
                 ["aspect_ratio"] = track.AspectRatio,
                 ["duration"] = track.Duration == "auto" ? "auto" : int.Parse(track.Duration),
                 ["resolution"] = track.Resolution,
+                ["version"] = track.Version,
                 ["generate_audio"] = track.GenerateAudio,
                 ["safety_tolerance"] = track.SafetyTolerance,
                 ["draft"] = track.Draft,
@@ -103,9 +118,8 @@ namespace BflTxtToImgPlugin
                     break;
 
                 case VideoTrackPayload.ModeVideoContinuation:
-                    var inputVideo = GetExistingPath(item.InputVideo);
                     request["mode"] = "v2v";
-                    request["start_video"] = Convert.ToBase64String(File.ReadAllBytes(inputVideo));
+                    request["start_video"] = Convert.ToBase64String(File.ReadAllBytes(GetExistingPath(item.InputVideo)));
                     break;
 
                 default:
@@ -114,7 +128,6 @@ namespace BflTxtToImgPlugin
 
             return request;
         }
-
         private async Task<Flux3SubmitResponse> SubmitVideoAsync(Dictionary<string, object> request)
         {
             using var client = CreateAuthorizedClient();
@@ -140,7 +153,7 @@ namespace BflTxtToImgPlugin
             return result;
         }
 
-        private async Task<VideoResponse> PollVideoAsync(string pollingUrl, string folderToSaveVideo)
+        private async Task<VideoResponse> PollVideoAsync(string pollingUrl, string folderToSaveVideo, VideoItemPayload item)
         {
             using var client = CreateAuthorizedClient();
 
@@ -167,9 +180,18 @@ namespace BflTxtToImgPlugin
                     }
 
                     Directory.CreateDirectory(folderToSaveVideo);
-                    var target = Path.Combine(folderToSaveVideo, $"{Guid.NewGuid()}.mp4");
                     using var downloadClient = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
+                    var target = Path.Combine(folderToSaveVideo, $"{Guid.NewGuid()}.mp4");
                     await File.WriteAllBytesAsync(target, await downloadClient.GetByteArrayAsync(videoUrl, cancellationToken), cancellationToken);
+
+                    if (TryGetResultUrl(root, "draft_cache", out var draftCacheUrl))
+                    {
+                        var cacheFile = Path.Combine(folderToSaveVideo, $"{Guid.NewGuid()}.bin");
+                        await File.WriteAllBytesAsync(cacheFile, await downloadClient.GetByteArrayAsync(draftCacheUrl, cancellationToken), cancellationToken);
+                        item.DraftCache = cacheFile;
+                        saveAndRefreshCallback?.Invoke(true);
+                    }
+
                     return new VideoResponse { Success = true, VideoFile = target, Fps = 24 };
                 }
 
@@ -192,24 +214,30 @@ namespace BflTxtToImgPlugin
 
         private static bool TryGetVideoUrl(JsonElement root, out string videoUrl)
         {
+            foreach (var propertyName in new[] { "sample", "video", "url" })
+            {
+                if (TryGetResultUrl(root, propertyName, out videoUrl))
+                {
+                    return true;
+                }
+            }
+
             videoUrl = null;
-            if (!root.TryGetProperty("result", out var result) || result.ValueKind != JsonValueKind.Object)
+            return false;
+        }
+
+        private static bool TryGetResultUrl(JsonElement root, string propertyName, out string url)
+        {
+            url = null;
+            if (!root.TryGetProperty("result", out var result) || result.ValueKind != JsonValueKind.Object ||
+                !result.TryGetProperty(propertyName, out var value) || value.ValueKind != JsonValueKind.String)
             {
                 return false;
             }
 
-            foreach (var propertyName in new[] { "sample", "video", "url" })
-            {
-                if (result.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String)
-                {
-                    videoUrl = value.GetString();
-                    return !string.IsNullOrWhiteSpace(videoUrl);
-                }
-            }
-
-            return false;
+            url = value.GetString();
+            return !string.IsNullOrWhiteSpace(url);
         }
-
         private static string FormatProgress(string status, JsonElement root)
         {
             if (root.TryGetProperty("progress", out var progress) && progress.ValueKind == JsonValueKind.Number && progress.TryGetDouble(out var value))
@@ -304,12 +332,17 @@ namespace BflTxtToImgPlugin
             {
                 return (false, "Track payload or item payload object not valid");
             }
-            if (string.IsNullOrWhiteSpace($"{track.Prompt} {item.Prompt}"))
+            if (track.Mode != VideoTrackPayload.ModeDraftEnhance && string.IsNullOrWhiteSpace($"{track.Prompt} {item.Prompt}"))
             {
                 return (false, "Prompt missing");
             }
             try
             {
+                if (track.Mode == VideoTrackPayload.ModeDraftEnhance)
+                {
+                    GetExistingPath(item.DraftCache);
+                }
+
                 if (track.Mode == VideoTrackPayload.ModeImageToVideo && GetImagePaths(item).Count == 0)
                 {
                     return (false, "At least one input image is required for Image to Video");
@@ -329,14 +362,14 @@ namespace BflTxtToImgPlugin
         public List<string> FilePathsOnPayloads(object trackPayload, object itemPayload)
         {
             if (itemPayload is not VideoItemPayload item) return new();
-            return new[] { item.InputImage, item.InputImage2, item.InputImage3, item.InputImage4, item.InputImage5, item.InputImage6, item.InputImage7, item.InputImage8, item.InputImage9, item.InputImage10, item.InputVideo }
+            return new[] { item.InputImage, item.InputImage2, item.InputImage3, item.InputImage4, item.InputImage5, item.InputImage6, item.InputImage7, item.InputImage8, item.InputImage9, item.InputImage10, item.InputVideo, item.DraftCache }
                 .Where(path => !string.IsNullOrWhiteSpace(path)).ToList();
         }
 
         public void ReplaceFilePathsOnPayloads(List<string> originalPaths, List<string> newPaths, object trackPayload, object itemPayload)
         {
             if (itemPayload is not VideoItemPayload item) return;
-            var paths = new[] { item.InputImage, item.InputImage2, item.InputImage3, item.InputImage4, item.InputImage5, item.InputImage6, item.InputImage7, item.InputImage8, item.InputImage9, item.InputImage10, item.InputVideo };
+            var paths = new[] { item.InputImage, item.InputImage2, item.InputImage3, item.InputImage4, item.InputImage5, item.InputImage6, item.InputImage7, item.InputImage8, item.InputImage9, item.InputImage10, item.InputVideo, item.DraftCache };
             for (var index = 0; index < originalPaths.Count && index < newPaths.Count; index++)
             {
                 for (var pathIndex = 0; pathIndex < paths.Length; pathIndex++)
@@ -345,7 +378,7 @@ namespace BflTxtToImgPlugin
                 }
             }
             item.InputImage = paths[0]; item.InputImage2 = paths[1]; item.InputImage3 = paths[2]; item.InputImage4 = paths[3]; item.InputImage5 = paths[4];
-            item.InputImage6 = paths[5]; item.InputImage7 = paths[6]; item.InputImage8 = paths[7]; item.InputImage9 = paths[8]; item.InputImage10 = paths[9]; item.InputVideo = paths[10];
+            item.InputImage6 = paths[5]; item.InputImage7 = paths[6]; item.InputImage8 = paths[7]; item.InputImage9 = paths[8]; item.InputImage10 = paths[9]; item.InputVideo = paths[10]; item.DraftCache = paths[11];
         }
 
         public void UserDataDeleteRequested() => connectionSettings?.DeleteTokens();

@@ -8,9 +8,10 @@ namespace BflTxtToImgPlugin
         public const string ModeTextToVideo = "Text to Video";
         public const string ModeImageToVideo = "Image to Video";
         public const string ModeVideoContinuation = "Video Continuation";
+        public const string ModeDraftEnhance = "Draft Enhance";
 
         [TriggerReload]
-        [PropertyComboOptions([ModeTextToVideo, ModeImageToVideo, ModeVideoContinuation])]
+        [PropertyComboOptions([ModeTextToVideo, ModeImageToVideo, ModeVideoContinuation, ModeDraftEnhance])]
         public string Mode { get; set; } = ModeTextToVideo;
 
         public string Prompt { get; set; }
@@ -24,12 +25,25 @@ namespace BflTxtToImgPlugin
         [PropertyComboOptions(["hd", "fhd"])]
         public string Resolution { get; set; } = "hd";
 
+        [IgnoreDynamicEdit]
+        public string Version { get; set; } = "latest";
+
         public bool GenerateAudio { get; set; } = true;
+
+        [PropertyComboOptions(["0", "1", "2", "3", "4"])]
         public int SafetyTolerance { get; set; } = 4;
 
         [Description("If true, the video will be generated in draft mode, costing less and faster")]
         public bool Draft { get; set; }
 
-        public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload) => true;
+        public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
+        {
+            if (Mode != ModeDraftEnhance)
+            {
+                return true;
+            }
+
+            return propertyName is nameof(Mode) or nameof(SafetyTolerance);
+        }
     }
 }
