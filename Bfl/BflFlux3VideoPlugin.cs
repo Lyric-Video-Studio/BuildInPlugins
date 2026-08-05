@@ -266,7 +266,6 @@ namespace BflTxtToImgPlugin
             }
 
             connectionSettings = parsed;
-            isInitialized = !string.IsNullOrWhiteSpace(parsed.AccessToken);
             return "";
         }
 
