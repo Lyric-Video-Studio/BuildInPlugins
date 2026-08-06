@@ -16,6 +16,7 @@ namespace MinimaxPlugin
         [Description("Video settings")][IgnorePropertyName]
         public Request Settings { get => imgToVidPayload; set => imgToVidPayload = value; }
         [Description("MiniMax-H3 V2 settings")]
+        [ParentNameAttribute]
         public H3Settings H3Settings { get; set; } = new();
         public SubjectRefContainer SubjectReferences { get; set; } = new();
         [Description("MiniMax-H3 reference inputs. Do not combine these with first or last frames.")]
