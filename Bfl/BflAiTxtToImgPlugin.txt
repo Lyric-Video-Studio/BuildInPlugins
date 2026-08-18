@@ -1,0 +1,6 @@
+BFL.ai / Black Forest Labs
+Capabilities - Create images from text, edit or outpaint images, create video from text, create video from image, continue a video, and enhance draft video.
+v1.5.62 - FLUX.3 video support added.
+Current - FLUX.2 image generation and editing.
+Current - FLUX.2 outpaint.
+Current - FLUX.3 text-to-video, image-to-video, video continuation and draft enhance.

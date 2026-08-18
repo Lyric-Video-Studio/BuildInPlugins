@@ -1,0 +1,8 @@
+Minimax
+Capabilities - Create video from text, create video from image, direct camera movement, generate speech from text, clone voices, and create or cover music.
+v1.5.60 - MiniMax-H3 video support added.
+Current - MiniMax-H3.
+Current - MiniMax-Hailuo-2.3 and MiniMax-Hailuo-02.
+Current - S2V-01, T2V-01, T2V-01-Director, I2V-01, I2V-01-Director and I2V-01-live.
+Current - speech-2.8-hd, speech-2.8-turbo, speech-2.6-hd and speech-2.6-turbo.
+Current - music-3.0, music-2.6 and music cover models, including free variants.

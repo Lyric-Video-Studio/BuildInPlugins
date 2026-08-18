@@ -1,0 +1,7 @@
+Luma AI Dream Machine
+Capabilities - Create images from text, create video from text, create video from image, and upscale generated video to 1080p or 4K.
+v1.5.50 - Ray 3.2 video support added.
+Current - ray-3.2, ray-2, ray-flash-2 and ray-1-6 video models.
+Current - uni-1 and uni-1-max image models.
+Current - photon-1 and photon-flash-1 image models.
+Current - Luma video upscale to 1080p and 4K.

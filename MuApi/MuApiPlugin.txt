@@ -1,0 +1,12 @@
+MuApi
+Capabilities - Create images from text, edit images, create video from text, create video from image or references, extend or edit video, generate character video, and create audio-driven media.
+v1.5.67 - Seedance 2.5 Spicy models added.
+v1.5.50 - Happy Horse 1.1, reference-to-video and Seedance 2 Mini added.
+Current - seedance-v2.0-t2v, seedance-v2.0-i2v and seedance-2.0-omni-reference.
+Current - seedance-2-mini text-to-video, image-to-video and omni-reference.
+Current - seedance-2.5-spicy text-to-video, image-to-video, first-last-frame, omni-reference, video-edit and video-extend.
+Current - happy-horse-1.1-image-to-video-1080p and happy-horse-1.1-reference-to-video-1080p.
+Current - vidu-q2-turbo text-to-video, image-to-video and start-end-video.
+Current - gpt-image-2 text-to-image and image-to-image.
+Current - midjourney-v8.
+Current - gemini-omni-character and gemini-omni-audio.

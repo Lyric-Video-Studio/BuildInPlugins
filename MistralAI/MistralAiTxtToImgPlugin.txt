@@ -1,0 +1,4 @@
+Mistral AI
+Capabilities - Create images from text prompts through the Mistral image-generation agent.
+Current - Mistral image-generation agent using mistral-medium-2505.
+Current - Search terms: Mistral, text-to-image, image generation.

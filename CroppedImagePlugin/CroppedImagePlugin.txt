@@ -1,0 +1,4 @@
+Image crop/scale
+Capabilities - Crop, scale, and resize an existing image for another aspect ratio or resolution.
+Current - Utility plugin; it does not use an AI model.
+Current - Search terms: crop, scale, resize, image processing.

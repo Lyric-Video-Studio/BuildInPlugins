@@ -16,6 +16,9 @@ namespace MuApiPlugin
         [PropertyComboOptions([/*GeminiOmniTrackPayload.ModelT2V, GeminiOmniTrackPayload.ModelI2V,*/
             Seedance2TrackPayload.ModelT2V, Seedance2TrackPayload.ModelI2V, Seedance2TrackPayload.ModelOmniRef,
             Seedance2TrackPayload.ModelMiniT2V, Seedance2TrackPayload.ModelMiniI2V, Seedance2TrackPayload.ModelMiniOmniRef,
+            Seedance2TrackPayload.Model25SpicyT2V, Seedance2TrackPayload.Model25SpicyI2V,
+            Seedance2TrackPayload.Model25SpicyFirstLast, Seedance2TrackPayload.Model25SpicyOmni,
+            Seedance2TrackPayload.Model25SpicyVideoEdit, Seedance2TrackPayload.Model25SpicyVideoExtend,
             HappyHorse1TrackPayload.ModelI2V1080p, HappyHorse1TrackPayload.ModelReferenceToVideo1080p,
             ViduQ2TurboTrackPayload.ModelT2V, ViduQ2TurboTrackPayload.ModelI2V, ViduQ2TurboTrackPayload.ModelStartEnd,
             Seedance2TrackPayload.ModelT2V480p, Seedance2TrackPayload.ModelI2V480p])]

@@ -1,0 +1,14 @@
+Google
+Capabilities - Create and edit images, create video from text, create video from image, generate speech from text, and create music with Google Gemini, Imagen, Veo, and Lyria models.
+v1.5.56 - Gemini Omni Flash and Nano Banana 2 Lite support added.
+Current - gemini-3.1-flash-lite-image.
+Current - gemini-3.1-flash-image-preview.
+Current - gemini-3-pro-image-preview.
+Current - gemini-2.5-flash-image.
+Current - models/imagen-4.0-generate-001.
+Current - veo-3.1-fast-generate-preview.
+Current - veo-3.1-generate-preview.
+Current - veo-3.1-lite-generate-preview.
+Current - gemini-omni-flash-preview.
+Current - gemini-3.1-flash-tts-preview.
+Current - lyria-3-clip-preview and lyria-3-pro-preview.

@@ -7,4 +7,7 @@
     -->
     <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
   </PropertyGroup>
+  <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)/$(MSBuildProjectName).txt')">
+    <EmbeddedResource Include="$(MSBuildProjectDirectory)/$(MSBuildProjectName).txt" />
+  </ItemGroup>
 </Project>

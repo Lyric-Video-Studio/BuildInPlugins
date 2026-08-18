@@ -1,0 +1,4 @@
+WAN API
+Capabilities - Create video from image with the hosted WAN 2.2 image-to-video model.
+Current - wan2.2-i2v-plus.
+Current - Search terms: WAN 2.2, image-to-video, Alibaba.

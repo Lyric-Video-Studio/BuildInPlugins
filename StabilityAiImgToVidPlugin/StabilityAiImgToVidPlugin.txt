@@ -1,0 +1,4 @@
+Stability AI image-to-video
+Capabilities - Create video from image with Stability AI hosted video generation.
+Current - Stability AI hosted image-to-video generation.
+Current - Search terms: Stability AI, Stable Video Diffusion, image-to-video.

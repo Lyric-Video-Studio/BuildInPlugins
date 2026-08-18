@@ -1,0 +1,17 @@
+Fal.ai multi-model plugin
+Capabilities - Create images from text, edit images, create video from text, create video from image or reference images, animate characters, control motion, lip-sync avatars, edit video, and create audio or sound effects.
+v1.5.56 - Seedream 5 Pro text-to-image and edit support added.
+v1.5.50 - Scail 2 character animation and Sync v3 avatar support added.
+Current - veo3.1, veo3.1/fast, image-to-video, reference-to-video and first-last-frame-to-video.
+Current - minimax/hailuo-2.3-fast standard and pro image-to-video.
+Current - Wan 2.7, Wan 2.6 and Wan 2.5 Preview text-to-video, image-to-video, reference-to-video and edit-video.
+Current - Kling O3, Kling 3, Kling 2.6 and Kling 2.5 video and motion-control models.
+Current - LTX Video 2 and LTX 2.3 audio-to-video.
+Current - PixVerse v6 and v5.6.
+Current - Seedance 1.5 and Seedance 2 text-to-video, image-to-video and reference-to-video.
+Current - Happy Horse text-to-video, image-to-video, reference-to-video and video edit.
+Current - HiDream O1 image and image edit.
+Current - Seedream 5 Pro, Seedream 5 Lite, Seedream 4.5 and Seedream 4.
+Current - GPT Image 2, GPT Image 1.5 and GPT Image 1 Mini.
+Current - Qwen Image, Imagen 4, Z-Image, Ovis Image and GLM Image.
+Current - VibeVoice 7B audio and Mirelo SFX 1.5 video-to-audio.

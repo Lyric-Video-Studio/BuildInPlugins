@@ -1,0 +1,4 @@
+Automatic1111 TxtToImg
+Capabilities - Create images from text prompts with locally installed Stable Diffusion or SDXL checkpoints.
+Current - Uses the checkpoints and models installed in the connected Automatic1111 instance.
+Current - Search terms: Stable Diffusion, SDXL, text-to-image, txt2img, checkpoint.

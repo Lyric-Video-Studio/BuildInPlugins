@@ -1,0 +1,4 @@
+Stability AI image generation
+Capabilities - Create images from text prompts with Stable Diffusion 3 through the Stability AI API.
+Current - sd3 through the Stability AI Stable Image API.
+Current - Search terms: SD3, Stable Diffusion 3, text-to-image.

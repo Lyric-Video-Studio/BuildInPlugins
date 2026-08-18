@@ -1,0 +1,4 @@
+ElevenLabs
+Capabilities - Create speech from text, generate voices, and create music from a prompt.
+Current - eleven_multilingual_v2 text-to-speech and voice generation.
+Current - music_v1 music generation.

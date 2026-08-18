@@ -259,27 +259,10 @@ namespace MuApiPlugin
 
                 if (TrackPayload.IsSeedance2(track))
                 {
-                    if (string.IsNullOrWhiteSpace($"{track.Seedance2.Prompt} {item.Seedance2.Prompt}".Trim()))
+                    var seedanceValidation = ValidateSeedancePayloads(track, item);
+                    if (!seedanceValidation.payloadOk)
                     {
-                        return (false, "Prompt missing");
-                    }
-
-                    var imageCount = CountFiles(item.Seedance2.ImageReferences.ImageSources.Select(i => i.ImageFile));
-                    if (imageCount > 9)
-                    {
-                        return (false, "MuApi supports up to 9 image references");
-                    }
-
-                    var videoCount = CountFiles(item.Seedance2.VideoReferences.VideoSources.Select(i => i.VideoFile));
-                    if (videoCount > 3)
-                    {
-                        return (false, "MuApi supports up to 3 video references");
-                    }
-
-                    var audioCount = CountFiles(item.Seedance2.AudioReferences.AudioSources.Select(i => i.AudioFile));
-                    if (audioCount > 3)
-                    {
-                        return (false, "MuApi supports up to 3 audio references");
+                        return seedanceValidation;
                     }
                 }
 
@@ -818,6 +801,103 @@ namespace MuApiPlugin
             _saveConnectionSettingsCallback = saveConnectionSettings;
         }
 
+        private static (bool payloadOk, string reasonIfNot) ValidateSeedancePayloads(TrackPayload track, ItemPayload item)
+        {
+            var model = track.Model;
+            var trackPayload = track.Seedance2;
+            var itemPayload = item.Seedance2;
+
+            if (string.IsNullOrWhiteSpace($"{trackPayload.Prompt} {itemPayload.Prompt}".Trim()))
+            {
+                return (false, "Prompt missing");
+            }
+
+            if (Seedance2TrackPayload.IsSpicyModel(model))
+            {
+                var maxDuration = Seedance2TrackPayload.IsSeedance25SpicyModel(model) ? 30 : 15;
+                if (itemPayload.Duration < 4 || itemPayload.Duration > maxDuration)
+                {
+                    return (false, $"{model} supports durations from 4 to {maxDuration} seconds");
+                }
+            }
+
+            if (!Seedance2TrackPayload.IsSeedance25SpicyModel(model) && trackPayload.AspectRatio == "9:21")
+            {
+                return (false, $"{model} does not support aspect ratio 9:21");
+            }
+
+            if (Seedance2TrackPayload.UsesResolutionParameter(model))
+            {
+                var supportedResolutions = Seedance2TrackPayload.IsMiniModel(model)
+                    ? new[] { "480p", "720p" }
+                    : new[] { "480p", "720p", "1080p", "4K" };
+                if (!supportedResolutions.Contains(trackPayload.Resolution, StringComparer.OrdinalIgnoreCase))
+                {
+                    return (false, $"{model} does not support resolution {trackPayload.Resolution}");
+                }
+            }
+
+            var imageCount = CountFiles(trackPayload.ImageReferences.ImageSources.Select(i => i.ImageFile))
+                + CountFiles(itemPayload.ImageReferences.ImageSources.Select(i => i.ImageFile));
+            var videoCount = CountFiles(trackPayload.VideoReferences.VideoSources.Select(i => i.VideoFile))
+                + CountFiles(itemPayload.VideoReferences.VideoSources.Select(i => i.VideoFile));
+            var audioCount = CountFiles(trackPayload.AudioReferences.AudioSources.Select(i => i.AudioFile))
+                + CountFiles(itemPayload.AudioReferences.AudioSources.Select(i => i.AudioFile));
+
+            if (Seedance2TrackPayload.IsImageToVideoModel(model))
+            {
+                var maxImages = Seedance2TrackPayload.IsSeedance25SpicyModel(model)
+                    ? model == Seedance2TrackPayload.Model25SpicyI2V ? 2 : 1
+                    : 9;
+                if (imageCount < 1 || imageCount > maxImages)
+                {
+                    return maxImages == 1
+                        ? (false, $"{model} requires exactly one input image")
+                        : (false, $"{model} requires between 1 and {maxImages} input images");
+                }
+            }
+            else if (Seedance2TrackPayload.IsFirstLastFrameModel(model) && imageCount != 2)
+            {
+                return (false, $"{model} requires exactly two input images");
+            }
+            else if (Seedance2TrackPayload.IsVideoEditModel(model))
+            {
+                if (videoCount != 1)
+                {
+                    return (false, $"{model} requires exactly one input video");
+                }
+
+                if (imageCount > 30 || audioCount > 10)
+                {
+                    return (false, $"{model} supports up to 30 image and 10 audio references");
+                }
+            }
+            else if (Seedance2TrackPayload.IsVideoExtendModel(model))
+            {
+                if (videoCount != 1)
+                {
+                    return (false, $"{model} requires exactly one input video");
+                }
+
+                if (imageCount > 1)
+                {
+                    return (false, $"{model} supports at most one target-frame image");
+                }
+            }
+            else if (Seedance2TrackPayload.IsOmniReferenceModel(model))
+            {
+                var maxImages = Seedance2TrackPayload.IsSeedance25SpicyModel(model) ? 30 : 9;
+                var maxVideos = Seedance2TrackPayload.IsSeedance25SpicyModel(model) ? 10 : 3;
+                var maxAudios = Seedance2TrackPayload.IsSeedance25SpicyModel(model) ? 10 : 3;
+                if (imageCount > maxImages || videoCount > maxVideos || audioCount > maxAudios)
+                {
+                    return (false, $"{model} supports up to {maxImages} image, {maxVideos} video, and {maxAudios} audio references");
+                }
+            }
+
+            return (true, "");
+        }
+
         private static int CountFiles(IEnumerable<string> additionalFiles)
         {
             return additionalFiles.Count(file => !string.IsNullOrWhiteSpace(file));
@@ -886,6 +966,8 @@ namespace MuApiPlugin
                 Model(IPluginBase.TrackType.Video, "Seedance 2 Mini", Seedance2TrackPayload.ModelMiniOmniRef),
                 Model(IPluginBase.TrackType.Video, "Seedance 2 480p", Seedance2TrackPayload.ModelT2V480p),
                 Model(IPluginBase.TrackType.Video, "Seedance 2 480p", Seedance2TrackPayload.ModelI2V480p),
+                .. Seedance2TrackPayload.SpicyModels.Select(model =>
+                    Model(IPluginBase.TrackType.Video, Seedance2TrackPayload.GetSpicyCategory(model), model)),
                 Model(IPluginBase.TrackType.Video, "Happy Horse 1.1", HappyHorse1TrackPayload.ModelI2V1080p),
                 Model(IPluginBase.TrackType.Video, "Happy Horse 1.1", HappyHorse1TrackPayload.ModelReferenceToVideo1080p),
                 Model(IPluginBase.TrackType.Video, "Vidu Q2 Turbo", ViduQ2TurboTrackPayload.ModelT2V),
