@@ -1,6 +1,7 @@
 ﻿using FalAiPlugin.ModelVisibilityHandlers;
 using PluginBase;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace FalAiPlugin
 {
@@ -97,6 +98,56 @@ namespace FalAiPlugin
         public string AudioSource { get; set; }
 
         public int UpscaleFactor { get; set; } = 2;
+
+        [CustomName("Topaz model")]
+        [PropertyComboOptions(["Proteus", "Proteus Natural", "Iris", "Iris Low Quality", "Dione DV", "Dione TV", "Dione Robust", "Dione Dehalo", "Dione Robust Dehalo", "Artemis High Quality", "Artemis Medium Quality", "Artemis Low Quality", "Artemis Strong Halo", "Artemis Medium Halo", "Artemis Aliasing & Moire", "Gaia HQ", "Gaia CG", "Gaia 2", "Rhea", "Theia Fine Tune Detail", "Theia Fine Tune Fidelity"])]
+        [Description("Precision enhancement model. Proteus fits most real-world footage; Iris recovers faces; Dione handles interlaced sources; Artemis restores degraded footage; Gaia targets high-quality footage, CG, or animation; Rhea maximizes detail; Theia provides manual tuning.")]
+        public string TopazModel { get; set; } = "Proteus";
+
+        [CustomName("Upscale factor")]
+        [Range(1, 4)]
+        [ShowSlider(1)]
+        [Description("Output scale multiplier. 2 doubles both width and height.")]
+        public float TopazUpscaleFactor { get; set; } = 2;
+
+        [CustomName("Target FPS")]
+        [Range(16, 60)]
+        [Description("Optional output frame rate. Setting it to a value different from the source enables frame interpolation. Clear the value to preserve the source FPS.")]
+        public int? TopazTargetFps { get; set; }
+
+        [CustomName("Compression removal")]
+        [Range(0, 1)]
+        [ShowSlider(2)]
+        [Description("Optional compression artifact removal level. Clear the value to use the selected model's default.")]
+        public float? TopazCompression { get; set; }
+
+        [CustomName("Noise reduction")]
+        [Range(0, 1)]
+        [ShowSlider(2)]
+        [Description("Optional noise reduction level. Clear the value to use the selected model's default.")]
+        public float? TopazNoise { get; set; }
+
+        [CustomName("Halo reduction")]
+        [Range(0, 1)]
+        [ShowSlider(2)]
+        [Description("Optional halo reduction level. Clear the value to use the selected model's default.")]
+        public float? TopazHalo { get; set; }
+
+        [CustomName("Film grain")]
+        [Range(0, 0.1)]
+        [ShowSlider(2)]
+        [Description("Optional film grain amount. Clear the value to use the selected model's default.")]
+        public float? TopazGrain { get; set; }
+
+        [CustomName("Recover detail")]
+        [Range(0, 1)]
+        [ShowSlider(2)]
+        [Description("Optional original-detail recovery level. Clear the value to use the selected model's default.")]
+        public float? TopazRecoverDetail { get; set; }
+
+        [CustomName("H264 output")]
+        [Description("Use H264 for the output instead of the default H265 codec.")]
+        public bool TopazH264Output { get; set; }
 
         [EnableFileDrop]
         public string FirstFrame { get; set; }

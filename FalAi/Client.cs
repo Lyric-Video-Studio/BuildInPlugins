@@ -41,13 +41,38 @@ namespace FalAiPlugin
     public class VideoRequest : Request
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string model { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string first_frame_url { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string last_frame_url { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public int? upscale_factor { get; set; }
+        public float? upscale_factor { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? target_fps { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public float? compression { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public float? noise { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public float? halo { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public float? grain { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public float? recover_detail { get; set; }
+
+        [JsonPropertyName("H264_output")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? h264_output { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? generate_audio { get; set; }
@@ -259,6 +284,12 @@ namespace FalAiPlugin
                 {
                     // Need to prop out the fal-ai
                     baseUrl = baseUrl.Replace("fal-ai/", "bytedance/");
+                    model = string.Join('/', model.Split('/').Skip(1));
+                }
+
+                if (model.StartsWith("topaz/", StringComparison.OrdinalIgnoreCase))
+                {
+                    baseUrl = baseUrl.Replace("fal-ai/", "topaz/");
                     model = string.Join('/', model.Split('/').Skip(1));
                 }
 
@@ -496,8 +527,10 @@ namespace FalAiPlugin
                 // Wait for assets to be filled
                 try
                 {
+
                     var modelSplit = model.Split('/');
                     model = modelSplit[0];
+
 
                     var generationResp = await httpClient.GetAsync($"{model}/requests/{id}");
                     var respString = await generationResp.Content.ReadAsStringAsync();
@@ -511,6 +544,10 @@ namespace FalAiPlugin
 
                     if (!generationResp.IsSuccessStatusCode)
                     {
+                        if (string.IsNullOrEmpty(respString))
+                        {
+                            respString = generationResp.StatusCode.ToString();
+                        }
                         System.Diagnostics.Debug.WriteLine(respString);
                         return new VideoResponse() { Success = false, ErrorMsg = respString };
                     }
@@ -533,7 +570,7 @@ namespace FalAiPlugin
 
                     //System.Diagnostics.Debug.WriteLine($"State: {respSerialized.status}");
                     //textualProgressAction.Invoke(respSerialized.status);
-                    // 
+                    //
                     if (respSerialized != null)
                     {
                         videoUrl = respSerialized.images != null && respSerialized.images.Count > 0 ? respSerialized.images[0].url : respSerialized.video?.url;
@@ -567,14 +604,14 @@ namespace FalAiPlugin
                         {
                             System.Diagnostics.Debug.WriteLine(ex.ToString());
                         }
-                    }                        
+                    }
 
                     if (string.IsNullOrEmpty(videoUrl))
                     {
                         await Task.Delay(pollingDelay, cancelToken.GetValueOrDefault());
                     }
-                    
-                    
+
+
                 }
                 catch (Exception)
                 {
@@ -700,7 +737,7 @@ namespace FalAiPlugin
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
 
-                
+
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {

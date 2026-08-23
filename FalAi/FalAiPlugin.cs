@@ -39,6 +39,7 @@ namespace FalAiPlugin
             new HappyHorseVideoEditHandler(),
             new LtxAudioToVideoHandler(),
             new Scail2Handler(),
+            new TopazUpscaleHandler(),
             new Seedance2T2VHandler(),
             new Seedance2Handler(),
             new Seedance2R2VHandler(),
@@ -167,7 +168,11 @@ namespace FalAiPlugin
 
                 tempRes1 = await UploadSource(newIp.VideoSource);
 
-                if (tempRes1.Success)
+                if (!tempRes1.Success)
+                {
+                    return tempRes1;
+                }
+                else if (!string.IsNullOrEmpty(tempRes1.VideoFile))
                 {
                     reg.video_url = tempRes1.VideoFile;
                 }
@@ -442,7 +447,7 @@ namespace FalAiPlugin
                 }
 
                 var videoResp = await new Client().GetVideo(reg, folderToSaveVideo, _connectionSettings, itemsPayload as ItemPayload, saveAndRefreshCallback,
-                textualProgressAction, model, _ct);
+                    textualProgressAction, model, _ct);
                 return videoResp;
             }
             else
@@ -1200,6 +1205,39 @@ namespace FalAiPlugin
                     if (string.IsNullOrWhiteSpace($"{vt.Prompt} {vi.Prompt}".Trim()))
                     {
                         return (false, "Prompt is required");
+                    }
+                }
+
+                if (vt.Model == TopazUpscaleHandler.Model)
+                {
+                    if (string.IsNullOrWhiteSpace(vi.VideoSource))
+                    {
+                        return (false, "Video source is required");
+                    }
+
+                    if (vi.TopazUpscaleFactor < 1 || vi.TopazUpscaleFactor > 4)
+                    {
+                        return (false, "Upscale factor must be between 1 and 4");
+                    }
+
+                    if (vi.TopazModel is "Proteus Natural" or "Gaia 2" && vi.TopazUpscaleFactor != 2)
+                    {
+                        return (false, $"{vi.TopazModel} only supports a 2x upscale factor");
+                    }
+
+                    if (vi.TopazTargetFps is < 16 or > 60)
+                    {
+                        return (false, "Target FPS must be between 16 and 60");
+                    }
+
+                    if (vi.TopazCompression is < 0 or > 1 || vi.TopazNoise is < 0 or > 1 || vi.TopazHalo is < 0 or > 1 || vi.TopazRecoverDetail is < 0 or > 1)
+                    {
+                        return (false, "Topaz enhancement controls must be between 0 and 1");
+                    }
+
+                    if (vi.TopazGrain is < 0 or > 0.1f)
+                    {
+                        return (false, "Topaz grain must be between 0 and 0.1");
                     }
                 }
 

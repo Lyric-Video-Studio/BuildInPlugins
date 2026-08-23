@@ -1,5 +1,6 @@
 Fal.ai multi-model plugin
 Capabilities - Create images from text, edit images, create video from text, create video from image or reference images, animate characters, control motion, lip-sync avatars, edit video, and create audio or sound effects.
+Current - Topaz Precision video upscaling with enhancement controls and optional frame interpolation.
 v1.5.56 - Seedream 5 Pro text-to-image and edit support added.
 v1.5.50 - Scail 2 character animation and Sync v3 avatar support added.
 Current - veo3.1, veo3.1/fast, image-to-video, reference-to-video and first-last-frame-to-video.
