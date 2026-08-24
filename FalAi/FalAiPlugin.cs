@@ -37,9 +37,13 @@ namespace FalAiPlugin
             new HappyHorseI2VHandler(),
             new HappyHorseR2VHandler(),
             new HappyHorseVideoEditHandler(),
+            new Wan3T2VHandler(),
+            new Wan3I2VHandler(),
+            new Wan3R2VHandler(),
             new LtxAudioToVideoHandler(),
             new Scail2Handler(),
             new TopazUpscaleHandler(),
+            new TopazGenerativeUpscaleHandler(),
             new Seedance2T2VHandler(),
             new Seedance2Handler(),
             new Seedance2R2VHandler(),
@@ -1208,7 +1212,7 @@ namespace FalAiPlugin
                     }
                 }
 
-                if (vt.Model == TopazUpscaleHandler.Model)
+                if (vt.Model is TopazUpscaleHandler.Model or TopazGenerativeUpscaleHandler.Model)
                 {
                     if (string.IsNullOrWhiteSpace(vi.VideoSource))
                     {
@@ -1220,7 +1224,8 @@ namespace FalAiPlugin
                         return (false, "Upscale factor must be between 1 and 4");
                     }
 
-                    if (vi.TopazModel is "Proteus Natural" or "Gaia 2" && vi.TopazUpscaleFactor != 2)
+                    if (vt.Model == TopazUpscaleHandler.Model &&
+                        (vi.TopazModel is "Proteus Natural" or "Gaia 2") && vi.TopazUpscaleFactor != 2)
                     {
                         return (false, $"{vi.TopazModel} only supports a 2x upscale factor");
                     }
@@ -1230,14 +1235,21 @@ namespace FalAiPlugin
                         return (false, "Target FPS must be between 16 and 60");
                     }
 
-                    if (vi.TopazCompression is < 0 or > 1 || vi.TopazNoise is < 0 or > 1 || vi.TopazHalo is < 0 or > 1 || vi.TopazRecoverDetail is < 0 or > 1)
+                    if (vt.Model == TopazUpscaleHandler.Model &&
+                        (vi.TopazCompression is < 0 or > 1 || vi.TopazNoise is < 0 or > 1 || vi.TopazHalo is < 0 or > 1 || vi.TopazRecoverDetail is < 0 or > 1))
                     {
                         return (false, "Topaz enhancement controls must be between 0 and 1");
                     }
 
-                    if (vi.TopazGrain is < 0 or > 0.1f)
+                    if (vt.Model == TopazUpscaleHandler.Model && vi.TopazGrain is < 0 or > 0.1f)
                     {
                         return (false, "Topaz grain must be between 0 and 0.1");
+                    }
+
+                    if (vt.Model == TopazGenerativeUpscaleHandler.Model && vi.TopazGenerativeModel == "Starlight Precise 2.6" &&
+                        vi.TopazSoftness is < 1 or > 5)
+                    {
+                        return (false, "Topaz softness must be between 1 and 5");
                     }
                 }
 
@@ -1251,6 +1263,46 @@ namespace FalAiPlugin
                     if (string.IsNullOrWhiteSpace(vi.AudioSource))
                     {
                         return (false, "Audio source is required");
+                    }
+                }
+
+                if (Wan3HandlerBase.IsWan3Model(vt.Model))
+                {
+                    if (vi.DurationWan3 is < 2 or > 30)
+                    {
+                        return (false, "Wan 3.0 duration must be between 2 and 30 seconds, or empty for smart duration");
+                    }
+
+                    if (vt.Model == Wan3T2VHandler.Model && string.IsNullOrWhiteSpace($"{vt.Prompt} {vi.Prompt}"))
+                    {
+                        return (false, "Prompt is required");
+                    }
+
+                    if (vt.Model == Wan3I2VHandler.Model &&
+                        string.IsNullOrWhiteSpace(vi.ImageSource) && string.IsNullOrWhiteSpace(vt.ImageSource))
+                    {
+                        return (false, "Start image is required");
+                    }
+
+                    if (vt.Model == Wan3R2VHandler.Model)
+                    {
+                        var imageReferences = vt.ImageSourceCont.ImageSources.Concat(vi.ImageSourceCont.ImageSources)
+                            .Count(source => !string.IsNullOrWhiteSpace(source.ImageFile));
+                        var videoReferences = vi.VideoSourceCont.VideoSources
+                            .Count(source => !string.IsNullOrWhiteSpace(source.VideoFile));
+                        var audioReferences = vi.AudioSourceCont.AudioSources
+                            .Count(source => !string.IsNullOrWhiteSpace(source.AudioFile))
+                            + (string.IsNullOrWhiteSpace(vi.AudioSource) ? 0 : 1);
+
+                        if (imageReferences + videoReferences + audioReferences == 0)
+                        {
+                            return (false, "At least one image, video, or audio reference is required");
+                        }
+
+                        if (imageReferences > 10 || videoReferences > 5 || audioReferences > 5)
+                        {
+                            return (false, "Wan 3.0 supports up to 10 image, 5 video, and 5 audio references");
+                        }
                     }
                 }
             }

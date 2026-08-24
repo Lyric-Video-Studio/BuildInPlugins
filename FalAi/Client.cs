@@ -70,12 +70,24 @@ namespace FalAiPlugin
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public float? recover_detail { get; set; }
 
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public float? softness { get; set; }
+
         [JsonPropertyName("H264_output")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? h264_output { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? generate_audio { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? audio { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? enable_prompt_expansion { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? enable_thinking { get; set; }
 
         public string resolution { get; set; }
 
@@ -159,6 +171,9 @@ namespace FalAiPlugin
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<string> audio_urls { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string> reference_audio_urls { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? enable_safety_checker { get; set; } = false;
@@ -296,6 +311,12 @@ namespace FalAiPlugin
                 if (model.Contains("alibaba/happy-horse/"))
                 {
                     // Need to prop out the fal-ai
+                    baseUrl = baseUrl.Replace("fal-ai/", "alibaba/");
+                    model = string.Join('/', model.Split('/').Skip(1));
+                }
+
+                if (model.StartsWith("alibaba/wan-3.0/", StringComparison.OrdinalIgnoreCase))
+                {
                     baseUrl = baseUrl.Replace("fal-ai/", "alibaba/");
                     model = string.Join('/', model.Split('/').Skip(1));
                 }
@@ -528,8 +549,10 @@ namespace FalAiPlugin
                 try
                 {
 
-                    var modelSplit = model.Split('/');
-                    model = modelSplit[0];
+
+                        var modelSplit = model.Split('/');
+                        model = modelSplit[0];
+
 
 
                     var generationResp = await httpClient.GetAsync($"{model}/requests/{id}");

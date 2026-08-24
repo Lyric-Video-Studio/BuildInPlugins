@@ -56,6 +56,30 @@ namespace FalAiPlugin
         public string ResolutionWan { get; set; } = "720p";
 
         [CustomName("Resolution")]
+        [PropertyComboOptions(["480p", "720p", "1080p"])]
+        public string ResolutionWan3 { get; set; } = "1080p";
+
+        [CustomName("AspectRatio")]
+        [PropertyComboOptions(["adaptive", "16:9", "4:3", "1:1", "3:4", "9:16"])]
+        public string AspectRatioWan3 { get; set; } = "adaptive";
+
+        [CustomName("Audio")]
+        [Description("Include generated audio in the video")]
+        public bool Wan3Audio { get; set; } = true;
+
+        [CustomName("Prompt expansion")]
+        [Description("Enable intelligent prompt rewriting. Disabling this reduces latency but may reduce generation quality.")]
+        public bool Wan3EnablePromptExpansion { get; set; } = true;
+
+        [CustomName("Thinking")]
+        [Description("Enable enhanced reasoning before generation")]
+        public bool Wan3EnableThinking { get; set; }
+
+        [CustomName("Safety checker")]
+        [Description("Enable content moderation for input and output")]
+        public bool Wan3EnableSafetyChecker { get; set; } = true;
+
+        [CustomName("Resolution")]
         public string ResolutionLtx { get; set; } = "720p";
 
         [CustomName("Resolution")]

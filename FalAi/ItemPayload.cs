@@ -35,6 +35,11 @@ namespace FalAiPlugin
         [PropertyComboOptions(["2", "3", "4", "5", "6", "7", "8", "9", "10"])]
         public int DurationWan27Shorter { get; set; } = 10;
 
+        [Description("Duration in seconds from 2 to 30. Clear the value to let Wan 3.0 choose the duration.")]
+        [CustomName("Duration")]
+        [Range(2, 30)]
+        public int? DurationWan3 { get; set; } = 5;
+
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
         public string DurationMinimax { get; set; } = "6";
@@ -104,6 +109,12 @@ namespace FalAiPlugin
         [Description("Precision enhancement model. Proteus fits most real-world footage; Iris recovers faces; Dione handles interlaced sources; Artemis restores degraded footage; Gaia targets high-quality footage, CG, or animation; Rhea maximizes detail; Theia provides manual tuning.")]
         public string TopazModel { get; set; } = "Proteus";
 
+        [CustomName("Topaz model")]
+        [PropertyComboOptions(["Starlight Precise 2.6", "Starlight HQ", "Starlight Mini", "Starlight Sharp", "Starlight Fast 2"])]
+        [TriggerReload]
+        [Description("Generative diffusion enhancement model. Starlight Precise 2.6 adds realism; HQ maximizes quality; Mini restores archival footage; Sharp favors sharper restoration; Fast 2 is the fastest option.")]
+        public string TopazGenerativeModel { get; set; } = "Starlight Precise 2.6";
+
         [CustomName("Upscale factor")]
         [Range(1, 4)]
         [ShowSlider(1)]
@@ -114,6 +125,12 @@ namespace FalAiPlugin
         [Range(16, 60)]
         [Description("Optional output frame rate. Setting it to a value different from the source enables frame interpolation. Clear the value to preserve the source FPS.")]
         public int? TopazTargetFps { get; set; }
+
+        [CustomName("Softness")]
+        [Range(1, 5)]
+        [ShowSlider(1)]
+        [Description("Optional softening from 1 (sharpest) to 5 (softest). Only supported by Starlight Precise 2.6. Clear the value to use Topaz's default.")]
+        public float? TopazSoftness { get; set; }
 
         [CustomName("Compression removal")]
         [Range(0, 1)]
