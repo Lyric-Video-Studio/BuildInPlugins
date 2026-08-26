@@ -97,6 +97,14 @@
     <value>Käänteinen väri rajaustyökaluun</value>
     <comment>Original english: Invert crop control colors</comment>
   </data>
+  <data name="KeepAspectRatio" xml:space="preserve">
+    <value>Säilytä kuvasuhde</value>
+    <comment>Original english: Keep aspect ratio</comment>
+  </data>
+  <data name="ScaleBy" xml:space="preserve">
+    <value>Skaalaa mitan mukaan</value>
+    <comment>Original english: Scale by</comment>
+  </data>
   <data name="Rotate" xml:space="preserve">
     <value>Kierrä</value>
     <comment>Original english: Rotate</comment>

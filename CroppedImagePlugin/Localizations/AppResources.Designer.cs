@@ -77,6 +77,15 @@ namespace CroppedImagePlugin.Localizations {
                 return ResourceManager.GetString("Invertcropcontrolcolors", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Keep aspect ratio.
+        /// </summary>
+        public static string KeepAspectRatio {
+            get {
+                return ResourceManager.GetString("KeepAspectRatio", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Mode (crop/scale).
@@ -111,6 +120,15 @@ namespace CroppedImagePlugin.Localizations {
         public static string RefreshcroppingTooltip {
             get {
                 return ResourceManager.GetString("RefreshcroppingTooltip", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Scale by.
+        /// </summary>
+        public static string ScaleBy {
+            get {
+                return ResourceManager.GetString("ScaleBy", resourceCulture);
             }
         }
         

@@ -92,18 +92,44 @@ namespace CroppedImagePlugin
                     {
                         if (newTp.Scale)
                         {
-                            if (newTp.Width <= 0)
+                            if (newTp.LockAspectRatio)
+                            {
+                                if (newTp.SelectedScaleDimension == (int)ScaleDimension.Height)
+                                {
+                                    if (newTp.Height <= 0)
+                                    {
+                                        return Task.FromResult(new ImageResponse { ErrorMsg = "Scaled height must be greater than zero" });
+                                    }
+
+                                    newTp.Width = Math.Max(1, (int)Math.Round(img.Width * ((double)newTp.Height / img.Height)));
+                                }
+                                else
+                                {
+                                    if (newTp.Width <= 0)
+                                    {
+                                        return Task.FromResult(new ImageResponse { ErrorMsg = "Scaled width must be greater than zero" });
+                                    }
+
+                                    newTp.Height = Math.Max(1, (int)Math.Round(img.Height * ((double)newTp.Width / img.Width)));
+                                }
+                            }
+                            else if (newTp.Width <= 0 && newTp.Height > 0)
                             {
                                 // Set width based on heigth
-                                var scale = (double)newTp.Height / newIp.SourceBitmap.Size.Height;
-                                newTp.Width = (int)(newIp.SourceBitmap.Size.Width * scale);
+                                var scale = (double)newTp.Height / img.Height;
+                                newTp.Width = Math.Max(1, (int)Math.Round(img.Width * scale));
                             }
 
-                            if (newTp.Height <= 0)
+                            if (!newTp.LockAspectRatio && newTp.Height <= 0 && newTp.Width > 0)
                             {
-                                // Set width based on heigth
-                                var scale = (double)newTp.Width / newIp.SourceBitmap.Size.Width;
-                                newTp.Height = (int)(newIp.SourceBitmap.Size.Height * scale);
+                                // Set height based on width
+                                var scale = (double)newTp.Width / img.Width;
+                                newTp.Height = Math.Max(1, (int)Math.Round(img.Height * scale));
+                            }
+
+                            if (newTp.Width <= 0 || newTp.Height <= 0)
+                            {
+                                return Task.FromResult(new ImageResponse { ErrorMsg = "Scaled width and height must be greater than zero" });
                             }
 
                             var info = new SKImageInfo(newTp.Width, newTp.Height, img.ColorType);

@@ -3,6 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
+using System.ComponentModel;
 
 namespace CroppedImagePlugin
 {
@@ -309,49 +311,70 @@ namespace CroppedImagePlugin
         }
 
         private double originalWidth = 1;
+        private ItemPayload? currentItemPayload;
 
         internal void SetItemPayload(ItemPayload ip)
         {
-            void SetImageProperties()
+            if (!Dispatcher.UIThread.CheckAccess())
             {
-                if (ip.SourceBitmap != null)
-                {
-                    originalWidth = ip.SourceBitmap.Size.Width;
-                }
-
-                imageContainer.Source = ip.SourceBitmap;
-                // Source has changed, must set the width and heigh to match the picture
-                if (DataContext is TrackPayload trackPayload)
-                {
-                    if (ip.SourceBitmap != null)
-                    {
-                        AssingValuesFromSource(trackPayload, ip);
-                    }
-                    else
-                    {
-                        ip.PropertyChanged += (s, p) =>
-                        {
-                            if (p.PropertyName == nameof(ItemPayload.Source))
-                            {
-                                if (ip.SourceBitmap != null)
-                                {
-                                    AssingValuesFromSource(trackPayload, ip);
-                                }
-                            }
-                        };
-                    }
-                }
-                CheckCropInit();
+                Dispatcher.UIThread.Post(() => SetItemPayload(ip));
+                return;
             }
-            SetImageProperties();
 
-            ip.PropertyChanged += (a, b) =>
+            if (!ReferenceEquals(currentItemPayload, ip))
             {
-                if (b.PropertyName == nameof(ItemPayload.SourceBitmap))
+                if (currentItemPayload != null)
                 {
-                    SetImageProperties();
+                    currentItemPayload.PropertyChanged -= ItemPayload_PropertyChanged;
                 }
-            };
+
+                currentItemPayload = ip;
+                currentItemPayload.PropertyChanged += ItemPayload_PropertyChanged;
+            }
+
+            SetImageProperties(ip);
+        }
+
+        private void ItemPayload_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(ItemPayload.SourceBitmap) || sender is not ItemPayload ip)
+            {
+                return;
+            }
+
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                SetImageProperties(ip);
+            }
+            else
+            {
+                Dispatcher.UIThread.Post(() => SetImageProperties(ip));
+            }
+        }
+
+        private void SetImageProperties(ItemPayload ip)
+        {
+            if (!ReferenceEquals(currentItemPayload, ip))
+            {
+                return;
+            }
+
+            var sourceBitmap = ip.SourceBitmap;
+            if (sourceBitmap != null)
+            {
+                originalWidth = sourceBitmap.Size.Width;
+            }
+
+            imageContainer.Source = sourceBitmap;
+
+            // Source has changed, so update crop bounds and the aspect ratio used by scaling.
+            if (DataContext is TrackPayload trackPayload && sourceBitmap != null)
+            {
+                trackPayload.SetSourceDimensions(sourceBitmap.Size.Width, sourceBitmap.Size.Height);
+                AssingValuesFromSource(trackPayload, ip);
+            }
+
+            CheckCropInit();
         }
 
         private void AssingValuesFromSource(TrackPayload trackPayload, ItemPayload ip)

@@ -94,6 +94,14 @@
     <value>Los colores de control de cultivos invertidos</value>
     <comment>Original english: Invert crop control colors</comment>
   </data>
+  <data name="KeepAspectRatio" xml:space="preserve">
+    <value>Mantener la relación de aspecto</value>
+    <comment>Original english: Keep aspect ratio</comment>
+  </data>
+  <data name="ScaleBy" xml:space="preserve">
+    <value>Escalar según</value>
+    <comment>Original english: Scale by</comment>
+  </data>
   <data name="Rotate" xml:space="preserve">
     <value>Rotar</value>
     <comment>Original english: Rotate</comment>

@@ -85,6 +85,12 @@
   <data name="Invertcropcontrolcolors" xml:space="preserve">
     <value>Invert crop control colors</value>
   </data>
+  <data name="KeepAspectRatio" xml:space="preserve">
+    <value>Keep aspect ratio</value>
+  </data>
+  <data name="ScaleBy" xml:space="preserve">
+    <value>Scale by</value>
+  </data>
   <data name="Rotate" xml:space="preserve">
     <value>Rotate</value>
   </data>

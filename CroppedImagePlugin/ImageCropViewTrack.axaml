@@ -38,6 +38,7 @@
     <TextBox
         Grid.Row="1"
         Grid.Column="1"
+        IsEnabled="{Binding CanEditWidth}"
         Text="{Binding Width}" />
 
     <TextBlock
@@ -47,7 +48,28 @@
     <TextBox
         Grid.Row="1"
         Grid.Column="3"
+        IsEnabled="{Binding CanEditHeight}"
         Text="{Binding Height}" />
+
+    <StackPanel
+        Grid.Row="2"
+        Grid.ColumnSpan="4"
+        IsVisible="{Binding Scale}"
+        Orientation="Horizontal"
+        Spacing="8">
+      <CheckBox
+          VerticalAlignment="Center"
+          Content="{x:Static strings:AppResources.KeepAspectRatio}"
+          IsChecked="{Binding LockAspectRatio}" />
+      <TextBlock
+          VerticalAlignment="Center"
+          Text="{x:Static strings:AppResources.ScaleBy}" />
+      <ComboBox
+          MinWidth="100"
+          IsEnabled="{Binding LockAspectRatio}"
+          ItemsSource="{Binding ScaleDimensionNames}"
+          SelectedIndex="{Binding SelectedScaleDimension}" />
+    </StackPanel>
 
     <TextBlock
         Grid.Row="2"
