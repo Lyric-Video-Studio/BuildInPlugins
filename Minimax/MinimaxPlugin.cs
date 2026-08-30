@@ -61,7 +61,7 @@ namespace MinimaxPlugin
                 if (JsonHelper.DeepCopy<TrackPayload>(trackPayload) is TrackPayload newTp && JsonHelper.DeepCopy<ItemPayload>(itemsPayload) is ItemPayload newIp)
                 {
                     newTp.VideoModel ??= newTp.Settings.model;
-                    if (newTp.VideoModel == "MiniMax-H3") return await GetH3Video(newTp, newIp, folderToSaveVideo, itemsPayload as ItemPayload);
+                    if (H3Models.IsH3(newTp.VideoModel)) return await GetH3Video(newTp, newIp, folderToSaveVideo, itemsPayload as ItemPayload);
                     newTp.Settings.model = newTp.VideoModel;
                     // combine prompts
 
@@ -140,17 +140,27 @@ namespace MinimaxPlugin
 
         private async Task<VideoResponse> GetH3Video(TrackPayload track, ItemPayload item, string folder, ItemPayload original)
         {
+            var isH3Max = track.VideoModel == H3Models.H3Max;
+            var modelName = isH3Max ? "H3 Max" : "H3";
+            var settings = track.H3Settings ?? new H3Settings();
+            var maxSettings = track.H3MaxSettings ?? new H3MaxSettings();
+            var resolution = isH3Max ? maxSettings.resolution : settings.resolution;
+            var duration = isH3Max ? maxSettings.duration : settings.duration;
+            var ratio = isH3Max ? maxSettings.ratio : settings.ratio;
             var prompt = (item.Prompt + " " + track.Settings.prompt).Trim();
             var frames = new[] { item.ImagePath, item.LastFramePath }.Count(x => !string.IsNullOrWhiteSpace(x));
             var refs = track.H3References.ReferenceImages.Concat(track.H3References.ReferenceVideos).Concat(track.H3References.ReferenceAudio)
                 .Concat(item.H3References.ReferenceImages).Concat(item.H3References.ReferenceVideos).Concat(item.H3References.ReferenceAudio).Where(x => !string.IsNullOrWhiteSpace(x.Source)).ToList();
             if (string.IsNullOrWhiteSpace(prompt)) return new VideoResponse { Success = false, ErrorMsg = "Prompt empty" };
+            if (isH3Max && refs.Count > 0) return new VideoResponse { Success = false, ErrorMsg = "H3 Max does not support reference images, videos, or audio." };
             if (refs.Count > 0 && frames > 0) return new VideoResponse { Success = false, ErrorMsg = "H3 references cannot be combined with first or last frames." };
-            if (frames == 0 && refs.Count == 0 && track.H3Settings.ratio == "adaptive") return new VideoResponse { Success = false, ErrorMsg = "H3 text-to-video requires a concrete aspect ratio." };
-            if (!string.IsNullOrWhiteSpace(item.LastFramePath) && string.IsNullOrWhiteSpace(item.ImagePath)) return new VideoResponse { Success = false, ErrorMsg = "H3 last frame requires a first frame." };
+            if (frames == 0 && refs.Count == 0 && ratio == "adaptive") return new VideoResponse { Success = false, ErrorMsg = $"{modelName} text-to-video requires a concrete aspect ratio." };
             if (refs.Count > 0 && refs.All(x => track.H3References.ReferenceAudio.Contains(x) || item.H3References.ReferenceAudio.Contains(x))) return new VideoResponse { Success = false, ErrorMsg = "H3 reference audio requires a reference image or video." };
-            var request = new H3Request { resolution = track.H3Settings.resolution, duration = track.H3Settings.duration, ratio = track.H3Settings.ratio };
-            if (request.duration < 4 || request.duration > 15) return new VideoResponse { Success = false, ErrorMsg = "H3 duration must be between 4 and 15 seconds." };
+            if (isH3Max && resolution is not ("480P" or "768P")) return new VideoResponse { Success = false, ErrorMsg = "H3 Max resolution must be 480P or 768P." };
+            if (!isH3Max && resolution is not ("768P" or "2K")) return new VideoResponse { Success = false, ErrorMsg = "H3 resolution must be 768P or 2K." };
+            var minimumDuration = isH3Max ? 5 : 4;
+            if (duration < minimumDuration || duration > 15) return new VideoResponse { Success = false, ErrorMsg = $"{modelName} duration must be between {minimumDuration} and 15 seconds." };
+            var request = new H3Request { model = track.VideoModel, resolution = resolution, duration = duration, ratio = frames > 0 ? "adaptive" : ratio };
             request.content.Add(new H3Content { type = "text", text = prompt });
             if (!string.IsNullOrWhiteSpace(item.ImagePath)) request.content.Add(new H3Content { type = "image_url", image_url = new H3Url { url = await H3Source(item.ImagePath) }, role = "first_frame" });
             if (!string.IsNullOrWhiteSpace(item.LastFramePath)) request.content.Add(new H3Content { type = "image_url", image_url = new H3Url { url = await H3Source(item.LastFramePath) }, role = "last_frame" });
@@ -281,7 +291,7 @@ namespace MinimaxPlugin
                 switch (CurrentTrackType)
                 {
                     case IPluginBase.TrackType.Video:
-                        return ["MiniMax-H3", "MiniMax-Hailuo-2.3", "MiniMax-Hailuo-02", "S2V-01", "T2V-01", "T2V-01-Director", "I2V-01", "I2V-01-Director", "I2V-01-live"];
+                        return [H3Models.H3Max, H3Models.H3, "MiniMax-Hailuo-2.3", "MiniMax-Hailuo-02", "S2V-01", "T2V-01", "T2V-01-Director", "I2V-01", "I2V-01-Director", "I2V-01-live"];
 
                     default:
                         break;

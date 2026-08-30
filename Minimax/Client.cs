@@ -9,7 +9,7 @@ namespace MinimaxPlugin
     public class Request
     {
         [IgnoreDynamicEdit]
-        public string model { get; set; } = "MiniMax-Hailuo-02";
+        public string model { get; set; } = H3Models.H3;
 
         public string prompt { get; set; } = "";
         public bool prompt_optimizer { get; set; } = true;
