@@ -6,7 +6,7 @@ namespace MinimaxPlugin
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-    public class MinimaxImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IRequestContentUploader, IImagePlugin, ITextualProgressIndication
+    public class MinimaxImgToVidPlugin : IVideoPlugin, ISaveAndRefresh, IImportFromImage, IRequestContentUploader, IImagePlugin, ITextualProgressIndication, ITrackPayloadFromModel
     {
         public const string PluginName = "MinimaxImgToVidBuildIn";
         public string UniqueName { get => PluginName; }
@@ -533,6 +533,16 @@ namespace MinimaxPlugin
                     break;
             }
             throw new NotImplementedException();
+        }
+
+        public object TrackPayloadFromModel(string model)
+        {
+            return CurrentTrackType switch
+            {
+                IPluginBase.TrackType.Video => new TrackPayload { VideoModel = model },
+                IPluginBase.TrackType.Image => new ImageTrackPayload(),
+                _ => null
+            };
         }
 
         public object DefaultPayloadForItem()
