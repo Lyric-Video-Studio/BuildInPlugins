@@ -115,6 +115,7 @@ publish_plugin "FalAi/FalAiPlugin.csproj"
 publish_plugin "Google/GooglePlugin.csproj"
 publish_plugin "LTX/LTXPlugin.csproj"
 publish_plugin "MuApi/MuApiPlugin.csproj"
+publish_plugin "Sonilo/SoniloPlugin.csproj"
 
 sign_plugin_outputs
 
