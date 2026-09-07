@@ -44,7 +44,7 @@ public class SoniloPlugin : IAudioPlugin, IVideoPlugin, IImportFromVideo, ISaveA
         _client?.Dispose();
         _connectionSettings = copied;
         _client = new SoniloClient(_connectionSettings);
-        IsInitialized = true;
+        IsInitialized = !string.IsNullOrEmpty(_connectionSettings.ApiKey);
         return "";
     }
 
