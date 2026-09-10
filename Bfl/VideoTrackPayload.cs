@@ -8,10 +8,11 @@ namespace BflTxtToImgPlugin
         public const string ModeTextToVideo = "Text to Video";
         public const string ModeImageToVideo = "Image to Video";
         public const string ModeVideoContinuation = "Video Continuation";
+        public const string ModeVideoEdit = "Video Edit";
         public const string ModeDraftEnhance = "Draft Enhance";
 
         [TriggerReload]
-        [PropertyComboOptions([ModeTextToVideo, ModeImageToVideo, ModeVideoContinuation, ModeDraftEnhance])]
+        [PropertyComboOptions([ModeTextToVideo, ModeImageToVideo, ModeVideoContinuation, ModeVideoEdit, ModeDraftEnhance])]
         public string Mode { get; set; } = ModeTextToVideo;
 
         public string Prompt { get; set; }
@@ -38,12 +39,18 @@ namespace BflTxtToImgPlugin
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
-            if (Mode != ModeDraftEnhance)
+            if (Mode == ModeDraftEnhance)
             {
-                return true;
+                return propertyName is nameof(Mode) or nameof(SafetyTolerance);
             }
 
-            return propertyName is nameof(Mode) or nameof(SafetyTolerance);
+            if (Mode == ModeVideoEdit)
+            {
+                // FLUX Video Edit accepts only video, prompt and safety_tolerance.
+                return propertyName is nameof(Mode) or nameof(Prompt) or nameof(SafetyTolerance);
+            }
+
+            return true;
         }
     }
 }
