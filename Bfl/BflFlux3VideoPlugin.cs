@@ -7,13 +7,16 @@ using System.Text.Json.Serialization;
 namespace BflTxtToImgPlugin
 {
     /// <summary>
-    /// FLUX 3 Video uses BFL's asynchronous video endpoint. It is kept as a
+    /// FLUX 3 Video uses BFL's asynchronous video endpoints. It is kept as a
     /// separate plugin entry because the existing BFL plugin has persisted
     /// image payload types and presets.
     /// </summary>
     public class BflFlux3VideoPlugin
     {
         private const string Flux3VideoEndpoint = "https://api.bfl.ai/v1/flux-3-video";
+        private const string FluxVideoEditEndpoint = "https://api.bfl.ai/v1/flux-tools/video-edit-v1";
+        private const long MaxVideoEditBytes = 50L * 1024L * 1024L;
+
         private ConnectionSettings connectionSettings = new();
         private CancellationToken cancellationToken;
         private Action<bool> saveAndRefreshCallback;
@@ -39,17 +42,21 @@ namespace BflTxtToImgPlugin
 
             try
             {
+                var shouldResumeLegacyPolling = string.IsNullOrWhiteSpace(item.SubmittedMode) &&
+                    track.Mode != VideoTrackPayload.ModeDraftEnhance &&
+                    track.Mode != VideoTrackPayload.ModeVideoEdit;
                 var shouldResumePolling = !string.IsNullOrWhiteSpace(item.PollingUrl) &&
-                    (item.SubmittedMode == track.Mode || (string.IsNullOrWhiteSpace(item.SubmittedMode) && track.Mode != VideoTrackPayload.ModeDraftEnhance));
+                    (item.SubmittedMode == track.Mode || shouldResumeLegacyPolling);
                 if (shouldResumePolling)
                 {
                     return await PollVideoAsync(item.PollingUrl, folderToSaveVideo, item);
                 }
 
-                // Switching a draft to Draft Enhance must create a new task, not re-poll the completed draft.
+                // Switching modes must create a new task, not re-poll a task from the previous mode.
                 item.PollingUrl = "";
                 var request = CreateRequest(track, item);
-                var submitted = await SubmitVideoAsync(request);
+                var endpoint = track.Mode == VideoTrackPayload.ModeVideoEdit ? FluxVideoEditEndpoint : Flux3VideoEndpoint;
+                var submitted = await SubmitVideoAsync(request, endpoint);
                 item.PollingUrl = submitted.PollingUrl;
                 item.SubmittedMode = track.Mode;
                 saveAndRefreshCallback?.Invoke(true);
@@ -87,6 +94,22 @@ namespace BflTxtToImgPlugin
             if (string.IsNullOrWhiteSpace(prompt))
             {
                 throw new InvalidOperationException("Prompt missing");
+            }
+
+            if (track.Mode == VideoTrackPayload.ModeVideoEdit)
+            {
+                if (prompt.Length > 4096)
+                {
+                    throw new InvalidOperationException("FLUX Video Edit prompt must be 4096 characters or fewer");
+                }
+
+                var videoPath = GetVideoEditPath(item.InputVideo);
+                return new Dictionary<string, object>
+                {
+                    ["video"] = Convert.ToBase64String(File.ReadAllBytes(videoPath)),
+                    ["prompt"] = prompt,
+                    ["safety_tolerance"] = track.SafetyTolerance,
+                };
             }
 
             var request = new Dictionary<string, object>
@@ -128,10 +151,11 @@ namespace BflTxtToImgPlugin
 
             return request;
         }
-        private async Task<Flux3SubmitResponse> SubmitVideoAsync(Dictionary<string, object> request)
+
+        private async Task<Flux3SubmitResponse> SubmitVideoAsync(Dictionary<string, object> request, string endpoint)
         {
             using var client = CreateAuthorizedClient();
-            using var message = new HttpRequestMessage(HttpMethod.Post, Flux3VideoEndpoint)
+            using var message = new HttpRequestMessage(HttpMethod.Post, endpoint)
             {
                 Content = new StringContent(JsonSerializer.Serialize(request))
             };
@@ -141,13 +165,13 @@ namespace BflTxtToImgPlugin
             var responseText = await response.Content.ReadAsStringAsync(cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                throw new InvalidOperationException($"BFL FLUX 3 request failed ({(int)response.StatusCode}): {GetApiError(responseText)}");
+                throw new InvalidOperationException($"BFL video request failed ({(int)response.StatusCode}): {GetApiError(responseText)}");
             }
 
             var result = JsonSerializer.Deserialize<Flux3SubmitResponse>(responseText);
             if (result == null || string.IsNullOrWhiteSpace(result.PollingUrl))
             {
-                throw new InvalidOperationException("BFL FLUX 3 request did not return a polling URL");
+                throw new InvalidOperationException("BFL video request did not return a polling URL");
             }
 
             return result;
@@ -176,7 +200,7 @@ namespace BflTxtToImgPlugin
                 {
                     if (!TryGetVideoUrl(root, out var videoUrl))
                     {
-                        return new VideoResponse { Success = false, ErrorMsg = "BFL FLUX 3 result did not include a video URL" };
+                        return new VideoResponse { Success = false, ErrorMsg = "BFL video result did not include a video URL" };
                     }
 
                     Directory.CreateDirectory(folderToSaveVideo);
@@ -238,6 +262,7 @@ namespace BflTxtToImgPlugin
             url = value.GetString();
             return !string.IsNullOrWhiteSpace(url);
         }
+
         private static string FormatProgress(string status, JsonElement root)
         {
             if (root.TryGetProperty("progress", out var progress) && progress.ValueKind == JsonValueKind.Number && progress.TryGetDouble(out var value))
@@ -274,6 +299,22 @@ namespace BflTxtToImgPlugin
                 .Where(path => !string.IsNullOrWhiteSpace(path))
                 .Select(GetExistingPath)
                 .ToList();
+        }
+
+        private static string GetVideoEditPath(string path)
+        {
+            var absolutePath = GetExistingPath(path);
+            if (!string.Equals(Path.GetExtension(absolutePath), ".mp4", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("FLUX Video Edit requires an MP4 input when uploading a local file");
+            }
+
+            if (new FileInfo(absolutePath).Length > MaxVideoEditBytes)
+            {
+                throw new InvalidOperationException("FLUX Video Edit input must be 50 MiB or smaller");
+            }
+
+            return absolutePath;
         }
 
         private static string GetExistingPath(string path)
@@ -332,10 +373,18 @@ namespace BflTxtToImgPlugin
             {
                 return (false, "Track payload or item payload object not valid");
             }
-            if (track.Mode != VideoTrackPayload.ModeDraftEnhance && string.IsNullOrWhiteSpace($"{track.Prompt} {item.Prompt}"))
+
+            var prompt = $"{track.Prompt} {item.Prompt}".Trim();
+            if (track.Mode != VideoTrackPayload.ModeDraftEnhance && string.IsNullOrWhiteSpace(prompt))
             {
                 return (false, "Prompt missing");
             }
+
+            if (track.Mode == VideoTrackPayload.ModeVideoEdit && prompt.Length > 4096)
+            {
+                return (false, "FLUX Video Edit prompt must be 4096 characters or fewer");
+            }
+
             try
             {
                 if (track.Mode == VideoTrackPayload.ModeDraftEnhance)
@@ -347,9 +396,15 @@ namespace BflTxtToImgPlugin
                 {
                     return (false, "At least one input image is required for Image to Video");
                 }
+
                 if (track.Mode == VideoTrackPayload.ModeVideoContinuation)
                 {
                     GetExistingPath(item.InputVideo);
+                }
+
+                if (track.Mode == VideoTrackPayload.ModeVideoEdit)
+                {
+                    GetVideoEditPath(item.InputVideo);
                 }
             }
             catch (Exception ex)
