@@ -42,8 +42,11 @@ namespace BflTxtToImgPlugin
 
             try
             {
+                var shouldResumeLegacyPolling = string.IsNullOrWhiteSpace(item.SubmittedMode) &&
+                    track.Mode != VideoTrackPayload.ModeDraftEnhance &&
+                    track.Mode != VideoTrackPayload.ModeVideoEdit;
                 var shouldResumePolling = !string.IsNullOrWhiteSpace(item.PollingUrl) &&
-                    (item.SubmittedMode == track.Mode || (string.IsNullOrWhiteSpace(item.SubmittedMode) && track.Mode != VideoTrackPayload.ModeDraftEnhance));
+                    (item.SubmittedMode == track.Mode || shouldResumeLegacyPolling);
                 if (shouldResumePolling)
                 {
                     return await PollVideoAsync(item.PollingUrl, folderToSaveVideo, item);
@@ -197,7 +200,7 @@ namespace BflTxtToImgPlugin
                 {
                     if (!TryGetVideoUrl(root, out var videoUrl))
                     {
-                        return new VideoResponse { Success = false, ErrorMsg = "BFL FLUX 3 result did not include a video URL" };
+                        return new VideoResponse { Success = false, ErrorMsg = "BFL video result did not include a video URL" };
                     }
 
                     Directory.CreateDirectory(folderToSaveVideo);
