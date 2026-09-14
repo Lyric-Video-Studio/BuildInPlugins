@@ -8,15 +8,10 @@ public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonO
 {
     private const string ApiKeyStorageKey = "SoniloPlugin.apiKey";
 
-    private string _url = "https://api.sonilo.com/v1";
     private string _apiKey = "";
 
-    [Description("Sonilo API base URL. The documentation site is not an API endpoint.")]
-    public string Url
-    {
-        get => _url;
-        set => _url = string.IsNullOrWhiteSpace(value) ? "https://api.sonilo.com/v1" : value.Trim();
-    }
+    [JsonIgnore]
+    public string Url => "https://api.sonilo.com/v1";
 
     [Description("Sonilo API key from https://platform.sonilo.com/. Generations use Sonilo credits. Lyric Video Studio cannot refund credits used by the provider.")]
     [EditorWidth(320)]
