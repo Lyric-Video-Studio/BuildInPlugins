@@ -40,6 +40,7 @@ namespace BflTxtToImgPlugin
             if (!string.IsNullOrEmpty(AccessToken))
             {
                 SecureStorageWrapper.SecStorage.SetKey(accessTokenKey, AccessToken);
+                AccessToken = "";
             }
         }
 

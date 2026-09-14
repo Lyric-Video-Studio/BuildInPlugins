@@ -60,6 +60,7 @@ namespace MusicGptPlugin
             if (!string.IsNullOrEmpty(AccessToken))
             {
                 SecureStorageWrapper.SecStorage.SetKey(accessTokenKey, AccessToken);
+                AccessToken = "";
             }
         }
 

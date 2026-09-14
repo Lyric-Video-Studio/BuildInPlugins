@@ -58,11 +58,13 @@ namespace LumaAiDreamMachinePlugin
             if (!string.IsNullOrEmpty(AccessToken))
             {
                 SecureStorageWrapper.SecStorage.SetKey(accessTokenKey, AccessToken);
+                AccessToken = "";
             }
 
             if (!string.IsNullOrEmpty(AccessTokenUni))
             {
                 SecureStorageWrapper.SecStorage.SetKey(accessTokenKey + ".uni", AccessTokenUni);
+                AccessTokenUni = "";
             }
         }
 

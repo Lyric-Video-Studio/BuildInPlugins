@@ -48,6 +48,7 @@ namespace MuApiPlugin
             if (!string.IsNullOrEmpty(AccessToken))
             {
                 SecureStorageWrapper.SecStorage.SetKey(AccessTokenKey, AccessToken);
+                AccessToken = "";
             }
         }
 

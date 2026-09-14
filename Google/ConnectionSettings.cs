@@ -48,6 +48,7 @@ namespace GooglePlugin
         public void OnSerializing()
         {
             SecureStorageWrapper.SecStorage.SetKey(accessTokenKey, AccessToken);
+            AccessToken = "";
         }
 
         internal void DeleteTokens()
