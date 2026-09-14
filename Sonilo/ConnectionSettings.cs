@@ -46,6 +46,7 @@ public class ConnectionSettings : IJsonOnDeserialized, IJsonOnSerialized, IJsonO
         if (!string.IsNullOrWhiteSpace(ApiKey))
         {
             SecureStorageWrapper.SecStorage?.SetKey(ApiKeyStorageKey, ApiKey);
+            ApiKey = "";
         }
     }
 
