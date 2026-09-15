@@ -4,7 +4,13 @@ namespace GooglePlugin
 {
     public class VideoTrackPayload : IPayloadPropertyVisibility
     {
-        public const string ModelGeminiOmniFlashPreview = "gemini-omni-flash-preview";
+        public const string ModelGeminiOmniFlash = "gemini-omni-1.1-flash";
+        public const string LegacyModelGeminiOmniFlashPreview = "gemini-omni-flash-preview";
+
+        // Keep the old constant name as a source-compatibility alias because the existing
+        // Google plugin routes Omni requests through it in several places.
+        public const string ModelGeminiOmniFlashPreview = ModelGeminiOmniFlash;
+
         public const string VideoTaskAuto = "Auto";
         public const string VideoTaskUnspecified = "Unspecified";
         public const string VideoTaskTextToVideo = "Text to Video";
@@ -12,9 +18,20 @@ namespace GooglePlugin
         public const string VideoTaskReferenceToVideo = "Reference to Video";
         public const string VideoTaskEdit = "Edit Video";
 
-        [PropertyComboOptions(["veo-3.1-fast-generate-preview", "veo-3.1-generate-preview", "veo-3.1-lite-generate-preview", ModelGeminiOmniFlashPreview])]
+        private string _model = "veo-3.1-fast-generate-preview";
+
+        [PropertyComboOptions(["veo-3.1-fast-generate-preview", "veo-3.1-generate-preview", "veo-3.1-lite-generate-preview", ModelGeminiOmniFlash])]
         [TriggerReload]
-        public string Model { get; set; } = "veo-3.1-fast-generate-preview";
+        public string Model
+        {
+            get => string.Equals(_model, LegacyModelGeminiOmniFlashPreview, StringComparison.OrdinalIgnoreCase)
+                ? ModelGeminiOmniFlash
+                : _model;
+            set => _model = string.Equals(value, LegacyModelGeminiOmniFlashPreview, StringComparison.OrdinalIgnoreCase)
+                ? ModelGeminiOmniFlash
+                : value;
+        }
+
         public string Prompt { get; set; }
 
         [PropertyComboOptions(["720p", "1080p", "4k"])]
