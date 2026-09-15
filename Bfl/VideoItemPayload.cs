@@ -51,7 +51,7 @@ namespace BflTxtToImgPlugin
 
             if (propertyName == nameof(InputVideo))
             {
-                return track.Mode == VideoTrackPayload.ModeVideoContinuation;
+                return track.Mode is VideoTrackPayload.ModeVideoContinuation or VideoTrackPayload.ModeVideoEdit;
             }
 
             return propertyName != nameof(DraftCache) || track.Mode == VideoTrackPayload.ModeDraftEnhance;
