@@ -276,7 +276,7 @@ public class SoniloPlugin : IAudioPlugin, IVideoPlugin, IImportFromVideo, ISaveA
             };
         }
 
-        if (trackPaylod is VideoTrackPayload && itemPayload is VideoItemPayload vi)
+        if (trackPaylod is VideoTrackPayload vt && itemPayload is VideoItemPayload vi)
         {
             if (!string.IsNullOrWhiteSpace(vi.TaskId))
             {
@@ -293,7 +293,7 @@ public class SoniloPlugin : IAudioPlugin, IVideoPlugin, IImportFromVideo, ISaveA
                 return (false, promptError);
             }
 
-            return ValidateVideoSource(vi.VideoSource);
+            return ValidateVideoSource(vi.VideoSource, allowGif: vt.Mode != SoniloModes.VideoMusic);
         }
 
         return (false, "Sonilo track/item payload types do not match");
@@ -382,7 +382,7 @@ public class SoniloPlugin : IAudioPlugin, IVideoPlugin, IImportFromVideo, ISaveA
 
     public void Dispose() => CloseConnection();
 
-    private static (bool payloadOk, string reasonIfNot) ValidateVideoSource(string source)
+    private static (bool payloadOk, string reasonIfNot) ValidateVideoSource(string source, bool allowGif = true)
     {
         if (string.IsNullOrWhiteSpace(source))
         {
@@ -391,6 +391,12 @@ public class SoniloPlugin : IAudioPlugin, IVideoPlugin, IImportFromVideo, ISaveA
 
         if (IsPublicUrl(source))
         {
+            if (!allowGif && Uri.TryCreate(source, UriKind.Absolute, out var uri) &&
+                Path.GetExtension(uri.AbsolutePath).Equals(".gif", StringComparison.OrdinalIgnoreCase))
+            {
+                return (false, "Sonilo video-to-video music does not support animated GIF input");
+            }
+
             return (true, "");
         }
 
@@ -400,8 +406,14 @@ public class SoniloPlugin : IAudioPlugin, IVideoPlugin, IImportFromVideo, ISaveA
             return (false, $"Video source file not found: {source}");
         }
 
+        var extension = Path.GetExtension(path).ToLowerInvariant();
+        if (!allowGif && extension == ".gif")
+        {
+            return (false, "Sonilo video-to-video music does not support animated GIF input");
+        }
+
         var allowed = new[] { ".mp4", ".mov", ".webm", ".m4v", ".gif" };
-        if (!allowed.Contains(Path.GetExtension(path).ToLowerInvariant()))
+        if (!allowed.Contains(extension))
         {
             return (false, "Sonilo video input must be mp4, mov, webm, m4v, or animated gif");
         }
