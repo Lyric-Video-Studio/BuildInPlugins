@@ -1,0 +1,4 @@
+Sonilo
+Capabilities - Generate music and sound effects from text or video, create combined soundtracks, and add generated audio directly to existing video.
+Current - Text-to-music, text-to-SFX, video-to-music, video-to-SFX, combined video soundtrack, and muxed video soundtrack generation.
+Current - Search terms: Sonilo, audio, music, soundtrack, sound effects, SFX, Foley, video audio, add audio to video.

@@ -74,3 +74,7 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 echo "Building MUAPI"
 if NOT "%store%" == "steam" dotnet publish .\MuApi\MuApiPlugin.csproj -c Release -o %op%
 if %errorlevel% neq 0 exit /b %errorlevel%
+
+echo "Building Sonilo"
+if NOT "%store%" == "steam" dotnet publish .\Sonilo\SoniloPlugin.csproj -c Release -o %op%
+if %errorlevel% neq 0 exit /b %errorlevel%
