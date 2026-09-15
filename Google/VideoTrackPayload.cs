@@ -41,7 +41,7 @@ namespace GooglePlugin
         public string AspectRatio { get; set; } = "16:9";
 
         [PropertyComboOptions([VideoTaskAuto, VideoTaskUnspecified, VideoTaskTextToVideo, VideoTaskImageToVideo, VideoTaskReferenceToVideo, VideoTaskEdit])]
-        public string VideoTask { get; set; } = VideoTaskAuto;
+        public string VideoTask { get; set; } = VideoTaskUnspecified;
 
         [EnableFileDrop]
         [EnableDoodling]
