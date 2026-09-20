@@ -60,6 +60,11 @@ namespace FalAiPlugin
         [PropertyComboOptions(["480P", "768P", "1080P", "2K"])]
         public string H3MaxLipSyncResolution { get; set; } = "768P";
 
+        [CustomName("Prompt expansion")]
+        [PropertyComboOptions(["disabled", "balanced", "quality"])]
+        [Description("How much effort H3 Max spends rewriting the prompt before generation")]
+        public string H3MaxPromptExpansionMode { get; set; } = "balanced";
+
         [CustomName("Resolution")]
         public string ResolutionWan { get; set; } = "720p";
 
