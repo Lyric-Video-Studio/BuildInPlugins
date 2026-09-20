@@ -23,7 +23,7 @@ namespace GooglePlugin
         public float Temperature { get; set; } = 1.0f;
 
         [PropertyComboOptions(["mp3", "wav"])]
-        [Description("Lyria 3 Clip always returns MP3. Lyria 3.5 can also return WAV.")]
+        [Description("Current Lyria 3 Clip and Lyria 3.5 API output is MP3. WAV is retained only for legacy Lyria 3 Pro preview payloads.")]
         public string MusicFormat { get; set; } = "mp3";
 
         [Description("Use multi-speaker synthesis. Script should then contain lines like Speaker 1: ...")]
@@ -50,9 +50,18 @@ namespace GooglePlugin
                 }
             }
 
-            if (!IsLyriaModel(Model) && propertyName == nameof(MusicFormat))
+            if (propertyName == nameof(MusicFormat))
             {
-                return false;
+                if (Model is ModelLyriaClip or ModelLyria35)
+                {
+                    MusicFormat = "mp3";
+                    return false;
+                }
+
+                if (!IsLyriaModel(Model))
+                {
+                    return false;
+                }
             }
 
             if (!IsLyriaPro(Model) && propertyName == nameof(MusicFormat) && MusicFormat == "wav")
@@ -76,7 +85,10 @@ namespace GooglePlugin
 
         public static bool IsLyriaPro(string model)
         {
-            return model is ModelLyria35 or LegacyModelLyriaProPreview;
+            // Do not treat Lyria 3.5 as the legacy Pro model here. The current Google.GenAI
+            // GenerateContentConfig.ResponseMimeType property only supports text MIME types,
+            // so using it for Lyria 3.5 WAV requests throws before generation starts.
+            return model == LegacyModelLyriaProPreview;
         }
     }
 }
