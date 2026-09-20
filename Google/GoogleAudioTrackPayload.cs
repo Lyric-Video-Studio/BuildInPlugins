@@ -7,9 +7,14 @@ namespace GooglePlugin
     {
         public const string ModelTts = "gemini-3.1-flash-tts-preview";
         public const string ModelLyriaClip = "lyria-3-clip-preview";
-        public const string ModelLyriaPro = "lyria-3-pro-preview";
+        public const string ModelLyria35 = "lyria-3.5";
 
-        [PropertyComboOptions([ModelTts, ModelLyriaClip, ModelLyriaPro])]
+        // Keep the old constant name as a source-compatibility alias because the plugin
+        // already exposes it through GetSupportedModels().
+        public const string ModelLyriaPro = ModelLyria35;
+        public const string LegacyModelLyriaProPreview = "lyria-3-pro-preview";
+
+        [PropertyComboOptions([ModelTts, ModelLyriaClip, ModelLyria35])]
         public string Model { get; set; } = "gemini-3.1-flash-tts-preview";
 
         [Description("Shared instructions for the scene, tone, pronunciation or accent")]
@@ -18,7 +23,7 @@ namespace GooglePlugin
         public float Temperature { get; set; } = 1.0f;
 
         [PropertyComboOptions(["mp3", "wav"])]
-        [Description("Lyria 3 Clip always returns MP3. Lyria 3 Pro can also return WAV.")]
+        [Description("Lyria 3 Clip always returns MP3. Lyria 3.5 can also return WAV.")]
         public string MusicFormat { get; set; } = "mp3";
 
         [Description("Use multi-speaker synthesis. Script should then contain lines like Speaker 1: ...")]
@@ -66,12 +71,12 @@ namespace GooglePlugin
 
         public static bool IsLyriaModel(string model)
         {
-            return model is ModelLyriaClip or ModelLyriaPro;
+            return model is ModelLyriaClip or ModelLyria35 or LegacyModelLyriaProPreview;
         }
 
         public static bool IsLyriaPro(string model)
         {
-            return model == ModelLyriaPro;
+            return model is ModelLyria35 or LegacyModelLyriaProPreview;
         }
     }
 }
