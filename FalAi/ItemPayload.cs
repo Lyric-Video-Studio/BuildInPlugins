@@ -92,6 +92,15 @@ namespace FalAiPlugin
             });
         }
 
+        [CustomAction("Remove last camera keyframe")]
+        public void RemoveLastH3MaxCameraKeyframe()
+        {
+            if (H3MaxCameraTrajectory.Count > 0)
+            {
+                H3MaxCameraTrajectory.RemoveAt(H3MaxCameraTrajectory.Count - 1);
+            }
+        }
+
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
         public string DurationPixverse { get; set; } = "5";
@@ -201,7 +210,7 @@ namespace FalAiPlugin
         [CustomName("Film grain")]
         [Range(0, 0.1)]
         [ShowSlider(2)]
-        [Description("Optional film grain amount. Clear the value to use Topaz's default.")]
+        [Description("Optional film grain amount. Clear the value to use the selected model's default.")]
         public float? TopazGrain { get; set; }
 
         [CustomName("Recover detail")]
@@ -240,7 +249,6 @@ namespace FalAiPlugin
 
         public ItemPayload()
         {
-            H3MaxCameraKeyframe.Remove += (s, e) => H3MaxCameraTrajectory.Remove((H3MaxCameraKeyframe)s);
         }
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
