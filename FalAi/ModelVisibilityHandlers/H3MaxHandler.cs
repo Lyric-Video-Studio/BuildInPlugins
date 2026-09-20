@@ -337,15 +337,16 @@ namespace FalAiPlugin.ModelVisibilityHandlers
 
         public override bool ShouldTrackPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
-            return propertyName is nameof(TrackPayload.ImageSource) or nameof(TrackPayload.H3MaxLipSyncResolution);
+            return propertyName is nameof(TrackPayload.ImageSource)
+                or nameof(TrackPayload.H3MaxLipSyncResolution)
+                or nameof(TrackPayload.H3MaxEnableTranscription);
         }
 
         public override bool ShouldItemPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             return propertyName is nameof(ItemPayload.ImageSource)
                 or nameof(ItemPayload.AudioSource)
-                or nameof(ItemPayload.Seed)
-                or nameof(ItemPayload.H3MaxEnableTranscription);
+                or nameof(ItemPayload.Seed);
         }
 
         public override void ConvertRequest(VideoRequest reg, object trackPayload, object itemPayload)
@@ -359,7 +360,7 @@ namespace FalAiPlugin.ModelVisibilityHandlers
                 reg.durationInt = null;
                 reg.aspect_ratio = null;
                 reg.enable_safety_checker = false;
-                reg.enable_transcription = ip.H3MaxEnableTranscription;
+                reg.enable_transcription = tp.H3MaxEnableTranscription;
                 reg.prompt_expansion_mode = null;
                 reg.target_audio_url = null;
                 reg.sync_mode = null;
