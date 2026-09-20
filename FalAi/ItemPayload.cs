@@ -1,5 +1,6 @@
 ﻿using FalAiPlugin.ModelVisibilityHandlers;
 using PluginBase;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
@@ -43,6 +44,53 @@ namespace FalAiPlugin
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
         public string DurationMinimax { get; set; } = "6";
+
+        [Description("H3 Max video duration in seconds")]
+        [CustomName("Duration")]
+        [Range(5, 15)]
+        public int DurationH3Max { get; set; } = 5;
+
+        [CustomName("Resolution")]
+        [PropertyComboOptions(["480P", "768P", "1080P"])]
+        public string H3MaxResolution { get; set; } = "768P";
+
+        [CustomName("Resolution")]
+        [PropertyComboOptions(["480P", "768P", "1080P", "2K"])]
+        public string H3MaxLipSyncResolution { get; set; } = "768P";
+
+        [CustomName("AspectRatio")]
+        [PropertyComboOptions(["21:9", "16:9", "4:3", "1:1", "3:4", "9:16"])]
+        public string H3MaxAspectRatio { get; set; } = "16:9";
+
+        [CustomName("AspectRatio")]
+        [PropertyComboOptions(["adaptive", "21:9", "16:9", "4:3", "1:1", "3:4", "9:16"])]
+        public string H3MaxReferenceAspectRatio { get; set; } = "adaptive";
+
+        [CustomName("Prompt expansion")]
+        [PropertyComboOptions(["disabled", "balanced", "quality"])]
+        [Description("How much effort H3 Max spends rewriting the prompt before generation")]
+        public string H3MaxPromptExpansionMode { get; set; } = "balanced";
+
+        [CustomName("Safety checker")]
+        [Description("Enable fal.ai content safety checks")]
+        public bool H3MaxEnableSafetyChecker { get; set; } = true;
+
+        [CustomName("Transcription")]
+        [Description("Transcribe the supplied audio to guide H3 Max lip synchronization")]
+        public bool H3MaxEnableTranscription { get; set; } = true;
+
+        [Description("Ordered camera keyframes for H3 Max camera controls. Time is normalized from 0 to 1.")]
+        public ObservableCollection<H3MaxCameraKeyframe> H3MaxCameraTrajectory { get; set; } = new();
+
+        [CustomAction("Add camera keyframe")]
+        public void AddH3MaxCameraKeyframe()
+        {
+            H3MaxCameraTrajectory.Add(new H3MaxCameraKeyframe
+            {
+                Time = H3MaxCameraTrajectory.Count == 0 ? 0 : Math.Min(1, H3MaxCameraTrajectory.Count * 0.25f),
+                Distance = 1
+            });
+        }
 
         [Description("Duration of the video in seconds")]
         [CustomName("Duration")]
@@ -153,7 +201,7 @@ namespace FalAiPlugin
         [CustomName("Film grain")]
         [Range(0, 0.1)]
         [ShowSlider(2)]
-        [Description("Optional film grain amount. Clear the value to use the selected model's default.")]
+        [Description("Optional film grain amount. Clear the value to use Topaz's default.")]
         public float? TopazGrain { get; set; }
 
         [CustomName("Recover detail")]
@@ -192,6 +240,7 @@ namespace FalAiPlugin
 
         public ItemPayload()
         {
+            H3MaxCameraKeyframe.Remove += (s, e) => H3MaxCameraTrajectory.Remove((H3MaxCameraKeyframe)s);
         }
 
         public bool ShouldPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
