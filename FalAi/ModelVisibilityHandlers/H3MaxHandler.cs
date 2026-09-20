@@ -73,6 +73,7 @@ namespace FalAiPlugin.ModelVisibilityHandlers
         protected static bool IsCommonTrackProperty(string propertyName)
         {
             return propertyName is nameof(TrackPayload.Prompt)
+                or nameof(TrackPayload.Seed)
                 or nameof(TrackPayload.H3MaxResolution)
                 or nameof(TrackPayload.H3MaxPromptExpansionMode);
         }
@@ -338,6 +339,7 @@ namespace FalAiPlugin.ModelVisibilityHandlers
         public override bool ShouldTrackPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             return propertyName is nameof(TrackPayload.ImageSource)
+                or nameof(TrackPayload.Seed)
                 or nameof(TrackPayload.H3MaxLipSyncResolution)
                 or nameof(TrackPayload.H3MaxEnableTranscription);
         }
