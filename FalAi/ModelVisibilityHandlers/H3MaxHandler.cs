@@ -72,16 +72,16 @@ namespace FalAiPlugin.ModelVisibilityHandlers
 
         protected static bool IsCommonTrackProperty(string propertyName)
         {
-            return propertyName is nameof(TrackPayload.Prompt) or nameof(TrackPayload.H3MaxResolution);
+            return propertyName is nameof(TrackPayload.Prompt)
+                or nameof(TrackPayload.H3MaxResolution)
+                or nameof(TrackPayload.H3MaxPromptExpansionMode);
         }
 
         protected static bool IsCommonItemProperty(string propertyName)
         {
             return propertyName is nameof(ItemPayload.Prompt)
                 or nameof(ItemPayload.Seed)
-                or nameof(ItemPayload.DurationH3Max)
-                or nameof(ItemPayload.H3MaxPromptExpansionMode)
-                or nameof(ItemPayload.H3MaxEnableSafetyChecker);
+                or nameof(ItemPayload.DurationH3Max);
         }
 
         protected static void ApplyCommonRequest(VideoRequest reg, TrackPayload trackPayload, ItemPayload itemPayload)
@@ -90,8 +90,8 @@ namespace FalAiPlugin.ModelVisibilityHandlers
             reg.resolution = trackPayload.H3MaxResolution;
             reg.duration = null;
             reg.durationInt = itemPayload.DurationH3Max;
-            reg.prompt_expansion_mode = itemPayload.H3MaxPromptExpansionMode;
-            reg.enable_safety_checker = itemPayload.H3MaxEnableSafetyChecker;
+            reg.prompt_expansion_mode = trackPayload.H3MaxPromptExpansionMode;
+            reg.enable_safety_checker = false;
             reg.sync_mode = null;
 
             reg.model = null;
@@ -202,7 +202,7 @@ namespace FalAiPlugin.ModelVisibilityHandlers
         public override bool ShouldItemPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             return IsCommonItemProperty(propertyName)
-                || propertyName is nameof(ItemPayload.ImageSource) or nameof(ItemPayload.LastFrame) or nameof(ItemPayload.AudioSource);
+                || propertyName is nameof(ItemPayload.ImageSource) or nameof(ItemPayload.LastFrame);
         }
 
         public override void ConvertRequest(VideoRequest reg, object trackPayload, object itemPayload)
@@ -213,8 +213,9 @@ namespace FalAiPlugin.ModelVisibilityHandlers
                 reg.aspect_ratio = null;
                 reg.end_image_url = reg.last_frame_url;
                 reg.last_frame_url = null;
+                reg.audio_url = null;
+                reg.target_audio_url = null;
                 ClearReferences(reg);
-                UseTargetAudio(reg);
             }
         }
     }
@@ -344,7 +345,6 @@ namespace FalAiPlugin.ModelVisibilityHandlers
             return propertyName is nameof(ItemPayload.ImageSource)
                 or nameof(ItemPayload.AudioSource)
                 or nameof(ItemPayload.Seed)
-                or nameof(ItemPayload.H3MaxEnableSafetyChecker)
                 or nameof(ItemPayload.H3MaxEnableTranscription);
         }
 
@@ -358,7 +358,7 @@ namespace FalAiPlugin.ModelVisibilityHandlers
                 reg.duration = null;
                 reg.durationInt = null;
                 reg.aspect_ratio = null;
-                reg.enable_safety_checker = ip.H3MaxEnableSafetyChecker;
+                reg.enable_safety_checker = false;
                 reg.enable_transcription = ip.H3MaxEnableTranscription;
                 reg.prompt_expansion_mode = null;
                 reg.target_audio_url = null;
@@ -460,7 +460,7 @@ namespace FalAiPlugin.ModelVisibilityHandlers
         public override bool ShouldItemPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
             return IsCommonItemProperty(propertyName)
-                || propertyName is nameof(ItemPayload.ImageSource) or nameof(ItemPayload.LastFrame) or nameof(ItemPayload.AudioSource);
+                || propertyName is nameof(ItemPayload.ImageSource) or nameof(ItemPayload.LastFrame);
         }
 
         public override void ConvertRequest(VideoRequest reg, object trackPayload, object itemPayload)
@@ -471,8 +471,9 @@ namespace FalAiPlugin.ModelVisibilityHandlers
                 reg.aspect_ratio = null;
                 reg.end_image_url = reg.last_frame_url;
                 reg.last_frame_url = null;
+                reg.audio_url = null;
+                reg.target_audio_url = null;
                 ClearReferences(reg);
-                UseTargetAudio(reg);
             }
         }
     }
