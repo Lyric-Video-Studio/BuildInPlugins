@@ -87,6 +87,11 @@ namespace FalAiPlugin.ModelVisibilityHandlers
 
         protected static void ApplyCommonRequest(VideoRequest reg, TrackPayload trackPayload, ItemPayload itemPayload)
         {
+            reg.seed = itemPayload.Seed != 0
+                ? itemPayload.Seed
+                : trackPayload.Seed != 0
+                    ? trackPayload.Seed
+                    : reg.seed;
             reg.negative_prompt = null;
             reg.resolution = trackPayload.H3MaxResolution;
             reg.duration = null;
@@ -355,6 +360,11 @@ namespace FalAiPlugin.ModelVisibilityHandlers
         {
             if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
+                reg.seed = ip.Seed != 0
+                    ? ip.Seed
+                    : tp.Seed != 0
+                        ? tp.Seed
+                        : reg.seed;
                 reg.prompt = null;
                 reg.negative_prompt = null;
                 reg.resolution = tp.H3MaxLipSyncResolution;
