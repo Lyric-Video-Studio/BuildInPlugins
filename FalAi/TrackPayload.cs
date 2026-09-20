@@ -65,6 +65,10 @@ namespace FalAiPlugin
         [Description("How much effort H3 Max spends rewriting the prompt before generation")]
         public string H3MaxPromptExpansionMode { get; set; } = "balanced";
 
+        [CustomName("Transcription")]
+        [Description("Transcribe the supplied audio to guide H3 Max lip synchronization")]
+        public bool H3MaxEnableTranscription { get; set; } = true;
+
         [CustomName("Resolution")]
         public string ResolutionWan { get; set; } = "720p";
 
