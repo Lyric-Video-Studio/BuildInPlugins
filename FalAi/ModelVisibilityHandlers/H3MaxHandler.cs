@@ -7,8 +7,6 @@ namespace FalAiPlugin
 {
     public class H3MaxCameraKeyframe
     {
-        public static event EventHandler Remove;
-
         [Range(0, 1)]
         [ShowSlider(2)]
         [Description("Normalized video time: 0 is the start and 1 is the end")]
@@ -22,12 +20,6 @@ namespace FalAiPlugin
 
         [Description("Camera distance from the subject in normalized scene units")]
         public float Distance { get; set; } = 1;
-
-        [CustomAction("Delete")]
-        public void Delete()
-        {
-            Remove?.Invoke(this, EventArgs.Empty);
-        }
     }
 }
 
@@ -301,7 +293,8 @@ namespace FalAiPlugin.ModelVisibilityHandlers
             return IsCommonItemProperty(propertyName)
                 || propertyName is nameof(ItemPayload.ImageSource)
                     or nameof(ItemPayload.H3MaxCameraTrajectory)
-                    or nameof(ItemPayload.AddH3MaxCameraKeyframe);
+                    or nameof(ItemPayload.AddH3MaxCameraKeyframe)
+                    or nameof(ItemPayload.RemoveLastH3MaxCameraKeyframe);
         }
 
         public override void ConvertRequest(VideoRequest reg, object trackPayload, object itemPayload)
