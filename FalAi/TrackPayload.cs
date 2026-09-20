@@ -178,6 +178,7 @@ namespace FalAiPlugin
 
                 if (tp.Model != null && tp.Model.StartsWith("pixverse/v5.6/image") && propertyName.StartsWith("Aspect"))
                 {
+                    // Only image source and video ref
                     return false;
                 }
 
@@ -188,6 +189,7 @@ namespace FalAiPlugin
 
                 if (tp.Model != null && tp.Model.Contains("one-to-all-animation"))
                 {
+                    // Only image source and video ref
                     return propertyName is nameof(ImageSource) or nameof(Prompt) or nameof(NegativePrompt) or nameof(ResolutionWan);
                 }
 
@@ -198,21 +200,25 @@ namespace FalAiPlugin
 
                 if (tp.Model != null && (tp.Model == "veed/fabric-1.0"))
                 {
+                    // Only image source and video ref
                     return propertyName is nameof(ImageSource) or nameof(ResolutionLtx);
                 }
 
                 if (tp.Model != null && (tp.Model == "stable-avatar"))
                 {
+                    // Only image source and video ref
                     return propertyName is nameof(ImageSource) or nameof(Prompt);
                 }
 
                 if (tp.Model != null && tp.Model == "decart/lucy-restyle")
                 {
+                    // Only image source and video ref
                     return propertyName is nameof(Prompt) or nameof(EnhancePrompt);
                 }
 
                 if (tp.Model != null && tp.Model.Contains("motion-control"))
                 {
+                    // Only image source and video ref
                     return propertyName is nameof(ImageSource);
                 }
 
@@ -296,11 +302,13 @@ namespace FalAiPlugin
 
                 if (tp.Model.Contains("upscale"))
                 {
+                    // In upscale, there's really not a lot of things to edit
                     return propertyName == nameof(Model);
                 }
 
                 if (tp.Model.Contains("omnihuman"))
                 {
+                    // THis also has very few inputs
                     return propertyName == nameof(Model) || propertyName == nameof(ImageSource);
                 }
 
