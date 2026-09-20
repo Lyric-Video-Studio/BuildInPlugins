@@ -299,8 +299,9 @@ namespace FalAiPlugin
 
                 // It's best to keep these here: use can change these from item settings
                 var baseUrl = connectionSettings.Url;
+                var isH3Max = model.StartsWith("minimax/h3-max", StringComparison.OrdinalIgnoreCase);
 
-                if (model.StartsWith("minimax/h3-max", StringComparison.OrdinalIgnoreCase))
+                if (isH3Max)
                 {
                     baseUrl = baseUrl.Replace("fal-ai/", "minimax/");
                     model = string.Join('/', model.Split('/').Skip(1));
@@ -362,6 +363,12 @@ namespace FalAiPlugin
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
                     return await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave, textualProgressAction, model, cancelToken: ct);
+                }
+
+                if (isH3Max && request.seed.HasValue && refItemPlayload.Seed != request.seed.Value)
+                {
+                    refItemPlayload.Seed = request.seed.Value;
+                    saveAndRefreshCallback.Invoke(true);
                 }
 
                 var serialized = "";
