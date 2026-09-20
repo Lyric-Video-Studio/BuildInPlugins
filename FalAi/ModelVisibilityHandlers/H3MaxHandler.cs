@@ -72,7 +72,7 @@ namespace FalAiPlugin.ModelVisibilityHandlers
 
         protected static bool IsCommonTrackProperty(string propertyName)
         {
-            return propertyName == nameof(TrackPayload.Prompt);
+            return propertyName is nameof(TrackPayload.Prompt) or nameof(TrackPayload.H3MaxResolution);
         }
 
         protected static bool IsCommonItemProperty(string propertyName)
@@ -80,15 +80,14 @@ namespace FalAiPlugin.ModelVisibilityHandlers
             return propertyName is nameof(ItemPayload.Prompt)
                 or nameof(ItemPayload.Seed)
                 or nameof(ItemPayload.DurationH3Max)
-                or nameof(ItemPayload.H3MaxResolution)
                 or nameof(ItemPayload.H3MaxPromptExpansionMode)
                 or nameof(ItemPayload.H3MaxEnableSafetyChecker);
         }
 
-        protected static void ApplyCommonRequest(VideoRequest reg, ItemPayload itemPayload)
+        protected static void ApplyCommonRequest(VideoRequest reg, TrackPayload trackPayload, ItemPayload itemPayload)
         {
             reg.negative_prompt = null;
-            reg.resolution = itemPayload.H3MaxResolution;
+            reg.resolution = trackPayload.H3MaxResolution;
             reg.duration = null;
             reg.durationInt = itemPayload.DurationH3Max;
             reg.prompt_expansion_mode = itemPayload.H3MaxPromptExpansionMode;
@@ -174,9 +173,9 @@ namespace FalAiPlugin.ModelVisibilityHandlers
 
         public override void ConvertRequest(VideoRequest reg, object trackPayload, object itemPayload)
         {
-            if (itemPayload is ItemPayload ip)
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
-                ApplyCommonRequest(reg, ip);
+                ApplyCommonRequest(reg, tp, ip);
                 reg.aspect_ratio = ip.H3MaxAspectRatio;
                 reg.image_url = null;
                 reg.end_image_url = null;
@@ -208,9 +207,9 @@ namespace FalAiPlugin.ModelVisibilityHandlers
 
         public override void ConvertRequest(VideoRequest reg, object trackPayload, object itemPayload)
         {
-            if (itemPayload is ItemPayload ip)
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
-                ApplyCommonRequest(reg, ip);
+                ApplyCommonRequest(reg, tp, ip);
                 reg.aspect_ratio = null;
                 reg.end_image_url = reg.last_frame_url;
                 reg.last_frame_url = null;
@@ -245,9 +244,9 @@ namespace FalAiPlugin.ModelVisibilityHandlers
 
         public override void ConvertRequest(VideoRequest reg, object trackPayload, object itemPayload)
         {
-            if (itemPayload is ItemPayload ip)
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
-                ApplyCommonRequest(reg, ip);
+                ApplyCommonRequest(reg, tp, ip);
                 reg.aspect_ratio = ip.H3MaxReferenceAspectRatio;
 
                 reg.reference_image_urls = reg.image_urls?.ToArray();
@@ -299,9 +298,9 @@ namespace FalAiPlugin.ModelVisibilityHandlers
 
         public override void ConvertRequest(VideoRequest reg, object trackPayload, object itemPayload)
         {
-            if (itemPayload is ItemPayload ip)
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
-                ApplyCommonRequest(reg, ip);
+                ApplyCommonRequest(reg, tp, ip);
                 reg.aspect_ratio = null;
                 reg.audio_url = null;
                 reg.target_audio_url = null;
@@ -337,7 +336,7 @@ namespace FalAiPlugin.ModelVisibilityHandlers
 
         public override bool ShouldTrackPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
         {
-            return propertyName == nameof(TrackPayload.ImageSource);
+            return propertyName is nameof(TrackPayload.ImageSource) or nameof(TrackPayload.H3MaxLipSyncResolution);
         }
 
         public override bool ShouldItemPropertyBeVisible(string propertyName, object trackPayload, object itemPayload)
@@ -345,18 +344,17 @@ namespace FalAiPlugin.ModelVisibilityHandlers
             return propertyName is nameof(ItemPayload.ImageSource)
                 or nameof(ItemPayload.AudioSource)
                 or nameof(ItemPayload.Seed)
-                or nameof(ItemPayload.H3MaxLipSyncResolution)
                 or nameof(ItemPayload.H3MaxEnableSafetyChecker)
                 or nameof(ItemPayload.H3MaxEnableTranscription);
         }
 
         public override void ConvertRequest(VideoRequest reg, object trackPayload, object itemPayload)
         {
-            if (itemPayload is ItemPayload ip)
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
                 reg.prompt = null;
                 reg.negative_prompt = null;
-                reg.resolution = ip.H3MaxLipSyncResolution;
+                reg.resolution = tp.H3MaxLipSyncResolution;
                 reg.duration = null;
                 reg.durationInt = null;
                 reg.aspect_ratio = null;
@@ -433,9 +431,9 @@ namespace FalAiPlugin.ModelVisibilityHandlers
 
         public override void ConvertRequest(VideoRequest reg, object trackPayload, object itemPayload)
         {
-            if (itemPayload is ItemPayload ip)
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
-                ApplyCommonRequest(reg, ip);
+                ApplyCommonRequest(reg, tp, ip);
                 reg.aspect_ratio = ip.H3MaxAspectRatio;
                 reg.image_url = null;
                 reg.end_image_url = null;
@@ -467,9 +465,9 @@ namespace FalAiPlugin.ModelVisibilityHandlers
 
         public override void ConvertRequest(VideoRequest reg, object trackPayload, object itemPayload)
         {
-            if (itemPayload is ItemPayload ip)
+            if (trackPayload is TrackPayload tp && itemPayload is ItemPayload ip)
             {
-                ApplyCommonRequest(reg, ip);
+                ApplyCommonRequest(reg, tp, ip);
                 reg.aspect_ratio = null;
                 reg.end_image_url = reg.last_frame_url;
                 reg.last_frame_url = null;
