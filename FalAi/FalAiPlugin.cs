@@ -96,7 +96,9 @@ namespace FalAiPlugin
                     reg.aspect_ratio = newTp.AspectRatio;
                 }
 
-                if (newIp.ShouldPropertyBeVisible(nameof(newIp.Seed), newTp, newIp))
+                var itemSeedVisible = newIp.ShouldPropertyBeVisible(nameof(newIp.Seed), newTp, newIp);
+                var trackSeedVisible = newTp.ShouldPropertyBeVisible(nameof(newTp.Seed), newTp, newIp);
+                if (itemSeedVisible || trackSeedVisible)
                 {
                     if (newIp.Seed != 0)
                     {
@@ -104,7 +106,10 @@ namespace FalAiPlugin
                     }
                     else if (itemsPayload is ItemPayload ipOld)
                     {
-                        ipOld.Seed = new Random().Next(1, int.MaxValue);
+                        ipOld.Seed = trackSeedVisible && newTp.Seed != 0
+                            ? newTp.Seed
+                            : new Random().Next(1, int.MaxValue);
+                        newIp.Seed = ipOld.Seed;
                         saveAndRefreshCallback.Invoke(true);
                         reg.seed = ipOld.Seed;
                     }

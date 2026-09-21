@@ -53,6 +53,23 @@ namespace FalAiPlugin
         public string ResolutionMinimax { get; set; } = "768P";
 
         [CustomName("Resolution")]
+        [PropertyComboOptions(["480P", "768P", "1080P"])]
+        public string H3MaxResolution { get; set; } = "768P";
+
+        [CustomName("Resolution")]
+        [PropertyComboOptions(["480P", "768P", "1080P", "2K"])]
+        public string H3MaxLipSyncResolution { get; set; } = "768P";
+
+        [CustomName("Prompt expansion")]
+        [PropertyComboOptions(["disabled", "balanced", "quality"])]
+        [Description("How much effort H3 Max spends rewriting the prompt before generation")]
+        public string H3MaxPromptExpansionMode { get; set; } = "balanced";
+
+        [CustomName("Transcription")]
+        [Description("Transcribe the supplied audio to guide H3 Max lip synchronization")]
+        public bool H3MaxEnableTranscription { get; set; } = true;
+
+        [CustomName("Resolution")]
         public string ResolutionWan { get; set; } = "720p";
 
         [CustomName("Resolution")]

@@ -177,6 +177,26 @@ namespace FalAiPlugin
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? enable_safety_checker { get; set; } = false;
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string prompt_expansion_mode { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string target_audio_url { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? enable_transcription { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<H3MaxCameraKeyframeRequest> camera_trajectory { get; set; }
+    }
+
+    public class H3MaxCameraKeyframeRequest
+    {
+        public float time { get; set; }
+        public float azimuth { get; set; }
+        public float elevation { get; set; }
+        public float distance { get; set; }
     }
 
     public class AudioRequest
@@ -279,6 +299,13 @@ namespace FalAiPlugin
 
                 // It's best to keep these here: use can change these from item settings
                 var baseUrl = connectionSettings.Url;
+                var isH3Max = model.StartsWith("minimax/h3-max", StringComparison.OrdinalIgnoreCase);
+
+                if (isH3Max)
+                {
+                    baseUrl = baseUrl.Replace("fal-ai/", "minimax/");
+                    model = string.Join('/', model.Split('/').Skip(1));
+                }
 
                 if (model.Contains("lucy-"))
                 {
@@ -336,6 +363,12 @@ namespace FalAiPlugin
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
                     return await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSave, textualProgressAction, model, cancelToken: ct);
+                }
+
+                if (isH3Max && request.seed.HasValue && refItemPlayload.Seed != request.seed.Value)
+                {
+                    refItemPlayload.Seed = request.seed.Value;
+                    saveAndRefreshCallback.Invoke(true);
                 }
 
                 var serialized = "";
@@ -678,7 +711,6 @@ namespace FalAiPlugin
                 var fileExtension = ".mp4";
 
                 var extFromPath = Path.GetExtension(file);
-
                 if (!string.IsNullOrEmpty(extFromPath))
                 {
                     fileExtension = extFromPath;
