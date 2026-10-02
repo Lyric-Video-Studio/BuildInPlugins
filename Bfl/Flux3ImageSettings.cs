@@ -6,6 +6,9 @@ namespace BflTxtToImgPlugin
 {
     public class Flux3ImageSettings
     {
+        [Description("Optional track-level prompt appended to each item's prompt.")]
+        public string Prompt { get; set; } = "";
+
         [Description("Output aspect ratio. Auto follows the first reference image when image-to-image is used, otherwise 1:1.")]
         [PropertyComboOptions(["auto", "21:9", "2:1", "16:9", "3:2", "7:5", "4:3", "5:4", "1:1", "4:5", "3:4", "5:7", "2:3", "9:16", "1:2", "9:21"])]
         [CustomName("Aspect ratio")]
