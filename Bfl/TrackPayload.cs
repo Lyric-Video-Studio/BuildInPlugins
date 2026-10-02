@@ -7,13 +7,15 @@ namespace BflTxtToImgPlugin
     public class TrackPayload : IPayloadPropertyVisibility
     {
         public const string ModeFlux2 = "FLUX.2";
+        public const string ModeFlux3 = "FLUX.3";
         public const string ModeOutpaint = "Outpaint";
 
         private Flux2Inputs txt2ImgPayloadNew = new();
+        private Flux3ImageSettings flux3ImageSettings = new();
         private FluxOutpaintSettings outpaintSettings = new();
 
         [TriggerReload]
-        [PropertyComboOptions([ModeFlux2, ModeOutpaint])]
+        [PropertyComboOptions([ModeFlux3, ModeFlux2, ModeOutpaint])]
         public string Mode { get; set; } = ModeFlux2;
 
         [Description("Image settings")]
@@ -21,6 +23,12 @@ namespace BflTxtToImgPlugin
         [CustomName("Settings")]
         [HideAllChildren]
         public Flux2Inputs SettingsNew { get => txt2ImgPayloadNew; set => txt2ImgPayloadNew = value; }
+
+        [Description("FLUX.3 image settings")]
+        [IgnorePropertyName]
+        [CustomName("Settings")]
+        [HideAllChildren]
+        public Flux3ImageSettings Flux3Settings { get => flux3ImageSettings; set => flux3ImageSettings = value; }
 
         [Description("Outpaint settings")]
         [IgnorePropertyName]
@@ -59,6 +67,11 @@ namespace BflTxtToImgPlugin
                 if (propertyName == nameof(SettingsNew))
                 {
                     return tp.Mode == ModeFlux2;
+                }
+
+                if (propertyName == nameof(Flux3Settings))
+                {
+                    return tp.Mode == ModeFlux3;
                 }
 
                 if (propertyName == nameof(OutpaintSettings))
