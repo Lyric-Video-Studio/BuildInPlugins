@@ -1,3 +1,6 @@
+@echo off
+setlocal
+
 set op=%1
 set runtime=%2
 set "runtimeArgs="
