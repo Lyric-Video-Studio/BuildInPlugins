@@ -2924,6 +2924,12 @@ namespace Bfl
         [System.Runtime.Serialization.EnumMember(Value = @"Pending")]
         Pending = 1,
 
+        [System.Runtime.Serialization.EnumMember(Value = @"Reasoning")]
+        Reasoning = 6,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"Generating")]
+        Generating = 7,
+
         [System.Runtime.Serialization.EnumMember(Value = @"Request Moderated")]
         Request_Moderated = 2,
 

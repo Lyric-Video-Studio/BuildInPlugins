@@ -103,6 +103,11 @@ namespace BflTxtToImgPlugin
 
                         imageRequest = await SubmitOutpaintRequestAsync(newTp.OutpaintSettings, inputImages.First());
                     }
+                    else if (newTp.Mode == TrackPayload.ModeFlux3)
+                    {
+                        var prompt = $"{newIp.Prompt} {newTp.Flux3Settings.Prompt}".Trim();
+                        imageRequest = await SubmitFlux3ImageRequestAsync(newTp.Flux3Settings, prompt, inputImages);
+                    }
                     else
                     {
                         if (newIp.Seed == 0)
@@ -169,7 +174,10 @@ namespace BflTxtToImgPlugin
             try
             {
                 ResultResponse resp = null;
-                while (resp == null || resp.Status == StatusResponse.Pending)
+                while (resp == null ||
+                       resp.Status == StatusResponse.Pending ||
+                       resp.Status == StatusResponse.Reasoning ||
+                       resp.Status == StatusResponse.Generating)
                 {
                     if (cancelToken.IsCancellationRequested)
                     {
@@ -375,7 +383,10 @@ namespace BflTxtToImgPlugin
                 return (true, "");
             }
 
-            var prompt = $"{ip.Prompt} {tp.SettingsNew.Prompt}".Trim();
+            var prompt = tp.Mode == TrackPayload.ModeFlux3
+                ? $"{ip.Prompt} {tp.Flux3Settings.Prompt}".Trim()
+                : $"{ip.Prompt} {tp.SettingsNew.Prompt}".Trim();
+
             if (string.IsNullOrEmpty(prompt))
             {
                 return (false, "Prompt missing");
@@ -671,6 +682,49 @@ namespace BflTxtToImgPlugin
                         break;
                 }
             }
+        }
+
+        private async Task<AsyncResponse> SubmitFlux3ImageRequestAsync(Flux3ImageSettings settings, string prompt, List<string> inputImages)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.bfl.ai/v1/flux-3-image");
+            request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+            var payload = new Dictionary<string, object>
+            {
+                ["prompt"] = prompt,
+                ["aspect_ratio"] = settings.AspectRatio,
+                ["resolution"] = settings.Resolution,
+                ["safety_tolerance"] = settings.SafetyTolerance,
+                ["grounding"] = settings.Grounding
+            };
+
+            if (inputImages.Count > 0)
+            {
+                payload["images"] = inputImages
+                    .Take(10)
+                    .Select(path => Convert.ToBase64String(File.ReadAllBytes(path)))
+                    .ToArray();
+            }
+
+            var json = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(payload);
+            request.Content = new ByteArrayContent(json);
+            request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+
+            using var response = await httpClient.SendAsync(request, cancelToken);
+            var responseText = await response.Content.ReadAsStringAsync(cancelToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException($"BFL FLUX.3 image request failed ({(int)response.StatusCode}): {responseText}");
+            }
+
+            var result = System.Text.Json.JsonSerializer.Deserialize<AsyncResponse>(responseText);
+            if (result == null || string.IsNullOrWhiteSpace(result.Polling_url))
+            {
+                throw new InvalidOperationException("BFL FLUX.3 image request did not return a polling URL");
+            }
+
+            return result;
         }
 
         private async Task<AsyncResponse> SubmitOutpaintRequestAsync(FluxOutpaintSettings settings, string inputImagePath)
