@@ -21,7 +21,7 @@ namespace BflTxtToImgPlugin
         [Description("Safety tolerance from 0 (strictest) to 4.")]
         [Range(0, 4)]
         [CustomName("Safety tolerance")]
-        public int SafetyTolerance { get; set; } = 2;
+        public int SafetyTolerance { get; set; } = 4;
 
         [Description("Allow FLUX.3 to use web and image search to ground the generation.")]
         public bool Grounding { get; set; } = true;
