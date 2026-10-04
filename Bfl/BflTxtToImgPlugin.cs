@@ -174,7 +174,10 @@ namespace BflTxtToImgPlugin
             try
             {
                 ResultResponse resp = null;
-                while (resp == null || resp.Status == StatusResponse.Pending)
+                while (resp == null ||
+                       resp.Status == StatusResponse.Pending ||
+                       resp.Status == StatusResponse.Reasoning ||
+                       resp.Status == StatusResponse.Generating)
                 {
                     if (cancelToken.IsCancellationRequested)
                     {
