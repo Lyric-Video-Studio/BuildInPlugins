@@ -4,12 +4,18 @@ namespace GooglePlugin
 {
     public class ImageTrackPayload : IPayloadPropertyVisibility
     {
-        [PropertyComboOptions(["gemini-3.1-flash-lite-image", "gemini-3.1-flash-image-preview", "gemini-3-pro-image-preview", "gemini-2.5-flash-image", "models/imagen-4.0-generate-001"])]
+        [PropertyComboOptions(["gemini-nano-banana-2.1", "gemini-3.1-flash-lite-image", "gemini-3.1-flash-image-preview", "gemini-3-pro-image-preview", "gemini-2.5-flash-image", "models/imagen-4.0-generate-001"])]
         public string Model { get; set; } = "gemini-3.1-flash-lite-image";
         public string Prompt { get; set; }
 
         [PropertyComboOptions(["1K", "2K", "4K"])]
         public string Size { get; set; } = "1K";
+
+        [PropertyComboOptions(["Auto", "1:1", "1:4", "1:8", "2:3", "3:2", "3:4", "4:1", "4:3", "4:5", "5:4", "8:1", "9:16", "16:9", "21:9"])]
+        public string AspectRatio { get; set; } = "Auto";
+
+        [PropertyComboOptions(["MINIMAL", "MEDIUM", "HIGH"])]
+        public string ThinkingLevel { get; set; } = "MEDIUM";
 
         [EnableFileDrop]
         public string ImageSource { get; set; }
@@ -27,7 +33,17 @@ namespace GooglePlugin
         {
             if (propertyName == nameof(Size))
             {
-                return Model == "gemini-3-pro-image-preview";
+                return Model is "gemini-nano-banana-2.1" or "gemini-3-pro-image-preview";
+            }
+
+            if (propertyName == nameof(ThinkingLevel))
+            {
+                return Model == "gemini-nano-banana-2.1";
+            }
+
+            if (propertyName == nameof(AspectRatio))
+            {
+                return Model != "models/imagen-4.0-generate-001";
             }
 
             return true;
