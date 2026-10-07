@@ -104,7 +104,6 @@ namespace GooglePlugin
                 or nameof(ImageSource12)
                 or nameof(ImageSource13)
                 or nameof(ImageSource14);
-            }
         }
     }
 }
