@@ -84,13 +84,22 @@ namespace GooglePlugin
                 var prompt = (tp.Prompt + " " + ip.Prompt).Trim();
                 var getCOnfig = new GenerateContentConfig
                 {
-                    ThinkingConfig = tp.Model is "gemini-2.5-flash-image" ? null : new ThinkingConfig
+                    ThinkingConfig = tp.Model switch
                     {
-                        ThinkingLevel = "MINIMAL"
+                        "gemini-2.5-flash-image" => null,
+                        "gemini-nano-banana-2.1" => new ThinkingConfig
+                        {
+                            ThinkingLevel = tp.ThinkingLevel
+                        },
+                        _ => new ThinkingConfig
+                        {
+                            ThinkingLevel = "MINIMAL"
+                        }
                     },
                     ImageConfig = new ImageConfig
                     {
-                        ImageSize = tp.Size
+                        ImageSize = tp.Size,
+                        AspectRatio = tp.AspectRatio == "Auto" ? null : tp.AspectRatio
                     },
                     ResponseModalities = new List<string>
                     {
@@ -1030,6 +1039,7 @@ namespace GooglePlugin
         {
             return
             [
+                Model(IPluginBase.TrackType.Image, "Gemini", "gemini-nano-banana-2.1"),
                 Model(IPluginBase.TrackType.Image, "Gemini", "gemini-3.1-flash-image-preview"),
                 Model(IPluginBase.TrackType.Image, "Gemini", "gemini-3-pro-image-preview"),
                 Model(IPluginBase.TrackType.Image, "Gemini", "gemini-2.5-flash-image"),
