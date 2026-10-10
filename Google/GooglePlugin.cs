@@ -52,45 +52,27 @@ namespace GooglePlugin
 
             if (trackPayload is ImageTrackPayload tp && itemsPayload is ImageItemPayload ip)
             {
-                var effectiveImages = new List<string>();
-                var img = !string.IsNullOrEmpty(ip.ImageSource) ? ip.ImageSource : tp.ImageSource;
-
-                if (!string.IsNullOrEmpty(img))
-                {
-                    effectiveImages.Add(img);
-                }
-
-                img = !string.IsNullOrEmpty(ip.ImageSource2) ? ip.ImageSource2 : tp.ImageSource2;
-
-                if (!string.IsNullOrEmpty(img))
-                {
-                    effectiveImages.Add(img);
-                }
-
-                img = !string.IsNullOrEmpty(ip.ImageSource3) ? ip.ImageSource3 : tp.ImageSource3;
-
-                if (!string.IsNullOrEmpty(img))
-                {
-                    effectiveImages.Add(img);
-                }
-
-                img = !string.IsNullOrEmpty(ip.ImageSource4) ? ip.ImageSource4 : tp.ImageSource4;
-
-                if (!string.IsNullOrEmpty(img))
-                {
-                    effectiveImages.Add(img);
-                }
+                var effectiveImages = CollectEffectiveImageReferences(tp, ip);
 
                 var prompt = (tp.Prompt + " " + ip.Prompt).Trim();
                 var getCOnfig = new GenerateContentConfig
                 {
-                    ThinkingConfig = tp.Model is "gemini-2.5-flash-image" ? null : new ThinkingConfig
+                    ThinkingConfig = tp.Model switch
                     {
-                        ThinkingLevel = "MINIMAL"
+                        "gemini-2.5-flash-image" => null,
+                        "gemini-nano-banana-2.1" => new ThinkingConfig
+                        {
+                            ThinkingLevel = tp.ThinkingLevel
+                        },
+                        _ => new ThinkingConfig
+                        {
+                            ThinkingLevel = "MINIMAL"
+                        }
                     },
                     ImageConfig = new ImageConfig
                     {
-                        ImageSize = tp.Size
+                        ImageSize = tp.Size,
+                        AspectRatio = tp.AspectRatio == "Auto" ? null : tp.AspectRatio
                     },
                     ResponseModalities = new List<string>
                     {
@@ -152,6 +134,38 @@ namespace GooglePlugin
                 }
             }
             throw new Exception("Internal error");
+        }
+
+        private static List<string> CollectEffectiveImageReferences(ImageTrackPayload track, ImageItemPayload item)
+        {
+            var trackImages = new[]
+            {
+                track.ImageSource, track.ImageSource2, track.ImageSource3, track.ImageSource4,
+                track.ImageSource5, track.ImageSource6, track.ImageSource7, track.ImageSource8,
+                track.ImageSource9, track.ImageSource10, track.ImageSource11, track.ImageSource12,
+                track.ImageSource13, track.ImageSource14
+            };
+
+            var itemImages = new[]
+            {
+                item.ImageSource, item.ImageSource2, item.ImageSource3, item.ImageSource4,
+                item.ImageSource5, item.ImageSource6, item.ImageSource7, item.ImageSource8,
+                item.ImageSource9, item.ImageSource10, item.ImageSource11, item.ImageSource12,
+                item.ImageSource13, item.ImageSource14
+            };
+
+            var maxReferences = ImageTrackPayload.SupportsExtendedReferenceImages(track.Model) ? 14 : 4;
+            var result = new List<string>(maxReferences);
+            for (var i = 0; i < maxReferences; i++)
+            {
+                var image = !string.IsNullOrEmpty(itemImages[i]) ? itemImages[i] : trackImages[i];
+                if (!string.IsNullOrEmpty(image))
+                {
+                    result.Add(image);
+                }
+            }
+
+            return result;
         }
 
         public async Task<AudioResponse> GetAudio(object trackPayload, object itemsPayload, string folderToSaveAudio)
@@ -1030,6 +1044,7 @@ namespace GooglePlugin
         {
             return
             [
+                Model(IPluginBase.TrackType.Image, "Gemini", "gemini-nano-banana-2.1"),
                 Model(IPluginBase.TrackType.Image, "Gemini", "gemini-3.1-flash-image-preview"),
                 Model(IPluginBase.TrackType.Image, "Gemini", "gemini-3-pro-image-preview"),
                 Model(IPluginBase.TrackType.Image, "Gemini", "gemini-2.5-flash-image"),
@@ -1186,7 +1201,23 @@ namespace GooglePlugin
         {
             if (trackPayload is ImageTrackPayload ip && itemPayload is ImageItemPayload tp)
             {
-                return new List<string> { ip.ImageSource, tp.ImageSource, ip.ImageSource2, tp.ImageSource2, ip.ImageSource3, tp.ImageSource3, ip.ImageSource4, tp.ImageSource4 };
+                return new List<string>
+                {
+                    ip.ImageSource, tp.ImageSource,
+                    ip.ImageSource2, tp.ImageSource2,
+                    ip.ImageSource3, tp.ImageSource3,
+                    ip.ImageSource4, tp.ImageSource4,
+                    ip.ImageSource5, tp.ImageSource5,
+                    ip.ImageSource6, tp.ImageSource6,
+                    ip.ImageSource7, tp.ImageSource7,
+                    ip.ImageSource8, tp.ImageSource8,
+                    ip.ImageSource9, tp.ImageSource9,
+                    ip.ImageSource10, tp.ImageSource10,
+                    ip.ImageSource11, tp.ImageSource11,
+                    ip.ImageSource12, tp.ImageSource12,
+                    ip.ImageSource13, tp.ImageSource13,
+                    ip.ImageSource14, tp.ImageSource14
+                };
             }
 
             if (trackPayload is VideoTrackPayload vi && itemPayload is VideoItemPayload vi2)
@@ -1235,6 +1266,26 @@ namespace GooglePlugin
                 vi2.ImageSource3 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource3);
                 vi.ImageSource4 = ReplacePayloadPath(originalPath, newPath, vi.ImageSource4);
                 vi2.ImageSource4 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource4);
+                vi.ImageSource5 = ReplacePayloadPath(originalPath, newPath, vi.ImageSource5);
+                vi2.ImageSource5 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource5);
+                vi.ImageSource6 = ReplacePayloadPath(originalPath, newPath, vi.ImageSource6);
+                vi2.ImageSource6 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource6);
+                vi.ImageSource7 = ReplacePayloadPath(originalPath, newPath, vi.ImageSource7);
+                vi2.ImageSource7 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource7);
+                vi.ImageSource8 = ReplacePayloadPath(originalPath, newPath, vi.ImageSource8);
+                vi2.ImageSource8 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource8);
+                vi.ImageSource9 = ReplacePayloadPath(originalPath, newPath, vi.ImageSource9);
+                vi2.ImageSource9 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource9);
+                vi.ImageSource10 = ReplacePayloadPath(originalPath, newPath, vi.ImageSource10);
+                vi2.ImageSource10 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource10);
+                vi.ImageSource11 = ReplacePayloadPath(originalPath, newPath, vi.ImageSource11);
+                vi2.ImageSource11 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource11);
+                vi.ImageSource12 = ReplacePayloadPath(originalPath, newPath, vi.ImageSource12);
+                vi2.ImageSource12 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource12);
+                vi.ImageSource13 = ReplacePayloadPath(originalPath, newPath, vi.ImageSource13);
+                vi2.ImageSource13 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource13);
+                vi.ImageSource14 = ReplacePayloadPath(originalPath, newPath, vi.ImageSource14);
+                vi2.ImageSource14 = ReplacePayloadPath(originalPath, newPath, vi2.ImageSource14);
             }
         }
 
