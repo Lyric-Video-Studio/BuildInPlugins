@@ -42,6 +42,9 @@ namespace BflTxtToImgPlugin
 
             try
             {
+                using var generationSlot = await BflGenerationConcurrency.AcquireAsync(
+                    cancellationToken, () => progressCallback?.Invoke("Waiting for available BFL generation slot"));
+
                 var shouldResumeLegacyPolling = string.IsNullOrWhiteSpace(item.SubmittedMode) &&
                     track.Mode != VideoTrackPayload.ModeDraftEnhance &&
                     track.Mode != VideoTrackPayload.ModeVideoEdit;
@@ -393,6 +396,7 @@ namespace BflTxtToImgPlugin
             }
 
             connectionSettings = parsed;
+            BflGenerationConcurrency.Configure(parsed.ConcurrencyLimit);
             return "";
         }
 

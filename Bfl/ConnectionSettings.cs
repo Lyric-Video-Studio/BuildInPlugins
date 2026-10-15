@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using PluginBase;
 
@@ -14,6 +15,10 @@ namespace BflTxtToImgPlugin
         [EditorWidth(300)]
         [MaskInput]
         public string AccessToken { get => accessToken; set => accessToken = value; }
+
+        [Description("Maximum simultaneous BFL image and video generations, including result polling. Default: 8. Adjust for your BFL account limits.")]
+        [Range(1, 64)]
+        public int ConcurrencyLimit { get; set; } = 8;
 
         public bool AllowMcpAccess { get; set; } = false;
 
