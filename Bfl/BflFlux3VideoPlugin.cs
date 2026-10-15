@@ -116,7 +116,7 @@ namespace BflTxtToImgPlugin
             {
                 ["prompt"] = prompt,
                 ["aspect_ratio"] = track.AspectRatio,
-                ["duration"] = track.Duration == "auto" ? "auto" : int.Parse(track.Duration),
+                ["duration"] = item.Duration == "auto" ? "auto" : int.Parse(item.Duration),
                 ["resolution"] = track.Resolution,
                 ["version"] = track.Version,
                 ["generate_audio"] = track.GenerateAudio,
@@ -131,13 +131,16 @@ namespace BflTxtToImgPlugin
                     break;
 
                 case VideoTrackPayload.ModeImageToVideo:
-                    var images = GetImagePaths(item);
-                    if (images.Count == 0)
-                    {
-                        throw new InvalidOperationException("At least one input image is required for Image to Video");
-                    }
+                    var keyframes = GetImageKeyframes(item);
+                    ValidateImageKeyframes(keyframes, item.Duration);
                     request["mode"] = "i2v";
-                    request["keyframes"] = images.Select(path => Convert.ToBase64String(File.ReadAllBytes(path))).ToArray();
+                    // BFL accepts plain image strings (automatic placement) or [seconds, image]
+                    // pairs (exact placement). Preserve the old all-string payload by default.
+                    request["keyframes"] = keyframes.Select(frame =>
+                    {
+                        var image = Convert.ToBase64String(File.ReadAllBytes(frame.Path));
+                        return frame.Seconds == -1 ? (object)image : new object[] { frame.Seconds, image };
+                    }).ToArray();
                     break;
 
                 case VideoTrackPayload.ModeVideoContinuation:
@@ -293,12 +296,67 @@ namespace BflTxtToImgPlugin
             return json;
         }
 
-        private static List<string> GetImagePaths(VideoItemPayload item)
+        private static List<(string Path, double Seconds)> GetImageKeyframes(VideoItemPayload item)
         {
-            return new[] { item.InputImage, item.InputImage2, item.InputImage3, item.InputImage4, item.InputImage5, item.InputImage6, item.InputImage7, item.InputImage8, item.InputImage9, item.InputImage10 }
-                .Where(path => !string.IsNullOrWhiteSpace(path))
-                .Select(GetExistingPath)
+            // Keep times paired with their original image slots, even when some slots are empty.
+            var images = new (string Path, double Seconds)[]
+            {
+                (item.InputImage, item.InputImageSeconds),
+                (item.InputImage2, item.InputImage2Seconds),
+                (item.InputImage3, item.InputImage3Seconds),
+                (item.InputImage4, item.InputImage4Seconds),
+                (item.InputImage5, item.InputImage5Seconds),
+                (item.InputImage6, item.InputImage6Seconds),
+                (item.InputImage7, item.InputImage7Seconds),
+                (item.InputImage8, item.InputImage8Seconds),
+                (item.InputImage9, item.InputImage9Seconds),
+                (item.InputImage10, item.InputImage10Seconds),
+            };
+
+            return images.Where(image => !string.IsNullOrWhiteSpace(image.Path))
+                .Select(image => (GetExistingPath(image.Path), image.Seconds))
                 .ToList();
+        }
+
+        private static void ValidateImageKeyframes(List<(string Path, double Seconds)> keyframes, string duration)
+        {
+            if (keyframes.Count == 0)
+            {
+                throw new InvalidOperationException("At least one input image is required for Image to Video");
+            }
+
+            var lastPinnedTime = -1d;
+            var explicitDuration = duration == "auto" ? (int?)null : int.Parse(duration);
+            foreach (var frame in keyframes)
+            {
+                if (!double.IsFinite(frame.Seconds) ||
+                    (frame.Seconds != -1 && (frame.Seconds < 0 || frame.Seconds > 20)))
+                {
+                    throw new InvalidOperationException("Keyframe times must be -1 (automatic) or between 0 and 20 seconds");
+                }
+
+                if (frame.Seconds == -1)
+                {
+                    continue;
+                }
+
+                if (frame.Seconds <= lastPinnedTime)
+                {
+                    throw new InvalidOperationException("Explicit keyframe times must be strictly increasing in image order");
+                }
+
+                if (explicitDuration.HasValue && frame.Seconds > explicitDuration.Value)
+                {
+                    throw new InvalidOperationException($"Keyframe at {frame.Seconds} seconds exceeds video duration of {explicitDuration.Value} seconds");
+                }
+
+                lastPinnedTime = frame.Seconds;
+            }
+
+            if (keyframes.Count >= 3 && keyframes.All(frame => frame.Seconds == -1) && !explicitDuration.HasValue)
+            {
+                throw new InvalidOperationException("Choose a specific video duration when using three or more automatically spaced keyframes");
+            }
         }
 
         private static string GetVideoEditPath(string path)
@@ -392,9 +450,9 @@ namespace BflTxtToImgPlugin
                     GetExistingPath(item.DraftCache);
                 }
 
-                if (track.Mode == VideoTrackPayload.ModeImageToVideo && GetImagePaths(item).Count == 0)
+                if (track.Mode == VideoTrackPayload.ModeImageToVideo)
                 {
-                    return (false, "At least one input image is required for Image to Video");
+                    ValidateImageKeyframes(GetImageKeyframes(item), item.Duration);
                 }
 
                 if (track.Mode == VideoTrackPayload.ModeVideoContinuation)
