@@ -14,6 +14,9 @@ namespace BflTxtToImgPlugin
         // Keeps a completed draft from being mistaken for a pending Draft Enhance job.
         public string SubmittedMode { get; set; } = "";
 
+        [PropertyComboOptions(["auto", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"])]
+        public string Duration { get; set; } = "auto";
+
         [EnableFileDrop, TriggerReload] public string InputImage { get; set; }
 
         [CustomName("Image 1 time (seconds)")]

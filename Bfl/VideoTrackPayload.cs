@@ -18,10 +18,7 @@ namespace BflTxtToImgPlugin
         public string Prompt { get; set; }
 
         [PropertyComboOptions(["auto", "21:9", "2:1", "16:9", "4:3", "1:1", "3:4", "9:16"])]
-        public string AspectRatio { get; set; } = "auto";
-
-        [PropertyComboOptions(["auto", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"])]
-        public string Duration { get; set; } = "auto";
+        public string AspectRatio { get; set; } = "auto";        
 
         [PropertyComboOptions(["hd", "fhd"])]
         public string Resolution { get; set; } = "hd";

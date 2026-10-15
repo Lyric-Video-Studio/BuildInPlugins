@@ -116,7 +116,7 @@ namespace BflTxtToImgPlugin
             {
                 ["prompt"] = prompt,
                 ["aspect_ratio"] = track.AspectRatio,
-                ["duration"] = track.Duration == "auto" ? "auto" : int.Parse(track.Duration),
+                ["duration"] = item.Duration == "auto" ? "auto" : int.Parse(item.Duration),
                 ["resolution"] = track.Resolution,
                 ["version"] = track.Version,
                 ["generate_audio"] = track.GenerateAudio,
@@ -132,7 +132,7 @@ namespace BflTxtToImgPlugin
 
                 case VideoTrackPayload.ModeImageToVideo:
                     var keyframes = GetImageKeyframes(item);
-                    ValidateImageKeyframes(keyframes, track.Duration);
+                    ValidateImageKeyframes(keyframes, item.Duration);
                     request["mode"] = "i2v";
                     // BFL accepts plain image strings (automatic placement) or [seconds, image]
                     // pairs (exact placement). Preserve the old all-string payload by default.
@@ -452,7 +452,7 @@ namespace BflTxtToImgPlugin
 
                 if (track.Mode == VideoTrackPayload.ModeImageToVideo)
                 {
-                    ValidateImageKeyframes(GetImageKeyframes(item), track.Duration);
+                    ValidateImageKeyframes(GetImageKeyframes(item), item.Duration);
                 }
 
                 if (track.Mode == VideoTrackPayload.ModeVideoContinuation)
