@@ -78,13 +78,17 @@ namespace BflTxtToImgPlugin
 
             if (JsonHelper.DeepCopy<TrackPayload>(trackPayload) is TrackPayload newTp && JsonHelper.DeepCopy<ItemPayload>(itemsPayload) is ItemPayload newIp && itemsPayload is ItemPayload oldPl)
             {
-                if (!string.IsNullOrEmpty(newIp.PollingUrl))
-                {
-                    return await PollImage(newIp.PollingUrl);
-                }
-
                 try
                 {
+                    using var generationSlot = await BflGenerationConcurrency.AcquireAsync(
+                        cancelToken, () => progressAction?.Invoke("Waiting for available BFL generation slot"));
+
+                    // Resuming a previously submitted job also occupies a concurrency slot.
+                    if (!string.IsNullOrEmpty(newIp.PollingUrl))
+                    {
+                        return await PollImage(newIp.PollingUrl);
+                    }
+
                     AsyncResponse imageRequest;
 
                     var inputImages = GetInputImagePaths(newTp, newIp);
@@ -249,6 +253,7 @@ namespace BflTxtToImgPlugin
                 imgClient = null;
                 httpClient = null;
                 _connectionSettings = s;
+                BflGenerationConcurrency.Configure(s.ConcurrencyLimit);
                 _isInitialized = !string.IsNullOrEmpty(s.AccessToken);
                 return "";
             }
