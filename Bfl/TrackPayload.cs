@@ -16,7 +16,7 @@ namespace BflTxtToImgPlugin
 
         [TriggerReload]
         [PropertyComboOptions([ModeFlux3, ModeFlux2, ModeOutpaint])]
-        public string Mode { get; set; } = ModeFlux2;
+        public string Mode { get; set; } = ModeFlux3;
 
         [Description("Image settings")]
         [IgnorePropertyName]
