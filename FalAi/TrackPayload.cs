@@ -94,7 +94,7 @@ namespace FalAiPlugin
 
         [CustomName("Safety checker")]
         [Description("Enable content moderation for input and output")]
-        public bool Wan3EnableSafetyChecker { get; set; } = true;
+        public bool Wan3EnableSafetyChecker { get; set; } = false;
 
         [CustomName("Resolution")]
         public string ResolutionLtx { get; set; } = "720p";
