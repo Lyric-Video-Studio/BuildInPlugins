@@ -147,7 +147,7 @@ namespace CroppedImagePlugin
                 SetLayoutBounds(bottomRightMarker, newBottomRight);
             }
 
-            if (currentTp != null && !currentTp.Scale && topLeftMarker != null && bottomRightMarker != null)
+            if (elementToDrag != null && currentTp != null && !currentTp.Scale && topLeftMarker != null && bottomRightMarker != null)
             {
                 var topLeft = GetLayoutBounds(topLeftMarker);
                 var bottomRight = GetLayoutBounds(bottomRightMarker);
