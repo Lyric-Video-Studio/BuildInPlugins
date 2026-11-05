@@ -586,7 +586,7 @@ namespace FalAiPlugin
         }
 
         private static async Task<VideoResponse> PollVideoResults(HttpClient httpClient, string id, string folderToSave,
-            Action<string> textualProgressAction, string model, bool isActuallyImage = false, CancellationToken? cancelToken = null)
+            Action<string> textualProgressAction, string model, bool isActuallyImage = false, CancellationToken? cancelToken = null, bool isActuallyAudio = false)
         {
             var pollingDelay = TimeSpan.FromSeconds(20);
 
@@ -671,10 +671,16 @@ namespace FalAiPlugin
                             // Maybe it's audios
                             var audios = JsonHelper.DeserializeString<ContentResponseAudios>(respString);
 
-                            if (audios != null)
+                            if (audios?.audio?.Length > 0)
                             {
-                                videoUrl = audios.audio.FirstOrDefault()?.url;
-                                maskUrl = audios.audio.LastOrDefault()?.url;
+                                videoUrl = audios.audio[0]?.url;
+                                // The secondary slot holds separated speech or a second variation,
+                                // never a duplicate of the primary soundtrack.
+                                maskUrl = audios.speech?.outcome == "speech" ? audios.speech.audio?.url : null;
+                                if (string.IsNullOrEmpty(maskUrl) && audios.audio.Length > 1)
+                                {
+                                    maskUrl = audios.audio[1]?.url;
+                                }
                             }
                         }
                         catch (Exception ex)
@@ -706,14 +712,8 @@ namespace FalAiPlugin
 
             using var downloadClient = new HttpClient { BaseAddress = downloadBase, Timeout = Timeout.InfiniteTimeSpan };
 
-            if (isActuallyImage)
-            {
-                downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "image/*");
-            }
-            else
-            {
-                downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
-            }
+            downloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept",
+                isActuallyImage ? "image/*" : isActuallyAudio ? "audio/*" : "video/*");
 
             // Store video request token to disk, in case connection is broken or something
 
@@ -729,7 +729,7 @@ namespace FalAiPlugin
 
             if (videoResp.StatusCode == HttpStatusCode.OK)
             {
-                var fileExtension = ".mp4";
+                var fileExtension = isActuallyAudio ? ".wav" : ".mp4";
 
                 var extFromPath = Path.GetExtension(file);
                 if (!string.IsNullOrEmpty(extFromPath))
@@ -745,6 +745,7 @@ namespace FalAiPlugin
                 }
                 else
                 {
+                    Directory.CreateDirectory(folderToSave);
                     var pathToVideo = Path.Combine(folderToSave, $"{id}{fileExtension}");
                     await File.WriteAllBytesAsync(pathToVideo, respBytes);
                     textualProgressAction.Invoke("");
@@ -756,11 +757,12 @@ namespace FalAiPlugin
 
                         using var maskdownloadClient = new HttpClient { BaseAddress = downloadBase, Timeout = Timeout.InfiniteTimeSpan };
 
-                        maskdownloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "video/*");
+                        maskdownloadClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept",
+                            isActuallyAudio ? "audio/*" : "video/*");
 
                         // Store video request token to disk, in case connection is broken or something
 
-                        textualProgressAction.Invoke("Downloading mask");
+                        textualProgressAction.Invoke(isActuallyAudio ? "Downloading alternative audio" : "Downloading mask");
 
                         videoResp = await maskdownloadClient.GetAsync(file);
 
@@ -773,7 +775,12 @@ namespace FalAiPlugin
                         if (videoResp.StatusCode == HttpStatusCode.OK)
                         {
                             respBytes = await videoResp.Content.ReadAsByteArrayAsync();
-                            var pathToVideoMask = Path.Combine(folderToSave, $"{id}_mask{fileExtension}");
+                            var alternativeExtension = Path.GetExtension(file);
+                            if (string.IsNullOrEmpty(alternativeExtension))
+                            {
+                                alternativeExtension = fileExtension;
+                            }
+                            var pathToVideoMask = Path.Combine(folderToSave, $"{id}_{(isActuallyAudio ? "alternative" : "mask")}{alternativeExtension}");
                             await File.WriteAllBytesAsync(pathToVideoMask, respBytes);
                             textualProgressAction.Invoke("");
                             return new VideoResponse() { Success = true, VideoFile = pathToVideo, VideoMask = pathToVideoMask };
@@ -790,92 +797,8 @@ namespace FalAiPlugin
             }
         }
 
-        // Mirelo returns audio[] instead of the single audio object used by most fal models.
-        private static async Task<AudioResponse> PollMireloAudioResults(HttpClient client, string id,
-            string folder, Action<string> progress, string model, CancellationToken ct)
-        {
-            var modelRoot = model.Split('/')[0];
-            while (true)
-            {
-                ct.ThrowIfCancellationRequested();
-                using var response = await client.GetAsync($"{modelRoot}/requests/{id}", ct);
-                var json = await response.Content.ReadAsStringAsync(ct);
-
-                if (response.StatusCode == HttpStatusCode.Accepted ||
-                    json.Contains("still in progress", StringComparison.OrdinalIgnoreCase) ||
-                    json.Contains("\"IN_QUEUE\"", StringComparison.OrdinalIgnoreCase) ||
-                    json.Contains("\"IN_PROGRESS\"", StringComparison.OrdinalIgnoreCase))
-                {
-                    progress?.Invoke("Processing...");
-                    await Task.Delay(TimeSpan.FromSeconds(10), ct);
-                    continue;
-                }
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    return new AudioResponse { Success = false, ErrorMsg = $"Error: {response.StatusCode}, details: {json}" };
-                }
-
-                ContentResponseAudios result;
-                try
-                {
-                    result = JsonHelper.DeserializeString<ContentResponseAudios>(json);
-                }
-                catch (Exception ex)
-                {
-                    return new AudioResponse { Success = false, ErrorMsg = $"Invalid Mirelo audio response: {ex.Message}" };
-                }
-
-                if (result?.audio == null || result.audio.Length == 0 || string.IsNullOrWhiteSpace(result.audio[0]?.url))
-                {
-                    return new AudioResponse { Success = false, ErrorMsg = $"Mirelo returned no soundtrack: {json}" };
-                }
-
-                Directory.CreateDirectory(folder);
-                using var downloader = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
-                var prefix = Guid.NewGuid().ToString("N");
-                progress?.Invoke("Downloading soundtrack...");
-                var primary = await DownloadMireloAudio(downloader, result.audio[0].url, folder, prefix + "_sfx_1", ct);
-
-                // LVS has one alternative audio slot: use it for a second sample OR the speech stem.
-                var secondary = result.audio.Length > 1 ? result.audio[1] :
-                    result.speech?.outcome == "speech" ? result.speech.audio : null;
-                string alternative = null;
-                if (!string.IsNullOrWhiteSpace(secondary?.url))
-                {
-                    progress?.Invoke("Downloading alternative audio...");
-                    alternative = await DownloadMireloAudio(downloader, secondary.url, folder,
-                        prefix + (result.audio.Length > 1 ? "_sfx_2" : "_speech"), ct);
-                }
-
-                progress?.Invoke("");
-                return new AudioResponse
-                {
-                    Success = true,
-                    AudioFile = primary,
-                    AudioFormat = Path.GetExtension(primary).TrimStart('.'),
-                    AlternativeAudioFile = alternative
-                };
-            }
-        }
-
-        private static async Task<string> DownloadMireloAudio(HttpClient client, string url,
-            string folder, string name, CancellationToken ct)
-        {
-            using var response = await client.GetAsync(url, ct);
-            response.EnsureSuccessStatusCode();
-            var extension = Path.GetExtension(new Uri(url).AbsolutePath);
-            if (string.IsNullOrEmpty(extension) || extension.Length > 6)
-            {
-                extension = ".wav";
-            }
-
-            var file = Path.Combine(folder, name + extension);
-            await File.WriteAllBytesAsync(file, await response.Content.ReadAsByteArrayAsync(ct), ct);
-            return file;
-        }
-
-        internal static async Task<AudioResponse> GetAudio(object request, string folderToSaveAudio, AudioItemPayload refItemPlayload, ConnectionSettings connectionSettings, string model,
+        internal static async Task<AudioResponse> GetAudio(object request, string folderToSaveAudio,
+            AudioItemPayload refItemPlayload, ConnectionSettings connectionSettings, string model,
             Action<bool> saveAndRefreshCallback, Action<string> textualProgress, CancellationToken ct)
         {
             try
@@ -884,88 +807,78 @@ namespace FalAiPlugin
                 httpClient.DefaultRequestHeaders.Remove("accept");
 
                 var baseUrl = connectionSettings.Url;
-                var isMirelo = model.StartsWith("mirelo-ai/", StringComparison.OrdinalIgnoreCase);
-
-                if (isMirelo)
+                if (model.StartsWith("mirelo-ai/", StringComparison.OrdinalIgnoreCase))
                 {
                     baseUrl = baseUrl.Replace("fal-ai", "mirelo-ai");
                     model = model.Replace("mirelo-ai/", "");
                 }
 
-                // It's best to keep these here: use can change these from item settings
                 httpClient.BaseAddress = new Uri(baseUrl);
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("authorization", $"Key {connectionSettings.AccessToken}");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
                 httpClient.DefaultRequestHeaders.TryAddWithoutValidation("content-type", "application/json");
 
-
-
-                if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
+                if (string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    if (isMirelo)
+                    string serialized;
+                    try
                     {
-                        return await PollMireloAudioResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model, ct);
+                        serialized = JsonHelper.Serialize(request);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(ex.ToString());
+                        return new AudioResponse { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
                     }
 
-                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model, cancelToken: ct);
-                    return new AudioResponse() { Success = res.Success, ErrorMsg = res.ErrorMsg, AudioFile = res.VideoFile, AudioFormat = "wav" };
-                }
+                    using var stringContent = new StringContent(serialized);
+                    stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
-                var serialized = "";
+                    using var resp = await httpClient.PostAsync(model, stringContent, ct);
+                    var respString = await resp.Content.ReadAsStringAsync(ct);
 
-                try
-                {
-                    serialized = JsonHelper.Serialize(request);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex.ToString());
-                    return new AudioResponse() { ErrorMsg = $"Error: parsing request, details: {ex.Message}", Success = false };
-                }
-
-                var stringContent = new StringContent(serialized);
-                stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
-
-                var resp = await httpClient.PostAsync(model, stringContent, ct);
-                var respString = await resp.Content.ReadAsStringAsync(ct);
-
-                if (resp.StatusCode != HttpStatusCode.OK)
-                {
-                    return new AudioResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
-                }
-
-                RequestResponse respSerialized = null;
-
-                try
-                {
-                    respSerialized = JsonHelper.DeserializeString<RequestResponse>(respString);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine(ex.ToString());
-                    return new AudioResponse() { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
-                }
-
-                if (respSerialized != null && resp.IsSuccessStatusCode)
-                {
-                    refItemPlayload.PollingId = respSerialized.request_id.ToString();
-                    saveAndRefreshCallback.Invoke(true);
-
-                    if (isMirelo)
+                    if (!resp.IsSuccessStatusCode)
                     {
-                        return await PollMireloAudioResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model, ct);
+                        return new AudioResponse { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
                     }
 
-                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model, cancelToken: ct);
-                    return new AudioResponse() { Success = res.Success, ErrorMsg = res.ErrorMsg, AudioFile = res.VideoFile, AudioFormat = "wav", AlternativeAudioFile = res.VideoMask };
+                    RequestResponse respSerialized;
+                    try
+                    {
+                        respSerialized = JsonHelper.DeserializeString<RequestResponse>(respString);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(ex.ToString());
+                        return new AudioResponse { ErrorMsg = $"Error parsing response, {ex.Message}", Success = false };
+                    }
+
+                    if (string.IsNullOrEmpty(respSerialized?.request_id))
+                    {
+                        return new AudioResponse { ErrorMsg = $"Missing request ID in response: {respString}", Success = false };
+                    }
+
+                    refItemPlayload.PollingId = respSerialized.request_id;
+                    saveAndRefreshCallback?.Invoke(true);
                 }
 
-                return new AudioResponse() { ErrorMsg = $"Error: {resp.StatusCode}, details: {respString}", Success = false };
+                // The same result polling/downloading path handles video, images and audio.
+                var result = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio,
+                    textualProgress, model, cancelToken: ct, isActuallyAudio: true);
+
+                return new AudioResponse
+                {
+                    Success = result.Success,
+                    ErrorMsg = result.ErrorMsg,
+                    AudioFile = result.VideoFile,
+                    AudioFormat = Path.GetExtension(result.VideoFile ?? "").TrimStart('.'),
+                    AlternativeAudioFile = result.VideoMask
+                };
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(ex.ToString());
-                return new AudioResponse() { ErrorMsg = ex.Message, Success = false };
+                return new AudioResponse { ErrorMsg = ex.Message, Success = false };
             }
         }
     }
