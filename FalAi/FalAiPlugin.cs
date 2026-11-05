@@ -478,20 +478,18 @@ namespace FalAiPlugin
                     }
 
                     var prompt = $"{ap.Prompt} {ip.Prompt}".Trim();
-                    var isSfx2 = ap.Model == AudioTrackPayload.VideoToAudioSfxModel;
                     var sfxReg = new VideoToAudioRequest()
                     {
                         video_url = uploadedVideo.VideoFile,
                         text_prompt = string.IsNullOrWhiteSpace(prompt) ? null : prompt,
+                        negative_prompt = string.IsNullOrWhiteSpace(ip.NegativePrompt) ? null : ip.NegativePrompt,
                         seed = ip.Seed == 0 ? null : ip.Seed,
                         duration = ip.Duration,
-                        num_samples = isSfx2 ? ip.NumSamples : 2,
-                        start_offset = isSfx2 ? null : ip.StartOffset,
-                        negative_prompt = isSfx2 && !string.IsNullOrWhiteSpace(ip.NegativePrompt) ? ip.NegativePrompt : null,
-                        preserve_speech = isSfx2 ? ip.PreserveSpeech : null,
-                        return_speech = isSfx2 ? ip.ReturnSpeech : null,
-                        upload_audio_format = isSfx2 ? ip.OutputFormat : null,
-                        upload_audio_bitrate_kbps = isSfx2 && (ip.OutputFormat is "mp3" or "aac") && ip.AudioBitrateKbps > 0 ? ip.AudioBitrateKbps : null
+                        num_samples = ip.NumSamples,
+                        preserve_speech = ip.PreserveSpeech,
+                        return_speech = ip.ReturnSpeech,
+                        upload_audio_format = ip.OutputFormat,
+                        upload_audio_bitrate_kbps = (ip.OutputFormat is "mp3" or "aac") && ip.AudioBitrateKbps > 0 ? ip.AudioBitrateKbps : null
                     };
 
                     return await Client.GetAudio(sfxReg, folderToSaveAudio, ip, _connectionSettings, ap.Model, saveAndRefreshCallback, textualProgressAction, _ct);
@@ -1329,49 +1327,37 @@ namespace FalAiPlugin
                         return (false, "Video source is required");
                     }
 
-                    var isSfx2 = at.Model == AudioTrackPayload.VideoToAudioSfxModel;
-                    if (ai.Duration < 1 || ai.Duration > (isSfx2 ? 600 : 10))
+                    if (ai.Duration < 1 || ai.Duration > 600)
                     {
-                        return (false, isSfx2
-                            ? "SFX 2.0 duration must be between 1 and 600 seconds (and cannot exceed video length)"
-                            : "SFX 1.5 duration must be between 1 and 10 seconds");
+                        return (false, "SFX 2.0 duration must be between 1 and 600 seconds (clamped to video length)");
                     }
 
-                    if (!isSfx2 && ai.StartOffset < 0)
+                    if (ai.NumSamples is < 1 or > 2)
                     {
-                        return (false, "Start offset cannot be negative");
+                        return (false, "SFX 2.0 supports 1 or 2 samples in LVS");
                     }
 
-                    if (isSfx2)
+                    if (ai.ReturnSpeech && ai.NumSamples > 1)
                     {
-                        if (ai.NumSamples is < 1 or > 2)
+                        return (false, "Choose either two soundtracks or one soundtrack with separately returned speech");
+                    }
+
+                    if (ai.OutputFormat is not ("wav" or "mp3" or "aac" or "flac"))
+                    {
+                        return (false, "Unsupported SFX 2.0 audio format");
+                    }
+
+                    if (ai.AudioBitrateKbps != 0)
+                    {
+                        if (ai.OutputFormat == "mp3" && ai.AudioBitrateKbps is not
+                            (32 or 40 or 48 or 56 or 64 or 80 or 96 or 112 or 128 or 160 or 192 or 224 or 256 or 320))
                         {
-                            return (false, "SFX 2.0 supports 1 or 2 samples in LVS");
+                            return (false, "Invalid MP3 bitrate for SFX 2.0");
                         }
 
-                        if (ai.ReturnSpeech && ai.NumSamples > 1)
+                        if (ai.OutputFormat == "aac" && ai.AudioBitrateKbps is < 32 or > 256)
                         {
-                            return (false, "Choose either two soundtracks or one soundtrack with separately returned speech");
-                        }
-
-                        if (ai.OutputFormat is not ("wav" or "mp3" or "aac" or "flac"))
-                        {
-                            return (false, "Unsupported SFX 2.0 audio format");
-                        }
-
-                        if (ai.AudioBitrateKbps != 0)
-                        {
-                            if (ai.OutputFormat == "mp3" && ai.AudioBitrateKbps is not
-                                (32 or 40 or 48 or 56 or 64 or 80 or 96 or 112 or 128 or 160 or 192 or 224 or 256 or 320))
-                            {
-                                return (false, "Invalid MP3 bitrate for SFX 2.0");
-                            }
-
-                            if (ai.OutputFormat == "aac" && ai.AudioBitrateKbps is < 32 or > 256)
-                            {
-                                return (false, "AAC bitrate must be between 32 and 256 kbps");
-                            }
-
+                            return (false, "AAC bitrate must be between 32 and 256 kbps");
                         }
                     }
 
