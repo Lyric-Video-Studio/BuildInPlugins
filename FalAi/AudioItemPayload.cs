@@ -15,11 +15,8 @@ namespace FalAiPlugin
         [Description("Optional seed. Leave 0 for random.")]
         public int Seed { get; set; }
 
-        [Description("Duration of the generated audio in seconds (1–600 for SFX 2.0, limited to video length; 1–10 for legacy SFX 1.5).")]
+        [Description("Generated audio duration in seconds (1–600, clamped to the input video length).")]
         public float Duration { get; set; } = 10;
-
-        [Description("Start position in the source video, in seconds (legacy SFX 1.5 only).")]
-        public float StartOffset { get; set; }
 
         [Description("Sounds to exclude from the soundtrack (SFX 2.0).")]
         public string NegativePrompt { get; set; }
@@ -45,13 +42,7 @@ namespace FalAiPlugin
         {
             if (trackPayload is AudioTrackPayload tp)
             {
-                if (tp.Model == AudioTrackPayload.LegacyVideoToAudioSfxModel)
-                {
-                    return propertyName is nameof(PollingId) or nameof(Prompt) or nameof(VideoSource)
-                        or nameof(Seed) or nameof(Duration) or nameof(StartOffset);
-                }
-
-                if (tp.Model == AudioTrackPayload.VideoToAudioSfxModel)
+                if (AudioTrackPayload.IsSfxModel(tp.Model))
                 {
                     if (propertyName == nameof(AudioBitrateKbps))
                     {
@@ -66,7 +57,7 @@ namespace FalAiPlugin
             }
 
             return propertyName is not (nameof(VideoSource) or nameof(Seed) or nameof(Duration)
-                or nameof(StartOffset) or nameof(NegativePrompt) or nameof(PreserveSpeech)
+                or nameof(NegativePrompt) or nameof(PreserveSpeech)
                 or nameof(ReturnSpeech) or nameof(NumSamples) or nameof(OutputFormat)
                 or nameof(AudioBitrateKbps));
         }
