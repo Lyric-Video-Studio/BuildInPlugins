@@ -880,7 +880,7 @@ namespace FalAiPlugin
         }
 
         internal static async Task<AudioResponse> GetAudio(object request, string folderToSaveAudio, AudioItemPayload refItemPlayload, ConnectionSettings connectionSettings, string model,
-            Action<bool> saveAndRefreshCallback, Action<string> textualProgress)
+            Action<bool> saveAndRefreshCallback, Action<string> textualProgress, CancellationToken ct)
         {
             try
             {
@@ -888,10 +888,10 @@ namespace FalAiPlugin
                 httpClient.DefaultRequestHeaders.Remove("accept");
 
                 var baseUrl = connectionSettings.Url;
+                var isMirelo = model.StartsWith("mirelo-ai/", StringComparison.OrdinalIgnoreCase);
 
-                if (model.Contains("mirelo-ai"))
+                if (isMirelo)
                 {
-                    // Need to prop out the fal-ai
                     baseUrl = baseUrl.Replace("fal-ai", "mirelo-ai");
                     model = model.Replace("mirelo-ai/", "");
                 }
@@ -906,7 +906,12 @@ namespace FalAiPlugin
 
                 if (!string.IsNullOrEmpty(refItemPlayload.PollingId))
                 {
-                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model);
+                    if (isMirelo)
+                    {
+                        return await PollMireloAudioResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model, ct);
+                    }
+
+                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model, cancelToken: ct);
                     return new AudioResponse() { Success = res.Success, ErrorMsg = res.ErrorMsg, AudioFile = res.VideoFile, AudioFormat = "wav" };
                 }
 
@@ -925,8 +930,8 @@ namespace FalAiPlugin
                 var stringContent = new StringContent(serialized);
                 stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
-                var resp = await httpClient.PostAsync(model, stringContent);
-                var respString = await resp.Content.ReadAsStringAsync();
+                var resp = await httpClient.PostAsync(model, stringContent, ct);
+                var respString = await resp.Content.ReadAsStringAsync(ct);
 
                 if (resp.StatusCode != HttpStatusCode.OK)
                 {
@@ -950,7 +955,12 @@ namespace FalAiPlugin
                     refItemPlayload.PollingId = respSerialized.request_id.ToString();
                     saveAndRefreshCallback.Invoke(true);
 
-                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model);
+                    if (isMirelo)
+                    {
+                        return await PollMireloAudioResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model, ct);
+                    }
+
+                    var res = await PollVideoResults(httpClient, refItemPlayload.PollingId, folderToSaveAudio, textualProgress, model, cancelToken: ct);
                     return new AudioResponse() { Success = res.Success, ErrorMsg = res.ErrorMsg, AudioFile = res.VideoFile, AudioFormat = "wav", AlternativeAudioFile = res.VideoMask };
                 }
 
