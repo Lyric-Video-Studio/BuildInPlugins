@@ -1,5 +1,6 @@
 Fal.ai multi-model plugin
 Capabilities - Create and edit images, generate and edit video, lip-sync avatars, animate characters, upscale video, synthesize speech, and create synchronized sound effects/audio from video.
+Search queries - "make audio based on video", "replace audio from video", "generate synchronized sound effects from footage", "add sound to a silent video", "generate replacement soundtrack for video".
 Mirelo SFX 2.0 (video-to-audio) - Make audio based on a video, generate sound effects for footage, and replace audio from a video with a new synchronized soundtrack. Use it to add sound to silent AI-generated video, replace a video's original audio or soundtrack, produce Foley sound design and ambient noise matched to visible action, or generate audio/sound effects from video. Provide a video file or URL, optionally guide sounds with a text prompt, exclude unwanted sounds, and preserve or separately extract speech. Returns standalone audio files to place under the video in the timeline, not a muxed video file.
 Current - Topaz Precision and Generative video upscaling with enhancement controls and optional frame interpolation.
 v1.5.56 - Seedream 5 Pro text-to-image and edit support added.
