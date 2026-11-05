@@ -11,7 +11,8 @@ namespace FalAiPlugin
 {
     public class AudioTrackPayload : IPayloadPropertyVisibility
     {
-        public const string VideoToAudioSfxModel = "mirelo-ai/sfx-v1.5/video-to-audio";
+        public const string VideoToAudioSfxModel = "mirelo-ai/sfx2.0/video-to-audio";
+        public const string LegacyVideoToAudioSfxModel = "mirelo-ai/sfx-v1.5/video-to-audio";
 
         public AudioTrackPayload()
         {
@@ -57,7 +58,7 @@ namespace FalAiPlugin
 
         public static bool IsSfxModel(string model)
         {
-            return model == VideoToAudioSfxModel;
+            return model is VideoToAudioSfxModel or LegacyVideoToAudioSfxModel;
         }
     }
 
