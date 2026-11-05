@@ -612,7 +612,10 @@ namespace FalAiPlugin
                     var generationResp = await httpClient.GetAsync($"{model}/requests/{id}");
                     var respString = await generationResp.Content.ReadAsStringAsync();
 
-                    if (respString.Contains("still in progress"))
+                    if (generationResp.StatusCode == HttpStatusCode.Accepted ||
+                        respString.Contains("still in progress", StringComparison.OrdinalIgnoreCase) ||
+                        respString.Contains("\"IN_QUEUE\"", StringComparison.OrdinalIgnoreCase) ||
+                        respString.Contains("\"IN_PROGRESS\"", StringComparison.OrdinalIgnoreCase))
                     {
                         textualProgressAction.Invoke("Processing...");
                         await Task.Delay(pollingDelay, cancelToken.GetValueOrDefault());
