@@ -15,4 +15,4 @@ Current - HiDream O1 image and image edit.
 Current - Seedream 5 Pro, Seedream 5 Lite, Seedream 4.5 and Seedream 4.
 Current - GPT Image 2, GPT Image 1.5 and GPT Image 1 Mini.
 Current - Qwen Image, Imagen 4, Z-Image, Ovis Image and GLM Image.
-Current - VibeVoice 7B audio and Mirelo SFX 1.5 video-to-audio.
+Current - VibeVoice 7B audio and Mirelo SFX 2.0 video-to-audio (legacy SFX 1.5 projects remain supported).
