@@ -230,10 +230,6 @@ namespace FalAiPlugin
 
         public float duration { get; set; } = 10;
 
-        // Only the legacy endpoint accepts start_offset.
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public float? start_offset { get; set; }
-
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? preserve_speech { get; set; }
 
