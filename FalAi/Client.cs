@@ -23,6 +23,13 @@ namespace FalAiPlugin
     public class ContentResponseAudios
     {
         public VideoResp[] audio { get; set; }
+        public MireloSpeechResponse speech { get; set; }
+    }
+
+    public class MireloSpeechResponse
+    {
+        public string outcome { get; set; }
+        public VideoResp audio { get; set; }
     }
 
     public class VideoResp
@@ -213,13 +220,31 @@ namespace FalAiPlugin
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string text_prompt { get; set; }
 
-        public int num_samples { get; set; } = 2;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string negative_prompt { get; set; }
+
+        public int num_samples { get; set; } = 1;
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public int? seed { get; set; }
 
         public float duration { get; set; } = 10;
-        public float start_offset { get; set; }
+
+        // Only the legacy endpoint accepts start_offset.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public float? start_offset { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? preserve_speech { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? return_speech { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string upload_audio_format { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? upload_audio_bitrate_kbps { get; set; }
     }
 
     public class SpeakerRequest
@@ -767,6 +792,91 @@ namespace FalAiPlugin
                 textualProgressAction.Invoke("");
                 return new VideoResponse() { ErrorMsg = $"Error: {videoResp.StatusCode}, details: {await videoResp.Content.ReadAsStringAsync()}", Success = false };
             }
+        }
+
+        // Mirelo returns audio[] instead of the single audio object used by most fal models.
+        private static async Task<AudioResponse> PollMireloAudioResults(HttpClient client, string id,
+            string folder, Action<string> progress, string model, CancellationToken ct)
+        {
+            var modelRoot = model.Split('/')[0];
+            while (true)
+            {
+                ct.ThrowIfCancellationRequested();
+                using var response = await client.GetAsync($"{modelRoot}/requests/{id}", ct);
+                var json = await response.Content.ReadAsStringAsync(ct);
+
+                if (response.StatusCode == HttpStatusCode.Accepted ||
+                    json.Contains("still in progress", StringComparison.OrdinalIgnoreCase) ||
+                    json.Contains("\"IN_QUEUE\"", StringComparison.OrdinalIgnoreCase) ||
+                    json.Contains("\"IN_PROGRESS\"", StringComparison.OrdinalIgnoreCase))
+                {
+                    progress?.Invoke("Processing...");
+                    await Task.Delay(TimeSpan.FromSeconds(10), ct);
+                    continue;
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new AudioResponse { Success = false, ErrorMsg = $"Error: {response.StatusCode}, details: {json}" };
+                }
+
+                ContentResponseAudios result;
+                try
+                {
+                    result = JsonHelper.DeserializeString<ContentResponseAudios>(json);
+                }
+                catch (Exception ex)
+                {
+                    return new AudioResponse { Success = false, ErrorMsg = $"Invalid Mirelo audio response: {ex.Message}" };
+                }
+
+                if (result?.audio == null || result.audio.Length == 0 || string.IsNullOrWhiteSpace(result.audio[0]?.url))
+                {
+                    return new AudioResponse { Success = false, ErrorMsg = $"Mirelo returned no soundtrack: {json}" };
+                }
+
+                Directory.CreateDirectory(folder);
+                using var downloader = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
+                var prefix = Guid.NewGuid().ToString("N");
+                progress?.Invoke("Downloading soundtrack...");
+                var primary = await DownloadMireloAudio(downloader, result.audio[0].url, folder, prefix + "_sfx_1", ct);
+
+                // LVS has one alternative audio slot: use it for a second sample OR the speech stem.
+                var secondary = result.audio.Length > 1 ? result.audio[1] :
+                    result.speech?.outcome == "speech" ? result.speech.audio : null;
+                string alternative = null;
+                if (!string.IsNullOrWhiteSpace(secondary?.url))
+                {
+                    progress?.Invoke("Downloading alternative audio...");
+                    alternative = await DownloadMireloAudio(downloader, secondary.url, folder,
+                        prefix + (result.audio.Length > 1 ? "_sfx_2" : "_speech"), ct);
+                }
+
+                progress?.Invoke("");
+                return new AudioResponse
+                {
+                    Success = true,
+                    AudioFile = primary,
+                    AudioFormat = Path.GetExtension(primary).TrimStart('.'),
+                    AlternativeAudioFile = alternative
+                };
+            }
+        }
+
+        private static async Task<string> DownloadMireloAudio(HttpClient client, string url,
+            string folder, string name, CancellationToken ct)
+        {
+            using var response = await client.GetAsync(url, ct);
+            response.EnsureSuccessStatusCode();
+            var extension = Path.GetExtension(new Uri(url).AbsolutePath);
+            if (string.IsNullOrEmpty(extension) || extension.Length > 6)
+            {
+                extension = ".wav";
+            }
+
+            var file = Path.Combine(folder, name + extension);
+            await File.WriteAllBytesAsync(file, await response.Content.ReadAsByteArrayAsync(ct), ct);
+            return file;
         }
 
         internal static async Task<AudioResponse> GetAudio(object request, string folderToSaveAudio, AudioItemPayload refItemPlayload, ConnectionSettings connectionSettings, string model,
