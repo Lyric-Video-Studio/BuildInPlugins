@@ -1,5 +1,7 @@
 Fal.ai multi-model plugin
-Capabilities - Create images from text, edit images, create video from text, create video from image or reference images, animate characters, control motion, lip-sync avatars, edit video, and create audio or sound effects.
+Capabilities - Create and edit images, generate and edit video, lip-sync avatars, animate characters, upscale video, synthesize speech, and create synchronized sound effects/audio from video.
+Search queries - "make audio based on video", "replace audio from video", "generate synchronized sound effects from footage", "add sound to a silent video", "generate replacement soundtrack for video".
+Mirelo SFX 2.0 (video-to-audio) - Make audio based on a video, generate sound effects for footage, and replace audio from a video with a new synchronized soundtrack. Use it to add sound to silent AI-generated video, replace a video's original audio or soundtrack, produce Foley sound design and ambient noise matched to visible action, or generate audio/sound effects from video. Provide a video file or URL, optionally guide sounds with a text prompt, exclude unwanted sounds, and preserve or separately extract speech. Returns standalone audio files to place under the video in the timeline, not a muxed video file.
 Current - Topaz Precision and Generative video upscaling with enhancement controls and optional frame interpolation.
 v1.5.56 - Seedream 5 Pro text-to-image and edit support added.
 v1.5.50 - Scail 2 character animation and Sync v3 avatar support added.
@@ -15,4 +17,4 @@ Current - HiDream O1 image and image edit.
 Current - Seedream 5 Pro, Seedream 5 Lite, Seedream 4.5 and Seedream 4.
 Current - GPT Image 2, GPT Image 1.5 and GPT Image 1 Mini.
 Current - Qwen Image, Imagen 4, Z-Image, Ovis Image and GLM Image.
-Current - VibeVoice 7B audio and Mirelo SFX 1.5 video-to-audio.
+Current - VibeVoice 7B speech synthesis. Mirelo SFX 2.0 is the video-to-audio sound effects and replacement soundtrack model.

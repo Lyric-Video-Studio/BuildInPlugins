@@ -482,12 +482,17 @@ namespace FalAiPlugin
                     {
                         video_url = uploadedVideo.VideoFile,
                         text_prompt = string.IsNullOrWhiteSpace(prompt) ? null : prompt,
+                        negative_prompt = string.IsNullOrWhiteSpace(ip.NegativePrompt) ? null : ip.NegativePrompt,
                         seed = ip.Seed == 0 ? null : ip.Seed,
                         duration = ip.Duration,
-                        start_offset = ip.StartOffset
+                        num_samples = ip.NumSamples,
+                        preserve_speech = ip.PreserveSpeech,
+                        return_speech = ip.ReturnSpeech,
+                        upload_audio_format = ip.OutputFormat,
+                        upload_audio_bitrate_kbps = (ip.OutputFormat is "mp3" or "aac") && ip.AudioBitrateKbps > 0 ? ip.AudioBitrateKbps : null
                     };
 
-                    return await Client.GetAudio(sfxReg, folderToSaveAudio, ip, _connectionSettings, ap.Model, saveAndRefreshCallback, textualProgressAction);
+                    return await Client.GetAudio(sfxReg, folderToSaveAudio, ip, _connectionSettings, ap.Model, saveAndRefreshCallback, textualProgressAction, _ct);
                 }
 
                 var audioReg = new AudioRequest() { cfg_scale = ap.Cfg, script = $"{ap.Prompt} {ip.Prompt}".Trim(), speakers = new() };
@@ -504,7 +509,7 @@ namespace FalAiPlugin
                     audioReg.speakers.Add(speaker);
                 }
 
-                return await Client.GetAudio(audioReg, folderToSaveAudio, ip, _connectionSettings, ap.Model, saveAndRefreshCallback, textualProgressAction);
+                return await Client.GetAudio(audioReg, folderToSaveAudio, ip, _connectionSettings, ap.Model, saveAndRefreshCallback, textualProgressAction, _ct);
             }
 
             throw new Exception("Internal error");
@@ -1087,7 +1092,8 @@ namespace FalAiPlugin
                                 return (false, "Prompt empty or video source empty");
                             }
 
-                            var speakerIndex = ip.Prompt.IndexOf("speaker", StringComparison.CurrentCultureIgnoreCase);
+                            var script = ip.Prompt ?? string.Empty;
+                            var speakerIndex = script.IndexOf("speaker", StringComparison.CurrentCultureIgnoreCase);
                             while (speakerIndex >= 0)
                             {
                                 if (speakerIndex >= 0)
@@ -1096,7 +1102,7 @@ namespace FalAiPlugin
                                     {
                                         return (false, "Speaker must be also separated by new line");
                                     }
-                                    speakerIndex = ip.Prompt.IndexOf("speaker", speakerIndex + 1, StringComparison.CurrentCultureIgnoreCase);
+                                    speakerIndex = script.IndexOf("speaker", speakerIndex + 1, StringComparison.CurrentCultureIgnoreCase);
                                 }
                             }
                         }
@@ -1321,14 +1327,38 @@ namespace FalAiPlugin
                         return (false, "Video source is required");
                     }
 
-                    if (ai.Duration < 1 || ai.Duration > 10)
+                    if (ai.Duration < 1 || ai.Duration > 600)
                     {
-                        return (false, "Duration must be between 1 and 10 seconds");
+                        return (false, "SFX 2.0 duration must be between 1 and 600 seconds (clamped to video length)");
                     }
 
-                    if (ai.StartOffset < 0)
+                    if (ai.NumSamples is < 1 or > 2)
                     {
-                        return (false, "Start offset cannot be negative");
+                        return (false, "SFX 2.0 supports 1 or 2 samples in LVS");
+                    }
+
+                    if (ai.ReturnSpeech && ai.NumSamples > 1)
+                    {
+                        return (false, "Choose either two soundtracks or one soundtrack with separately returned speech");
+                    }
+
+                    if (ai.OutputFormat is not ("wav" or "mp3" or "aac" or "flac"))
+                    {
+                        return (false, "Unsupported SFX 2.0 audio format");
+                    }
+
+                    if (ai.AudioBitrateKbps != 0)
+                    {
+                        if (ai.OutputFormat == "mp3" && ai.AudioBitrateKbps is not
+                            (32 or 40 or 48 or 56 or 64 or 80 or 96 or 112 or 128 or 160 or 192 or 224 or 256 or 320))
+                        {
+                            return (false, "Invalid MP3 bitrate for SFX 2.0");
+                        }
+
+                        if (ai.OutputFormat == "aac" && ai.AudioBitrateKbps is < 32 or > 256)
+                        {
+                            return (false, "AAC bitrate must be between 32 and 256 kbps");
+                        }
                     }
 
                     return (true, "");

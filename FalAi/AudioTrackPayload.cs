@@ -11,7 +11,7 @@ namespace FalAiPlugin
 {
     public class AudioTrackPayload : IPayloadPropertyVisibility
     {
-        public const string VideoToAudioSfxModel = "mirelo-ai/sfx-v1.5/video-to-audio";
+        public const string VideoToAudioSfxModel = "mirelo-ai/sfx2.0/video-to-audio";
 
         public AudioTrackPayload()
         {
