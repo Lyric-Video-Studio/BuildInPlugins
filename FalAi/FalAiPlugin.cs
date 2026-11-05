@@ -491,7 +491,7 @@ namespace FalAiPlugin
                         preserve_speech = isSfx2 ? ip.PreserveSpeech : null,
                         return_speech = isSfx2 ? ip.ReturnSpeech : null,
                         upload_audio_format = isSfx2 ? ip.OutputFormat : null,
-                        upload_audio_bitrate_kbps = isSfx2 && ip.AudioBitrateKbps > 0 ? ip.AudioBitrateKbps : null
+                        upload_audio_bitrate_kbps = isSfx2 && ip.OutputFormat is "mp3" or "aac" && ip.AudioBitrateKbps > 0 ? ip.AudioBitrateKbps : null
                     };
 
                     return await Client.GetAudio(sfxReg, folderToSaveAudio, ip, _connectionSettings, ap.Model, saveAndRefreshCallback, textualProgressAction, _ct);
@@ -1372,10 +1372,6 @@ namespace FalAiPlugin
                                 return (false, "AAC bitrate must be between 32 and 256 kbps");
                             }
 
-                            if (ai.OutputFormat is "wav" or "flac")
-                            {
-                                return (false, "Bitrate cannot be specified for lossless audio formats");
-                            }
                         }
                     }
 
