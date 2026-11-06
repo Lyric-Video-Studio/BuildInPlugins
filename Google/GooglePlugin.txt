@@ -1,15 +1,16 @@
 Google
-Capabilities - Create and edit images, create and edit video from text, images, and video, generate speech from text, and create music with Google Gemini, Imagen, Veo, and Lyria models.
+Capabilities - Generate and edit images; generate video with native dialogue, synchronized speech and environmental audio; create speech from text; create music.
+Model - Veo 3.1, Veo 3.1 Fast and Veo 3.1 Lite: text-to-video and image-driven video with synchronized generated speech, dialogue lip sync and sound effects. Audio is generated with the video; these are not tools to retime an existing video to a supplied audio track.
+Model - Gemini 3.1 Flash Lite Image, Gemini 3.1 Flash Image, Gemini 3 Pro Image and Gemini 2.5 Flash Image: text-to-image and image editing.
+Model - Imagen 4: text-to-image generation.
+Model - Gemini Omni Flash: multimodal generation using the supported reference inputs.
+Model - Gemini 3.1 Flash TTS: text-to-speech / voice generation.
+Model - Lyria 3 Clip and Lyria 3.5: generate music from prompts including clip or song-length output.
 Current - Lyria 3.5 full-song music generation support added.
 v1.5.56 - Gemini Omni Flash and Nano Banana 2 Lite support added.
-Current - gemini-3.1-flash-lite-image.
-Current - gemini-3.1-flash-image-preview.
-Current - gemini-3-pro-image-preview.
-Current - gemini-2.5-flash-image.
+Current - gemini-3.1-flash-lite-image, gemini-3.1-flash-image-preview, gemini-3-pro-image-preview, gemini-2.5-flash-image.
 Current - models/imagen-4.0-generate-001.
-Current - veo-3.1-fast-generate-preview.
-Current - veo-3.1-generate-preview.
-Current - veo-3.1-lite-generate-preview.
+Current - veo-3.1-fast-generate-preview, veo-3.1-generate-preview, veo-3.1-lite-generate-preview.
 Current - gemini-omni-1.1-flash.
 Current - gemini-3.1-flash-tts-preview.
 Current - lyria-3-clip-preview and lyria-3.5.

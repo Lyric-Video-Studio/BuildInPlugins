@@ -1,5 +1,14 @@
 MuApi
-Capabilities - Create images from text, edit images, create video from text, create video from image or references, extend or edit video, generate character video, and create audio-driven media.
+Capabilities - Generate or edit images; create video from text, images and multimodal references; extend/edit video; create character scenes with reference media.
+Model - Seedance 2.0 text-to-video and image-to-video: generate new scenes, motion and native audiovisual content.
+Model - Seedance 2.0 Omni Reference: create video guided by image/video/audio references; useful for audio-conditioned characters and speaking performances, not a dedicated existing-video lip-replacement tool.
+Model - Seedance 2 Mini text-to-video, image-to-video and omni-reference: shorter/faster model variants and reference-guided creation.
+Model - Seedance 2.5 Spicy: text-to-video, image-to-video, first/last-frame, reference-to-video, video edit and video extend.
+Model - Happy Horse 1.1 image-to-video / reference-to-video: animate a character or create a reference-guided scene.
+Model - Vidu Q2 Turbo: text-to-video, image-to-video and first/last-frame video.
+Model - GPT Image 2: create or edit images.
+Model - Midjourney V8: image generation.
+Model - Gemini Omni Character and Omni Audio: multimodal character and audio-driven workflows.
 v1.5.67 - Seedance 2.5 Spicy models added.
 v1.5.50 - Happy Horse 1.1, reference-to-video and Seedance 2 Mini added.
 Current - seedance-v2.0-t2v, seedance-v2.0-i2v and seedance-2.0-omni-reference.

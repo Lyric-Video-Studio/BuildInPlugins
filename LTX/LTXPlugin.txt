@@ -1,6 +1,7 @@
 LTX
-Capabilities - Create video from text or create video from image with LTX video models, including fast and high-quality generation choices.
-Current - ltx-2-3-pro.
-Current - ltx-2-3-fast.
-Current - ltx-2-fast.
-Current - ltx-2-pro.
+Capabilities - Generate video from text, animate still images, and create video using supported audio conditioning and reference inputs.
+Model - ltx-2-3-pro: high-quality video generation.
+Model - ltx-2-3-fast: faster LTX 2.3 generation.
+Model - ltx-2-pro: high-quality LTX 2 video generation.
+Model - ltx-2-fast: faster LTX 2 video generation.
+Current - ltx-2-3-pro, ltx-2-3-fast, ltx-2-fast, ltx-2-pro.
