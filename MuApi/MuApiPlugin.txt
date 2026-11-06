@@ -23,8 +23,8 @@ Model ID - vidu-q2-turbo-start-end-video | Name: Vidu Q2 Turbo Start End Video |
 Model ID - gpt-image-2-text-to-image | Name: GPT Image 2 Text to Image | Capabilities: text-to-image, create images, illustrations, backgrounds and typography using prompts. | Tags: text to image, image generation, create picture
 Model ID - gpt-image-2-image-to-image | Name: GPT Image 2 Image to Image | Capabilities: image editing, inpainting, change subjects, styles and composition from reference image. | Tags: reference to video, character consistency, reference images, image editing, edit image, inpainting, repaint
 Model ID - midjourney-v8 | Name: Midjourney V8 | Capabilities: text-to-image art generation, concept art, stylization and creative illustrations. | Tags: text to image, image generation, create picture
-Model ID - gemini-omni-character | Name: Gemini Omni Character | Capabilities: character reference generation, create consistent reference characters or reusable subject assets.
-Model ID - gemini-omni-audio | Name: Gemini Omni Audio | Capabilities: voice and audio character profiles, create or manage named voice references and speech identity.
+Model ID - gemini-omni-character | Name: Gemini Omni Character | Capabilities: character reference generation, create consistent reference characters or reusable subject assets. | Tags: character reference, character identity, character consistency, create character
+Model ID - gemini-omni-audio | Name: Gemini Omni Audio | Capabilities: voice and audio character profiles, create or manage named voice references and speech identity. | Tags: voice profile, audio character, voice identity, voice reference
 Model - Seedance 2.0 text-to-video and image-to-video: generate new scenes, motion and native audiovisual content.
 Model - Seedance 2.0 Omni Reference: create video guided by image/video/audio references; useful for audio-conditioned characters and speaking performances, not a dedicated existing-video lip-replacement tool.
 Model - Seedance 2 Mini text-to-video, image-to-video and omni-reference: shorter/faster model variants and reference-guided creation.
