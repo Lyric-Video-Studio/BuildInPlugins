@@ -21,7 +21,7 @@ Model - Gemini 3.1 Flash TTS: text-to-speech / voice generation.
 Model - Lyria 3 Clip and Lyria 3.5: generate music from prompts including clip or song-length output.
 Current - Lyria 3.5 full-song music generation support added.
 v1.5.56 - Gemini Omni Flash and Nano Banana 2 Lite support added.
-Current - gemini-3.1-flash-lite-image, gemini-3.1-flash-image-preview, gemini-3-pro-image-preview, gemini-2.5-flash-image.
+Current - gemini-nano-banana-2.1, gemini-3.1-flash-image-preview, gemini-3-pro-image-preview, gemini-2.5-flash-image.
 Current - models/imagen-4.0-generate-001.
 Current - veo-3.1-fast-generate-preview, veo-3.1-generate-preview, veo-3.1-lite-generate-preview.
 Current - gemini-omni-1.2-flash.
