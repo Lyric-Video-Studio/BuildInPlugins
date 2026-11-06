@@ -17,7 +17,7 @@ Model ID - speech-2.6-hd | Name: MiniMax Speech 2.6 HD | Capabilities: text-to-s
 Model ID - speech-2.6-turbo | Name: MiniMax Speech 2.6 Turbo | Capabilities: low-latency text-to-speech voice synthesis.
 Model ID - music-3.0 | Name: MiniMax Music 3.0 | Capabilities: text-to-music song generation with vocals or instrumental arrangement.
 Model ID - music-2.6 | Name: MiniMax Music 2.6 | Capabilities: text-to-music create songs and backing tracks.
-Model ID - music-cover | Name: MiniMax Music Cover | Capabilities: music cover, transform a song or vocal recording into a generated cover performance.
+Workflow - MiniMax Music Cover: music cover, transform a song or vocal recording into a generated cover performance.
 Model - MiniMax H3 Max: fast text-to-video and first/last-frame image-to-video; generates character video, but this plugin does not expose fal.ai's dedicated H3 Max Lip Sync image-plus-audio endpoint.
 Model - MiniMax H3: text-to-video and multimodal reference-guided generation using images, video and audio; supports native generated dialogue and character performances.
 Model - MiniMax Hailuo 2.3 and Hailuo 02: text/image-driven video generation, subject animation and cinematic movement.
