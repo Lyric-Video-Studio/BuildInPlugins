@@ -1,5 +1,15 @@
 Luma AI Dream Machine
 Capabilities - Create images from text, create video from text, create video from image, and upscale generated video to 1080p or 4K.
+
+Model ID - ray-3.2 | Name: Luma Ray 3.2 | Capabilities: text-to-video and image-to-video, cinematic video generation and source-video editing or reframe when supported.
+Model ID - ray-2 | Name: Luma Ray 2 | Capabilities: image-to-video and text-to-video, animate stills and cinematic shots.
+Model ID - ray-flash-2 | Name: Luma Ray Flash 2 | Capabilities: fast text-to-video and image-to-video generation.
+Model ID - ray-1-6 | Name: Luma Ray 1.6 | Capabilities: earlier text-to-video and image-to-video mode.
+Model ID - uni-1 | Name: Luma Uni 1 | Capabilities: image generation and image editing using prompts and references.
+Model ID - uni-1-max | Name: Luma Uni 1 Max | Capabilities: higher-fidelity image generation, image edits and reference-driven composition.
+Model ID - photon-1 | Name: Luma Photon 1 | Capabilities: text-to-image, photographic imagery, illustrations and visual concepts.
+Model ID - photon-flash-1 | Name: Luma Photon Flash 1 | Capabilities: fast text-to-image image generation.
+Model ID - luma-upscale-4k | Name: Luma Video Upscale | Capabilities: upscale generated video to 1080p or 4K resolution.
 v1.5.50 - Ray 3.2 video support added.
 Current - ray-3.2, ray-2, ray-flash-2 and ray-1-6 video models.
 Current - uni-1 and uni-1-max image models.
