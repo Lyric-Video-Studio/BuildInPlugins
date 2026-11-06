@@ -54,9 +54,9 @@ Model ID - imagineart-1.5-pro-preview/text-to-image | Name: Imagineart 1.5 Pro P
 Model ID - qwen-image-2512 | Name: Qwen Image 2512 | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
 Model ID - qwen-image-edit-2511 | Name: Qwen Image Edit 2511 | Capabilities: image-to-image editing, change objects, background, style or text while retaining source image composition where supported.
 Model ID - imagen4/preview | Name: Imagen4 Preview | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
-Model ID - wan/v2.2-a14b/text-to-image | Name: Wan V2.2 A14b Text To Image | Capabilities: specialized AI media generation.
-Model ID - wan-25-preview/text-to-image | Name: Wan 25 Preview Text To Image | Capabilities: text-to-video cinematic scene generation; characters, action and camera movement.
-Model ID - wan-25-preview/image-to-image | Name: Wan 25 Preview Image To Image | Capabilities: text-to-video cinematic scene generation; characters, action and camera movement.
+Model ID - wan/v2.2-a14b/text-to-image | Name: Wan V2.2 A14b Text To Image | Capabilities: text-to-image with Wan 2.2 A14B; create still illustrations and concept art from prompts.
+Model ID - wan-25-preview/text-to-image | Name: Wan 25 Preview Text To Image | Capabilities: text-to-image image generation with Wan 2.5; create still pictures and visual concepts from prompts.
+Model ID - wan-25-preview/image-to-image | Name: Wan 25 Preview Image To Image | Capabilities: image-to-image editing with Wan 2.5; modify a supplied picture and preserve requested visual elements.
 Model ID - bytedance/seedream/v5/lite/text-to-image | Name: Bytedance Seedream V5 Lite Text To Image | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
 Model ID - bytedance/seedream/v5/lite/edit | Name: Bytedance Seedream V5 Lite Edit | Capabilities: image-to-image editing, change objects, background, style or text while retaining source image composition where supported.
 Model ID - bytedance/seedream/v4.5/text-to-image | Name: Bytedance Seedream V4.5 Text To Image | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
