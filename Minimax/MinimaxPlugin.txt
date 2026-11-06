@@ -1,22 +1,22 @@
 Minimax
 Capabilities - Generate video from text, images and references, direct camera movement, produce synthetic speech, clone voices, generate music and create audio covers.
 
-Model ID - MiniMax-H3 | Name: MiniMax H3 | Capabilities: multimodal reference-to-video and native-audio video generation; text, image, video and audio references for characters and dialogues.
-Model ID - MiniMax-H3-Max | Name: MiniMax H3 Max | Capabilities: fast text-to-video and first-last-frame image-to-video with cinematic motion; native audio with generated scenes where supported.
-Model ID - MiniMax-Hailuo-2.3 | Name: MiniMax Hailuo 2.3 | Capabilities: image-to-video, cinematic camera motion, high-quality visual animation.
-Model ID - MiniMax-Hailuo-02 | Name: MiniMax Hailuo 02 | Capabilities: image-to-video, cinematic scene generation and fluid motion.
+Model ID - MiniMax-H3 | Name: MiniMax H3 | Capabilities: multimodal reference-to-video and native-audio video generation; text, image, video and audio references for characters and dialogues. | Tags: reference to video, character consistency, reference images, audio to video, audio-driven video, audio input
+Model ID - MiniMax-H3-Max | Name: MiniMax H3 Max | Capabilities: fast text-to-video and first-last-frame image-to-video with cinematic motion; native audio with generated scenes where supported. | Tags: text to video, video generation, make video from prompt, image to video, animate image, photo animation, first last frame, keyframe transition
+Model ID - MiniMax-Hailuo-2.3 | Name: MiniMax Hailuo 2.3 | Capabilities: image-to-video, cinematic camera motion, high-quality visual animation. | Tags: image to video, animate image, photo animation
+Model ID - MiniMax-Hailuo-02 | Name: MiniMax Hailuo 02 | Capabilities: image-to-video, cinematic scene generation and fluid motion. | Tags: image to video, animate image, photo animation
 Model ID - S2V-01 | Name: MiniMax Subject to Video | Capabilities: subject-reference video, preserve a subject identity while creating a new moving scene.
-Model ID - T2V-01 | Name: MiniMax Text to Video | Capabilities: text-to-video from scene prompts.
-Model ID - T2V-01-Director | Name: MiniMax Director Text to Video | Capabilities: text-to-video with director camera movement controls.
-Model ID - I2V-01 | Name: MiniMax Image to Video | Capabilities: image-to-video animate an existing first frame.
-Model ID - I2V-01-Director | Name: MiniMax Director Image to Video | Capabilities: image-to-video with director camera movements and cinematic motion guidance.
-Model ID - I2V-01-live | Name: MiniMax Live Image to Video | Capabilities: image-to-video character animation with livelier motion.
-Model ID - speech-2.8-hd | Name: MiniMax Speech 2.8 HD | Capabilities: high-fidelity text-to-speech voice synthesis and narration.
-Model ID - speech-2.8-turbo | Name: MiniMax Speech 2.8 Turbo | Capabilities: fast text-to-speech and spoken narration.
-Model ID - speech-2.6-hd | Name: MiniMax Speech 2.6 HD | Capabilities: text-to-speech narration and voice generation.
-Model ID - speech-2.6-turbo | Name: MiniMax Speech 2.6 Turbo | Capabilities: low-latency text-to-speech voice synthesis.
-Model ID - music-3.0 | Name: MiniMax Music 3.0 | Capabilities: text-to-music song generation with vocals or instrumental arrangement.
-Model ID - music-2.6 | Name: MiniMax Music 2.6 | Capabilities: text-to-music create songs and backing tracks.
+Model ID - T2V-01 | Name: MiniMax Text to Video | Capabilities: text-to-video from scene prompts. | Tags: text to video, video generation, make video from prompt
+Model ID - T2V-01-Director | Name: MiniMax Director Text to Video | Capabilities: text-to-video with director camera movement controls. | Tags: text to video, video generation, make video from prompt, camera control, camera movement
+Model ID - I2V-01 | Name: MiniMax Image to Video | Capabilities: image-to-video animate an existing first frame. | Tags: image to video, animate image, photo animation
+Model ID - I2V-01-Director | Name: MiniMax Director Image to Video | Capabilities: image-to-video with director camera movements and cinematic motion guidance. | Tags: image to video, animate image, photo animation, camera control, camera movement
+Model ID - I2V-01-live | Name: MiniMax Live Image to Video | Capabilities: image-to-video character animation with livelier motion. | Tags: image to video, animate image, photo animation
+Model ID - speech-2.8-hd | Name: MiniMax Speech 2.8 HD | Capabilities: high-fidelity text-to-speech voice synthesis and narration. | Tags: text to speech, speech synthesis, voice narration
+Model ID - speech-2.8-turbo | Name: MiniMax Speech 2.8 Turbo | Capabilities: fast text-to-speech and spoken narration. | Tags: text to speech, speech synthesis, voice narration
+Model ID - speech-2.6-hd | Name: MiniMax Speech 2.6 HD | Capabilities: text-to-speech narration and voice generation. | Tags: text to speech, speech synthesis, voice narration
+Model ID - speech-2.6-turbo | Name: MiniMax Speech 2.6 Turbo | Capabilities: low-latency text-to-speech voice synthesis. | Tags: text to speech, speech synthesis, voice narration
+Model ID - music-3.0 | Name: MiniMax Music 3.0 | Capabilities: text-to-music song generation with vocals or instrumental arrangement. | Tags: text to music, music generation, song creation
+Model ID - music-2.6 | Name: MiniMax Music 2.6 | Capabilities: text-to-music create songs and backing tracks. | Tags: text to music, music generation, song creation
 Workflow - MiniMax Music Cover: music cover, transform a song or vocal recording into a generated cover performance.
 Model - MiniMax H3 Max: fast text-to-video and first/last-frame image-to-video, with character and cinematic animation.
 Model - MiniMax H3: text-to-video and multimodal reference-guided generation using images, video and audio; supports native generated dialogue and character performances.
