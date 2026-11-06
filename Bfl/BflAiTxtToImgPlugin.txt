@@ -1,5 +1,14 @@
 BFL.ai / Black Forest Labs
 Capabilities - Create images from text, edit or outpaint images, create video from text, create video from image, continue or edit a video, and enhance draft video.
+
+Model ID - FLUX.2 | Name: FLUX.2 Image | Capabilities: text-to-image, edit images with reference pictures, object/background changes and prompt-based composition.
+Model ID - FLUX.3 | Name: FLUX.3 | Capabilities: image generation and editing, text-to-video, image-to-video, video continuation, editing and draft enhance based on selected track mode.
+Model ID - Outpaint | Name: BFL Outpaint Mode | Capabilities: image outpainting, expand image canvas beyond original borders and generate new content.
+Model ID - Text to Video | Name: FLUX.3 Text to Video Mode | Capabilities: text-to-video, generate moving cinematic scenes and motion from prompts.
+Model ID - Image to Video | Name: FLUX.3 Image to Video Mode | Capabilities: image-to-video, animate a starting image with optional multiple reference images and timed keyframes.
+Model ID - Video Continuation | Name: FLUX.3 Video Continuation Mode | Capabilities: extend existing video footage, generate further frames and continuation motion.
+Model ID - Video Edit | Name: FLUX.3 Video Edit Mode | Capabilities: video-to-video editing, modify original footage using prompts.
+Model ID - Draft Enhance | Name: FLUX.3 Draft Enhance Mode | Capabilities: video enhancement, increase detail and quality of draft-generated video.
 v1.5.62 - FLUX.3 video support added.
 Current - FLUX.2 image generation and editing.
 Current - FLUX.2 outpaint.
