@@ -1,5 +1,30 @@
 MuApi
 Capabilities - Generate or edit images; create video from text, images and multimodal references; extend/edit video; create character scenes with reference media.
+
+Model ID - seedance-v2.0-t2v | Name: Seedance 2.0 Text to Video | Capabilities: text-to-video, create cinematic video clips with synchronized generated sound, dialogue, actions and movement.
+Model ID - seedance-v2.0-i2v | Name: Seedance 2.0 Image to Video | Capabilities: image-to-video, animate a source frame with motion and native generated audio.
+Model ID - seedance-2.0-omni-reference | Name: Seedance 2.0 Omni Reference | Capabilities: multimodal reference-to-video, use images, source videos and audio for character consistency, motion and sound-guided generation.
+Model ID - seedance-2-mini-text-to-video | Name: Seedance 2 Mini Text to Video | Capabilities: fast text-to-video with character movement and cinematic scenes.
+Model ID - seedance-2-mini-image-to-video | Name: Seedance 2 Mini Image to Video | Capabilities: fast image-to-video, animate a still reference image into new motion.
+Model ID - seedance-2-mini-omni-reference | Name: Seedance 2 Mini Omni Reference | Capabilities: reference-guided video generation from image, video or audio references in the Mini mode.
+Model ID - seedance-2.0-t2v-480p | Name: Seedance 2.0 Text to Video 480p | Capabilities: 480p preview text-to-video generation with native audiovisual scenes.
+Model ID - seedance-2.0-i2v-480p | Name: Seedance 2.0 Image to Video 480p | Capabilities: 480p preview image-to-video animation from a source frame.
+Model ID - seedance-2.5-spicy-text-to-video | Name: Seedance 2.5 Spicy Text to Video | Capabilities: text-to-video generate new video and sound from a scene prompt.
+Model ID - seedance-2.5-spicy-image-to-video | Name: Seedance 2.5 Spicy Image to Video | Capabilities: image-to-video animate existing artwork, photos or character references.
+Model ID - seedance-2.5-spicy-first-last-frame | Name: Seedance 2.5 Spicy First Last Frame | Capabilities: first-to-last-frame animation, transition between two specified keyframe images.
+Model ID - seedance-2.5-spicy-omni-reference | Name: Seedance 2.5 Spicy Omni Reference | Capabilities: multimodal video references, character identity consistency and audio-conditioned video scenes.
+Model ID - seedance-2.5-spicy-video-edit | Name: Seedance 2.5 Spicy Video Edit | Capabilities: video-to-video editing and transformation of an existing clip using prompts and references.
+Model ID - seedance-2.5-spicy-video-extend | Name: Seedance 2.5 Spicy Video Extend | Capabilities: extend video, continue existing footage with additional frames and motion beyond its ending.
+Model ID - happy-horse-1.1-image-to-video-1080p | Name: Happy Horse 1.1 Image to Video | Capabilities: image-to-video at 1080p, turn still artwork into moving video with coherent visual subject.
+Model ID - happy-horse-1.1-reference-to-video-1080p | Name: Happy Horse 1.1 Reference to Video | Capabilities: reference-to-video at 1080p, create clips guided by visual references and consistent characters.
+Model ID - vidu-q2-turbo-text-to-video | Name: Vidu Q2 Turbo Text to Video | Capabilities: fast text-to-video and stylized scene generation from prompts.
+Model ID - vidu-q2-turbo-image-to-video | Name: Vidu Q2 Turbo Image to Video | Capabilities: fast image-to-video, animate characters and objects from a source image.
+Model ID - vidu-q2-turbo-start-end-video | Name: Vidu Q2 Turbo Start End Video | Capabilities: start-end-frame animation between specified first and last images.
+Model ID - gpt-image-2-text-to-image | Name: GPT Image 2 Text to Image | Capabilities: text-to-image, create images, illustrations, backgrounds and typography using prompts.
+Model ID - gpt-image-2-image-to-image | Name: GPT Image 2 Image to Image | Capabilities: image editing, inpainting, change subjects, styles and composition from reference image.
+Model ID - midjourney-v8 | Name: Midjourney V8 | Capabilities: text-to-image art generation, concept art, stylization and creative illustrations.
+Model ID - gemini-omni-character | Name: Gemini Omni Character | Capabilities: character reference generation, create consistent reference characters or reusable subject assets.
+Model ID - gemini-omni-audio | Name: Gemini Omni Audio | Capabilities: voice and audio character profiles, create or manage named voice references and speech identity.
 Model - Seedance 2.0 text-to-video and image-to-video: generate new scenes, motion and native audiovisual content.
 Model - Seedance 2.0 Omni Reference: create video guided by image/video/audio references; useful for audio-conditioned characters and speaking performances, not a dedicated existing-video lip-replacement tool.
 Model - Seedance 2 Mini text-to-video, image-to-video and omni-reference: shorter/faster model variants and reference-guided creation.
