@@ -1,7 +1,8 @@
 Runway ML
-Capabilities - Create video from text, create video from image, animate a character performance, transform or edit video, and upscale video.
-Current - gen4.5.
-Current - act_two.
-Current - upscale_v1.
-Current - gen4_aleph.
-Current - gen4_turbo and gen3a_turbo.
+Capabilities - Create video from text, animate an image, transfer a reference performance to a character, edit or transform existing video, and upscale video.
+Model - gen4.5: text-to-video generation with cinematic motion.
+Model - act_two: performance-driven character animation using an acting reference (facial expression, movement, speaking performance); use for controlled character acting, not standalone lip sync from only an audio file.
+Model - gen4_aleph: instruction-guided video-to-video editing and visual transformation.
+Model - gen4_turbo and gen3a_turbo: image-to-video generation and animation.
+Model - upscale_v1: upscale or enhance video resolution.
+Current - gen4.5, act_two, upscale_v1, gen4_aleph, gen4_turbo, gen3a_turbo.
