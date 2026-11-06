@@ -1,15 +1,11 @@
 using PluginBase;
+using System.ComponentModel;
 
 namespace GooglePlugin
 {
     public class VideoTrackPayload : IPayloadPropertyVisibility
     {
-        public const string ModelGeminiOmniFlash = "gemini-omni-1.1-flash";
-        public const string LegacyModelGeminiOmniFlashPreview = "gemini-omni-flash-preview";
-
-        // Keep the old constant name as a source-compatibility alias because the existing
-        // Google plugin routes Omni requests through it in several places.
-        public const string ModelGeminiOmniFlashPreview = ModelGeminiOmniFlash;
+        public const string ModelGeminiOmni12Flash = "gemini-omni-1.2-flash";
 
         public const string VideoTaskAuto = "Auto";
         public const string VideoTaskUnspecified = "Unspecified";
@@ -20,22 +16,22 @@ namespace GooglePlugin
 
         private string _model = "veo-3.1-fast-generate-preview";
 
-        [PropertyComboOptions(["veo-3.1-fast-generate-preview", "veo-3.1-generate-preview", "veo-3.1-lite-generate-preview", ModelGeminiOmniFlash])]
+        [PropertyComboOptions(["veo-3.1-fast-generate-preview", "veo-3.1-generate-preview", "veo-3.1-lite-generate-preview", ModelGeminiOmni12Flash])]
         [TriggerReload]
         public string Model
         {
-            get => string.Equals(_model, LegacyModelGeminiOmniFlashPreview, StringComparison.OrdinalIgnoreCase)
-                ? ModelGeminiOmniFlash
-                : _model;
-            set => _model = string.Equals(value, LegacyModelGeminiOmniFlashPreview, StringComparison.OrdinalIgnoreCase)
-                ? ModelGeminiOmniFlash
-                : value;
+            get => _model;
+            set => _model = value;
         }
 
         public string Prompt { get; set; }
 
         [PropertyComboOptions(["720p", "1080p", "4k"])]
         public string Resolution { get; set; } = "1080p";
+
+        [Description("Omni 1.2 output resolution. 1080p and 4K are upscaled.")]
+        [PropertyComboOptions(["360p", "720p", "1080p", "4k"])]
+        public string OmniResolution { get; set; } = "720p";
 
         [PropertyComboOptions(["Auto", "16:9", "9:16"])]
         public string AspectRatio { get; set; } = "16:9";
@@ -76,7 +72,7 @@ namespace GooglePlugin
         {
             if (trackPayload is VideoTrackPayload tp)
             {
-                var isOmni = tp.Model == ModelGeminiOmniFlashPreview;
+                var isOmni = tp.Model == ModelGeminiOmni12Flash;
                 if (propertyName is nameof(VideoTask) or nameof(VideoSource))
                 {
                     return isOmni;
@@ -90,6 +86,11 @@ namespace GooglePlugin
                 if (propertyName == nameof(Resolution))
                 {
                     return !isOmni;
+                }
+
+                if (propertyName == nameof(OmniResolution))
+                {
+                    return isOmni;
                 }
 
                 if (propertyName is nameof(ImageSource2) or nameof(ImageSource3))
