@@ -1,6 +1,96 @@
 Fal.ai multi-model plugin
 Capabilities - Create and edit images, generate and edit video, lip-sync talking or singing characters, animate performances, upscale video, synthesize speech, and make synchronized sound effects or replacement audio from video.
 Search terms - lipsync, lip sync, lip-sync, mouth synchronization, singing animation, talking avatar, dubbing, dialogue, audio-driven animation, video-to-audio.
+
+Model ID - veo3.1 | Name: Veo 3.1 Text to Video | Capabilities: text-to-video cinematic scene generation with native audio, synchronized speech, talking characters and environmental sound.
+Model ID - veo3.1/fast | Name: Veo 3.1 Fast Text to Video | Capabilities: text-to-video cinematic scene generation with native audio, synchronized speech, talking characters and environmental sound. Faster Veo generation mode.
+Model ID - veo3.1/image-to-video | Name: Veo3.1 Image To Video | Capabilities: animate a photo into video; native generated dialogue, lip-synced speech, music and environmental sound.
+Model ID - veo3.1/fast/image-to-video | Name: Veo3.1 Fast Image To Video | Capabilities: animate a photo into video; native generated dialogue, lip-synced speech, music and environmental sound. Faster Veo generation mode.
+Model ID - veo3.1/reference-to-video | Name: Veo3.1 Reference To Video | Capabilities: reference-to-video, combine reference images or footage to guide identity, character consistency, scene composition and movement.
+Model ID - veo3.1/first-last-frame-to-video | Name: Veo3.1 First Last Frame To Video | Capabilities: first-to-last-frame video animation, transition between start and end images, control keyframes, preserve beginning and ending composition.
+Model ID - minimax/hailuo-2.3-fast/standard/image-to-video | Name: Minimax Hailuo 2.3 Fast Standard Image To Video | Capabilities: fast image-to-video with cinematic scene motion; choose Standard or Pro quality tier and animate character or environment from still image.
+Model ID - minimax/hailuo-2.3-fast/pro/image-to-video | Name: Minimax Hailuo 2.3 Fast Pro Image To Video | Capabilities: fast image-to-video with cinematic scene motion; choose Standard or Pro quality tier and animate character or environment from still image.
+Model ID - wan/v2.7/text-to-video | Name: Wan V2.7 Text To Video | Capabilities: text-to-video cinematic scene generation; characters, action and camera movement.
+Model ID - wan/v2.7/reference-to-video | Name: Wan V2.7 Reference To Video | Capabilities: reference-to-video, combine reference images or footage to guide identity, character consistency, scene composition and movement.
+Model ID - wan/v2.7/edit-video | Name: Wan V2.7 Edit Video | Capabilities: video-to-video edit, modify existing footage from text/reference instructions; maintain source motion where supported.
+Model ID - wan/v2.6/text-to-video | Name: Wan V2.6 Text To Video | Capabilities: text-to-video cinematic scene generation; characters, action and camera movement.
+Model ID - wan/v2.6/image-to-video | Name: Wan V2.6 Image To Video | Capabilities: animate a still image, create subject movement and video from source photo; native generated audio when supported by model.
+Model ID - wan-25-preview/text-to-video | Name: Wan 25 Preview Text To Video | Capabilities: text-to-video cinematic scene generation; characters, action and camera movement.
+Model ID - wan-25-preview/image-to-video | Name: Wan 25 Preview Image To Video | Capabilities: animate a still image, create subject movement and video from source photo; native generated audio when supported by model.
+Model ID - wan-alpha | Name: Wan Alpha | Capabilities: experimental Wan video generator and character scene animation.
+Model ID - kling-video/o3/pro/text-to-video | Name: Kling Video O3 Pro Text To Video | Capabilities: text-to-video cinematic action, camera movement and character animations; native audio in supported versions.
+Model ID - kling-video/o3/pro/image-to-video | Name: Kling Video O3 Pro Image To Video | Capabilities: image-to-video, generate cinematic movement and consistent characters from a still, native audio on supported versions.
+Model ID - kling-video/v3/pro/motion-control | Name: Kling Video V3 Pro Motion Control | Capabilities: motion transfer, drive generated character movement using reference motion video; pose, gesture and choreography transfer, not ordinary text-to-video.
+Model ID - kling-video/v2.6/pro/text-to-video | Name: Kling Video V2.6 Pro Text To Video | Capabilities: text-to-video cinematic action, camera movement and character animations; native audio in supported versions.
+Model ID - kling-video/v2.6/pro/image-to-video | Name: Kling Video V2.6 Pro Image To Video | Capabilities: image-to-video, generate cinematic movement and consistent characters from a still, native audio on supported versions.
+Model ID - kling-video/o1/image-to-video | Name: Kling Video O1 Image To Video | Capabilities: image-to-video, generate cinematic movement and consistent characters from a still, native audio on supported versions.
+Model ID - kling-video/v2.6/pro/motion-control | Name: Kling Video V2.6 Pro Motion Control | Capabilities: motion transfer, drive generated character movement using reference motion video; pose, gesture and choreography transfer, not ordinary text-to-video.
+Model ID - kling-video/v2.6/standard/motion-control | Name: Kling Video V2.6 Standard Motion Control | Capabilities: motion transfer, drive generated character movement using reference motion video; pose, gesture and choreography transfer, not ordinary text-to-video.
+Model ID - kling-video/v2.5-turbo/pro/image-to-video | Name: Kling Video V2.5 Turbo Pro Image To Video | Capabilities: image-to-video, generate cinematic movement and consistent characters from a still, native audio on supported versions.
+Model ID - kling-video/v2.5-turbo/pro/text-to-video | Name: Kling Video V2.5 Turbo Pro Text To Video | Capabilities: text-to-video cinematic action, camera movement and character animations; native audio in supported versions.
+Model ID - ltxv-2/text-to-video/fast | Name: Ltxv 2 Text To Video Fast | Capabilities: fast AI video generation from a text prompt; synchronized audiovisual scene generation on supported LTX modes.
+Model ID - ltxv-2/text-to-video | Name: Ltxv 2 Text To Video | Capabilities: high-quality AI video generation from text prompts; detailed cinematic motion.
+Model ID - ltxv-2/image-to-video/fast | Name: Ltxv 2 Image To Video Fast | Capabilities: fast AI video generation from a still image; synchronized audiovisual scene generation on supported LTX modes.
+Model ID - ltxv-2/image-to-video | Name: Ltxv 2 Image To Video | Capabilities: high-quality AI video generation from a source image; detailed cinematic motion.
+Model ID - pixverse/v6/text-to-video | Name: Pixverse V6 Text To Video | Capabilities: stylized and cinematic text-to-video scene generation; dynamic motion and visual style.
+Model ID - pixverse/v6/image-to-video | Name: Pixverse V6 Image To Video | Capabilities: stylized and cinematic image-to-video animation from still art; dynamic motion and visual style.
+Model ID - pixverse/v5.6/text-to-video | Name: Pixverse V5.6 Text To Video | Capabilities: stylized and cinematic text-to-video scene generation; dynamic motion and visual style.
+Model ID - pixverse/v5.6/image-to-video | Name: Pixverse V5.6 Image To Video | Capabilities: stylized and cinematic image-to-video animation from still art; dynamic motion and visual style.
+Model ID - bytedance/dreamactor/v2 | Name: Bytedance Dreamactor V2 | Capabilities: performance transfer, character animation driven by reference video, transfer human movement, poses, expressions and dancing to a target subject.
+Model ID - bytedance/seedance/v1.5/pro/text-to-video | Name: Bytedance Seedance V1.5 Pro Text To Video | Capabilities: Seedance text-to-video, cinematic clips, character action and generated synchronized audio.
+Model ID - bytedance/seedance/v1.5/pro/image-to-video | Name: Bytedance Seedance V1.5 Pro Image To Video | Capabilities: Seedance image-to-video, animate an image, character motion and synchronized generated sound.
+Model ID - seedvr/upscale/video | Name: SeedVR Video Upscale | Capabilities: upscale video, video super-resolution and resolution enhancement; improve low-resolution footage.
+Model ID - lucy-edit/pro | Name: Lucy Edit Pro | Capabilities: prompt-based video editing, modify or transform existing footage with instructions.
+Model ID - decart/lucy-restyle | Name: Decart Lucy Restyle | Capabilities: video-to-video restyle, change visual style or appearance of source video while following original motion.
+Model ID - editto | Name: Editto Video Editor | Capabilities: prompt-based video editing, modify or transform existing footage with instructions.
+Model ID - one-to-all-animation/1.3b | Name: One To All Animation 1.3b | Capabilities: character and scene animation from source media; create animated transformations with the selected animation model.
+Model ID - one-to-all-animation/14b | Name: One To All Animation 14b | Capabilities: character and scene animation from source media; create animated transformations with the selected animation model.
+Model ID - creatify/aurora | Name: Creatify Aurora Avatar | Capabilities: AI avatar video creation and talking-character production from supported character inputs.
+Model ID - z-image/turbo | Name: Z-Image Turbo | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - ovis-image | Name: Ovis Image | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - hidream-i1-full | Name: HiDream I1 Full | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - glm-image | Name: GLM Image | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - imagineart-1.5-pro-preview/text-to-image | Name: Imagineart 1.5 Pro Preview Text To Image | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - qwen-image-2512 | Name: Qwen Image 2512 | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - qwen-image-edit-2511 | Name: Qwen Image Edit 2511 | Capabilities: image-to-image editing, change objects, background, style or text while retaining source image composition where supported.
+Model ID - imagen4/preview | Name: Imagen4 Preview | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - wan/v2.2-a14b/text-to-image | Name: Wan V2.2 A14b Text To Image | Capabilities: specialized AI media generation.
+Model ID - wan-25-preview/text-to-image | Name: Wan 25 Preview Text To Image | Capabilities: text-to-video cinematic scene generation; characters, action and camera movement.
+Model ID - wan-25-preview/image-to-image | Name: Wan 25 Preview Image To Image | Capabilities: text-to-video cinematic scene generation; characters, action and camera movement.
+Model ID - bytedance/seedream/v5/lite/text-to-image | Name: Bytedance Seedream V5 Lite Text To Image | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - bytedance/seedream/v5/lite/edit | Name: Bytedance Seedream V5 Lite Edit | Capabilities: image-to-image editing, change objects, background, style or text while retaining source image composition where supported.
+Model ID - bytedance/seedream/v4.5/text-to-image | Name: Bytedance Seedream V4.5 Text To Image | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - bytedance/seedream/v4/text-to-image | Name: Bytedance Seedream V4 Text To Image | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - bytedance/seedream/v4/edit | Name: Bytedance Seedream V4 Edit | Capabilities: image-to-image editing, change objects, background, style or text while retaining source image composition where supported.
+Model ID - gpt-image-2 | Name: Gpt Image 2 | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - gpt-image-2/edit | Name: Gpt Image 2 Edit | Capabilities: image-to-image editing, change objects, background, style or text while retaining source image composition where supported.
+Model ID - gpt-image-1.5 | Name: Gpt Image 1.5 | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - gpt-image-1.5/edit | Name: Gpt Image 1.5 Edit | Capabilities: image-to-image editing, change objects, background, style or text while retaining source image composition where supported.
+Model ID - gpt-image-1-mini | Name: Gpt Image 1 Mini | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - gpt-image-1-mini/edit | Name: Gpt Image 1 Mini Edit | Capabilities: image-to-image editing, change objects, background, style or text while retaining source image composition where supported.
+Model ID - bytedance/seedance-2.0/image-to-video | Name: Bytedance Seedance 2.0 Image To Video | Capabilities: Seedance 2 native audiovisual image-to-video, animate an image, character motion and synchronized generated sound.
+Model ID - bytedance/seedance-2.0/text-to-video | Name: Bytedance Seedance 2.0 Text To Video | Capabilities: Seedance 2 native audiovisual text-to-video, cinematic clips, character action and generated synchronized audio.
+Model ID - bytedance/seedance-2.0/reference-to-video | Name: Bytedance Seedance 2.0 Reference To Video | Capabilities: multimodal reference-to-video, use reference images, video and audio for consistent character appearance, movement and audiovisual scene generation.
+Model ID - alibaba/happy-horse/text-to-video | Name: Alibaba Happy Horse Text To Video | Capabilities: text-to-video generation, cinematic motion and audio where supported by endpoint.
+Model ID - alibaba/happy-horse/image-to-video | Name: Alibaba Happy Horse Image To Video | Capabilities: image-to-video animation from a starting frame; create scenes with subject motion and coherent appearance.
+Model ID - alibaba/happy-horse/reference-to-video | Name: Alibaba Happy Horse Reference To Video | Capabilities: reference-to-video, combine reference images or footage to guide identity, character consistency, scene composition and movement.
+Model ID - alibaba/happy-horse/video-edit | Name: Alibaba Happy Horse Video Edit | Capabilities: video-to-video edit, modify existing footage from text/reference instructions; maintain source motion where supported.
+Model ID - minimax/h3-max/text-to-video | Name: Minimax H3 Max Text To Video | Capabilities: H3 Max text-to-video, cinematic shot generation with native audiovisual dialogue and character performance.
+Model ID - minimax/h3-max/image-to-video | Name: Minimax H3 Max Image To Video | Capabilities: animate a still image with H3 Max, native generated audio and visual movement; preserve the source character.
+Model ID - minimax/h3-max/reference-to-video | Name: Minimax H3 Max Reference To Video | Capabilities: reference-guided H3 Max video generation, preserve character and environment appearance using image/video references.
+Model ID - minimax/h3-max/camera-controls | Name: H3 Max Camera Controls | Capabilities: direct camera moves using keyframes and camera trajectory (azimuth, elevation, distance), orbit, dolly and controlled framing around a generated H3 Max scene.
+Model ID - minimax/h3-max-turbo/text-to-video | Name: Minimax H3 Max Turbo Text To Video | Capabilities: H3 Max text-to-video, cinematic shot generation with native audiovisual dialogue and character performance. faster Turbo mode.
+Model ID - minimax/h3-max-turbo/image-to-video | Name: Minimax H3 Max Turbo Image To Video | Capabilities: animate a still image with H3 Max, native generated audio and visual movement; preserve the source character. faster Turbo mode.
+Model ID - topaz/upscale/video/precision | Name: Topaz Precision Video Upscale | Capabilities: upscale video, super-resolution and detail recovery with adjustable enhancement and restoration controls; optional frame interpolation.
+Model ID - topaz/upscale/video/generative | Name: Topaz Generative Video Upscale | Capabilities: generative video upscale, detail restoration and enhancement, optional interpolation for improved motion.
+Model ID - scail-2 | Name: Scail 2 Character Animation | Capabilities: character animation and performance transfer using a character reference and motion driving inputs.
+Model ID - ltx-2.3-quality/audio-to-video | Name: LTX 2.3 Audio to Video | Capabilities: audio-to-video, audio-reactive generation conditioned on supplied sound; animate new video following an existing audio clip.
+Model ID - hidream-o1-image | Name: HiDream O1 Image | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - hidream-o1-image/edit | Name: HiDream O1 Image Edit | Capabilities: image-to-image editing, modify a supplied image using prompt instructions and visual references.
+Model ID - bytedance/seedream/v5/pro/text-to-image | Name: Bytedance Seedream V5 Pro Text To Image | Capabilities: text-to-image generation, create illustrations, visual concepts, backgrounds and characters from prompts.
+Model ID - bytedance/seedream/v5/pro/edit | Name: Bytedance Seedream V5 Pro Edit | Capabilities: image-to-image editing, change objects, background, style or text while retaining source image composition where supported.
+Model ID - mirelo-ai/sfx2.0/video-to-audio | Name: Mirelo SFX 2.0 | Capabilities: video-to-audio, generate synchronized sound effects and Foley from silent video, replace an existing soundtrack with action-matched audio; optionally preserve speech and prompt desired sounds.
+Model ID - vibevoice/7b | Name: VibeVoice 7B Speech | Capabilities: text-to-speech, multi-speaker scripted dialogue, synthesize narration and character voices using built-in voice presets or supplied voice references.
 Model ID - sync-lipsync/v3/image-to-video | Name: Sync v3 Avatar | Capabilities: lip sync, lipsync, lip-sync, talking avatar, singing or speech animation with an existing audio file; requires a portrait/image and audio (not existing-video replacement).
 Model ID - minimax/h3-max/lip-sync/image-to-video | Name: H3 Max Lip Sync | Capabilities: lip sync, lipsync, lip-sync, animate a portrait with supplied speech or singing audio; optional transcription guidance.
 Model ID - bytedance/omnihuman/v1.5 | Name: OmniHuman 1.5 | Capabilities: lip sync, lipsync, speech-driven human animation with image and audio input.
