@@ -1,4 +1,6 @@
 OpenAI image generation
 Capabilities - Create images from text prompts with GPT Image or DALL-E models.
+
+Model ID - gpt-image-1 | Name: GPT Image 1 | Capabilities: text-to-image, generate illustrations and pictures from prompts.
 Current - gpt-image-1.
 Current - Search terms: OpenAI, GPT Image, text-to-image, DALL-E 3.
