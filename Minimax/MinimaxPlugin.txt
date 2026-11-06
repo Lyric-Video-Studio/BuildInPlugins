@@ -1,7 +1,7 @@
 Minimax
 Capabilities - Generate video from text, images and references, direct camera movement, produce synthetic speech, clone voices, generate music and create audio covers.
 
-Model ID - MiniMax-H3 | Name: MiniMax H3 | Capabilities: multimodal reference-to-video and native-audio video generation; text, image, video and audio references for characters and dialogues. | Tags: reference to video, character consistency, reference images, audio to video, audio-driven video, audio input
+Model ID - MiniMax-H3 | Name: MiniMax H3 | Capabilities: multimodal reference-to-video and native-audio video generation; text, image, video and audio references for characters and dialogues. | Tags: reference to video, character consistency, reference images, audio input, audio reference, audio-conditioned video
 Model ID - MiniMax-H3-Max | Name: MiniMax H3 Max | Capabilities: fast text-to-video and first-last-frame image-to-video with cinematic motion; native audio with generated scenes where supported. | Tags: text to video, video generation, make video from prompt, image to video, animate image, photo animation, first last frame, keyframe transition
 Model ID - MiniMax-Hailuo-2.3 | Name: MiniMax Hailuo 2.3 | Capabilities: image-to-video, cinematic camera motion, high-quality visual animation. | Tags: image to video, animate image, photo animation
 Model ID - MiniMax-Hailuo-02 | Name: MiniMax Hailuo 02 | Capabilities: image-to-video, cinematic scene generation and fluid motion. | Tags: image to video, animate image, photo animation
