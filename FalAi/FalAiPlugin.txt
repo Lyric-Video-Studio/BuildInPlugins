@@ -1,6 +1,15 @@
 Fal.ai multi-model plugin
 Capabilities - Create and edit images, generate and edit video, lip-sync talking or singing characters, animate performances, upscale video, synthesize speech, and make synchronized sound effects or replacement audio from video.
 Search terms - lipsync, lip sync, lip-sync, mouth synchronization, singing animation, talking avatar, dubbing, dialogue, audio-driven animation, video-to-audio.
+Model ID - sync-lipsync/v3/image-to-video | Name: Sync v3 Avatar | Capabilities: lip sync, lipsync, lip-sync, talking avatar, singing or speech animation with an existing audio file; requires a portrait/image and audio (not existing-video replacement).
+Model ID - minimax/h3-max/lip-sync/image-to-video | Name: H3 Max Lip Sync | Capabilities: lip sync, lipsync, lip-sync, animate a portrait with supplied speech or singing audio; optional transcription guidance.
+Model ID - bytedance/omnihuman/v1.5 | Name: OmniHuman 1.5 | Capabilities: lip sync, lipsync, speech-driven human animation with image and audio input.
+Model ID - kling-video/ai-avatar/v2/pro | Name: Kling AI Avatar V2 Pro | Capabilities: lip sync, lipsync, talking avatar and speech-driven portrait animation with audio.
+Model ID - wan/v2.7/image-to-video | Name: Wan 2.7 Image to Video | Capabilities: lip sync category in the Fal AI plugin; image-to-video character animation. Confirm audio input support in the selected endpoint before relying on supplied-audio synchronization.
+Model ID - alibaba/wan-3.0/reference-to-video | Name: Wan 3.0 Reference to Video | Capabilities: lip sync, lipsync, dialogue and performance generation with audio reference, plus image and video references; audio-conditioned new video, not mouth replacement in existing video.
+Model ID - alibaba/wan-3.0/image-to-video | Name: Wan 3.0 Image to Video | Capabilities: lip sync with newly generated spoken dialogue and synchronized audio from a source image; not synchronization to a supplied recording.
+Model ID - alibaba/wan-3.0/text-to-video | Name: Wan 3.0 Text to Video | Capabilities: lip sync with generated dialogue, native audiovisual talking and singing character scenes from text; no supplied-audio alignment.
+
 Lip sync (supplied audio) - Sync v3 Avatar (sync-lipsync/v3/image-to-video): animate a still face or illustrated character to an existing speech or singing audio file. Inputs: image + audio. This plugin exposes the image-to-video endpoint, not Sync v3 video-to-video.
 Lip sync (supplied audio) - H3 Max Lip Sync (minimax/h3-max/lip-sync/image-to-video): animate a portrait or illustration to an existing speech or singing recording. Inputs: image + audio; optional transcription guidance (disable for songs/music).
 Dialogue lip sync (native generated audio) - Wan 3.0 text-to-video and image-to-video (alibaba/wan-3.0): generate a talking or singing character with audio and visuals together, including synchronized spoken dialogue. This is native audio generation, not lip sync for an existing video's soundtrack.
