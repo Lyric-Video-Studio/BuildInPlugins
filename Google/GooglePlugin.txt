@@ -1,18 +1,18 @@
 Google
 Capabilities - Generate and edit images; generate video with native dialogue, synchronized speech and environmental audio; create speech from text; create music.
 
-Model ID - gemini-nano-banana-2.1 | Name: Nano Banana 2.1 | Capabilities: text-to-image and prompt-based image editing, reference-image composition, object replacement, style and character consistency.
-Model ID - gemini-3.1-flash-image-preview | Name: Gemini 3.1 Flash Image | Capabilities: fast text-to-image, edit pictures with text prompts, use visual references and create assets.
-Model ID - gemini-3-pro-image-preview | Name: Gemini 3 Pro Image | Capabilities: higher-quality prompt-based image generation, image editing, composite scenes and visual references.
-Model ID - gemini-2.5-flash-image | Name: Gemini 2.5 Flash Image | Capabilities: image generation and conversational image editing using prompts and references.
-Model ID - models/imagen-4.0-generate-001 | Name: Imagen 4 | Capabilities: high-quality text-to-image rendering for concept art, illustration, product shots and backgrounds.
-Model ID - veo-3.1-fast-generate-preview | Name: Veo 3.1 Fast | Capabilities: faster text-to-video and image-to-video with generated speech, synchronized dialogue, environmental sounds and native audio.
-Model ID - veo-3.1-generate-preview | Name: Veo 3.1 | Capabilities: text-to-video, image animation and audiovisual scenes; generated spoken dialogue and environmental audio.
+Model ID - gemini-nano-banana-2.1 | Name: Nano Banana 2.1 | Capabilities: text-to-image and prompt-based image editing, reference-image composition, object replacement, style and character consistency. | Tags: text to image, image generation, create picture, image editing, edit image
+Model ID - gemini-3.1-flash-image-preview | Name: Gemini 3.1 Flash Image | Capabilities: fast text-to-image, edit pictures with text prompts, use visual references and create assets. | Tags: reference to video, character consistency, reference images, text to image, image generation, create picture
+Model ID - gemini-3-pro-image-preview | Name: Gemini 3 Pro Image | Capabilities: higher-quality prompt-based image generation, image editing, composite scenes and visual references. | Tags: reference to video, character consistency, reference images, text to image, image generation, create picture, image editing, edit image
+Model ID - gemini-2.5-flash-image | Name: Gemini 2.5 Flash Image | Capabilities: image generation and conversational image editing using prompts and references. | Tags: text to image, image generation, create picture, image editing, edit image, multi speaker dialogue, conversation
+Model ID - models/imagen-4.0-generate-001 | Name: Imagen 4 | Capabilities: high-quality text-to-image rendering for concept art, illustration, product shots and backgrounds. | Tags: text to image, image generation, create picture
+Model ID - veo-3.1-fast-generate-preview | Name: Veo 3.1 Fast | Capabilities: faster text-to-video and image-to-video with generated speech, synchronized dialogue, environmental sounds and native audio. | Tags: text to video, video generation, make video from prompt, image to video, animate image, photo animation
+Model ID - veo-3.1-generate-preview | Name: Veo 3.1 | Capabilities: text-to-video, image animation and audiovisual scenes; generated spoken dialogue and environmental audio. | Tags: text to video, video generation, make video from prompt
 Model ID - veo-3.1-lite-generate-preview | Name: Veo 3.1 Lite | Capabilities: lightweight video generation from prompt and images with native synchronized audio where supported.
-Model ID - gemini-omni-1.2-flash | Name: Gemini Omni 1.2 Flash | Capabilities: text-to-video, image-to-video, reference-to-video with several images, video editing and continuation, native sound and dialogue, controlled aspect ratio and duration.
-Model ID - gemini-3.1-flash-tts-preview | Name: Gemini Flash TTS | Capabilities: text-to-speech, voice narration, spoken dialogue and preset speaker voices.
-Model ID - lyria-3-clip-preview | Name: Lyria 3 Clip | Capabilities: text-to-music, short music clip or instrumental loop generation from a style and mood prompt.
-Model ID - lyria-3.5 | Name: Lyria 3.5 | Capabilities: generate full songs and longer music tracks from text; control genre, mood, instrumentation, vocals where supported.
+Model ID - gemini-omni-1.2-flash | Name: Gemini Omni 1.2 Flash | Capabilities: text-to-video, image-to-video, reference-to-video with several images, video editing and continuation, native sound and dialogue, controlled aspect ratio and duration. | Tags: text to video, video generation, make video from prompt, image to video, animate image, photo animation, reference to video, character consistency, reference images, video editing, video to video, restyle video
+Model ID - gemini-3.1-flash-tts-preview | Name: Gemini Flash TTS | Capabilities: text-to-speech, voice narration, spoken dialogue and preset speaker voices. | Tags: text to speech, speech synthesis, voice narration
+Model ID - lyria-3-clip-preview | Name: Lyria 3 Clip | Capabilities: text-to-music, short music clip or instrumental loop generation from a style and mood prompt. | Tags: text to music, music generation, song creation
+Model ID - lyria-3.5 | Name: Lyria 3.5 | Capabilities: generate full songs and longer music tracks from text; control genre, mood, instrumentation, vocals where supported. | Tags: text to music, music generation, song creation
 Model - Veo 3.1, Veo 3.1 Fast and Veo 3.1 Lite: text-to-video and image-driven video with generated spoken dialogue and sound effects. Audio is generated together with new video.
 Model - Gemini 3.1 Flash Lite Image, Gemini 3.1 Flash Image, Gemini 3 Pro Image and Gemini 2.5 Flash Image: text-to-image and image editing.
 Model - Imagen 4: text-to-image generation.
