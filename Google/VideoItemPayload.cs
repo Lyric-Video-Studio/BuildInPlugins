@@ -10,6 +10,10 @@ namespace GooglePlugin
         [PropertyComboOptions(["3", "4", "5", "6", "7", "8", "9", "10"])]
         public string Duration { get; set; } = "8";
 
+        [Description("Gemini Omni 1.2 Flash video duration, from 3 to 15 seconds.")]
+        [PropertyComboOptions(["3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"])]
+        public string OmniDuration { get; set; } = "10";
+
         [EnableFileDrop]
         [EnableDoodling]
         public string ImageSource { get; set; }
@@ -49,7 +53,17 @@ namespace GooglePlugin
         {
             if (trackPayload is VideoTrackPayload tp)
             {
-                var isOmni = tp.Model == VideoTrackPayload.ModelGeminiOmniFlashPreview;
+                var isOmni = tp.Model == VideoTrackPayload.ModelGeminiOmni12Flash;
+                if (propertyName == nameof(Duration))
+                {
+                    return !isOmni;
+                }
+
+                if (propertyName == nameof(OmniDuration))
+                {
+                    return isOmni;
+                }
+
                 if (propertyName == nameof(VideoSourceWarning))
                 {
                     var itemVideoSource = itemPayload is VideoItemPayload ip ? ip.VideoSource : null;
