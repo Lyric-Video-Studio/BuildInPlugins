@@ -3,7 +3,7 @@ Capabilities - Generate and edit images; generate video with native dialogue, sy
 Model - Veo 3.1, Veo 3.1 Fast and Veo 3.1 Lite: text-to-video and image-driven video with synchronized generated speech, dialogue lip sync and sound effects. Audio is generated with the video; these are not tools to retime an existing video to a supplied audio track.
 Model - Gemini 3.1 Flash Lite Image, Gemini 3.1 Flash Image, Gemini 3 Pro Image and Gemini 2.5 Flash Image: text-to-image and image editing.
 Model - Imagen 4: text-to-image generation.
-Model - Gemini Omni Flash: multimodal generation using the supported reference inputs.
+Model - Gemini Omni 1.2 Flash: create videos with native sound, dialogue and synchronized speaking/lip movements from text, images, up to six reference images, or an input video. Supports conversational video editing and extension via interaction IDs, 3-15 second output, 360p/720p/1080p/4K, 16:9 or 9:16. Not a dedicated tool for lip-syncing an existing video to an uploaded audio track.
 Model - Gemini 3.1 Flash TTS: text-to-speech / voice generation.
 Model - Lyria 3 Clip and Lyria 3.5: generate music from prompts including clip or song-length output.
 Current - Lyria 3.5 full-song music generation support added.
@@ -11,6 +11,6 @@ v1.5.56 - Gemini Omni Flash and Nano Banana 2 Lite support added.
 Current - gemini-3.1-flash-lite-image, gemini-3.1-flash-image-preview, gemini-3-pro-image-preview, gemini-2.5-flash-image.
 Current - models/imagen-4.0-generate-001.
 Current - veo-3.1-fast-generate-preview, veo-3.1-generate-preview, veo-3.1-lite-generate-preview.
-Current - gemini-omni-1.1-flash.
+Current - gemini-omni-1.2-flash.
 Current - gemini-3.1-flash-tts-preview.
 Current - lyria-3-clip-preview and lyria-3.5.
