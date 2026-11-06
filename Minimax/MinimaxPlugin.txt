@@ -1,6 +1,7 @@
 Minimax
 Capabilities - Generate video from text, images and references, direct camera movement, produce synthetic speech, clone voices, generate music and create audio covers.
-Model - MiniMax H3 Max and H3: multimodal text-to-video, image-to-video, and reference-guided video generation. Generated dialogue and character animation are possible; these are not the dedicated H3 Max Lip Sync image-plus-audio endpoint available through the fal.ai plugin.
+Model - MiniMax H3 Max: fast text-to-video and first/last-frame image-to-video; generates character video, but this plugin does not expose fal.ai's dedicated H3 Max Lip Sync image-plus-audio endpoint.
+Model - MiniMax H3: text-to-video and multimodal reference-guided generation using images, video and audio; supports native generated dialogue and character performances.
 Model - MiniMax Hailuo 2.3 and Hailuo 02: text/image-driven video generation, subject animation and cinematic movement.
 Model - S2V-01, T2V-01, T2V-01-Director, I2V-01, I2V-01-Director, I2V-01-live: earlier generation and camera-directed video modes.
 Model - speech-2.8-hd, speech-2.8-turbo, speech-2.6-hd, speech-2.6-turbo: text-to-speech / synthetic voice audio; generating audio does not itself lip-sync an existing video.
