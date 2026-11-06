@@ -549,7 +549,7 @@ namespace GooglePlugin
 
         private static bool IsOmniVideoModel(string model)
         {
-            return string.Equals(model, VideoTrackPayload.ModelGeminiOmniFlashPreview, StringComparison.OrdinalIgnoreCase);
+            return string.Equals(model, VideoTrackPayload.ModelGeminiOmni12Flash, StringComparison.OrdinalIgnoreCase);
         }
 
         private async Task<VideoResponse> GetOmniVideo(VideoTrackPayload tp, VideoItemPayload ip, string prompt, List<string> effectiveImages, string folderToSaveVideo)
@@ -602,8 +602,9 @@ namespace GooglePlugin
             var request = new JsonObject
             {
                 ["model"] = tp.Model,
-                ["response_format"] = BuildOmniResponseFormat(tp, task == "edit"),
+                ["response_format"] = BuildOmniResponseFormat(tp, ip, task == "edit"),
                 ["background"] = false,
+                ["store"] = true,
                 ["stream"] = false
             };
 
@@ -612,8 +613,7 @@ namespace GooglePlugin
                 request["previous_interaction_id"] = previousInteractionId;
             }
 
-            var omniPrompt = AddOmniDurationToPrompt(prompt, ip.Duration);
-            request["input"] = await BuildOmniInput(omniPrompt, effectiveImages, videoSource);
+            request["input"] = await BuildOmniInput(prompt, effectiveImages, videoSource);
 
             if (!string.IsNullOrWhiteSpace(task))
             {
@@ -628,12 +628,14 @@ namespace GooglePlugin
             return request;
         }
 
-        private static JsonObject BuildOmniResponseFormat(VideoTrackPayload tp, bool omitAspectRatio)
+        private static JsonObject BuildOmniResponseFormat(VideoTrackPayload tp, VideoItemPayload ip, bool omitAspectRatio)
         {
             var responseFormat = new JsonObject
             {
                 ["type"] = "video",
-                ["delivery"] = "uri"
+                ["delivery"] = "uri",
+                ["resolution"] = string.IsNullOrWhiteSpace(tp.OmniResolution) ? "720p" : tp.OmniResolution,
+                ["duration"] = $"{GetSelectedOmniDurationSeconds(ip.OmniDuration)}s"
             };
 
             if (!omitAspectRatio && !string.IsNullOrWhiteSpace(tp.AspectRatio) && tp.AspectRatio != "Auto")
@@ -693,26 +695,14 @@ namespace GooglePlugin
             };
         }
 
-        private static string AddOmniDurationToPrompt(string prompt, string duration)
-        {
-            var seconds = GetSelectedVideoDurationSeconds(duration);
-            var durationInstruction = $"Create a video that is about {seconds} seconds long.";
-            if (string.IsNullOrWhiteSpace(prompt))
-            {
-                return durationInstruction;
-            }
-
-            return prompt.Trim() + " " + durationInstruction;
-        }
-
-        private static int GetSelectedVideoDurationSeconds(string duration)
+        private static int GetSelectedOmniDurationSeconds(string duration)
         {
             if (!int.TryParse(duration, out var seconds))
             {
-                seconds = 8;
+                seconds = 10;
             }
 
-            return Math.Clamp(seconds, 3, 10);
+            return Math.Clamp(seconds, 3, 15);
         }
 
         private static string ResolveOmniTask(string selectedTask, int imageCount, bool hasVideo, bool hasPreviousInteraction)
@@ -1052,7 +1042,7 @@ namespace GooglePlugin
                 Model(IPluginBase.TrackType.Video, "Veo", "veo-3.1-fast-generate-preview"),
                 Model(IPluginBase.TrackType.Video, "Veo", "veo-3.1-generate-preview"),
                 Model(IPluginBase.TrackType.Video, "Veo", "veo-3.1-lite-generate-preview"),
-                Model(IPluginBase.TrackType.Video, "Gemini Omni", VideoTrackPayload.ModelGeminiOmniFlashPreview),
+                Model(IPluginBase.TrackType.Video, "Gemini Omni", VideoTrackPayload.ModelGeminiOmni12Flash),
                 Model(IPluginBase.TrackType.Audio, "Gemini TTS", GoogleAudioTrackPayload.ModelTts),
                 Model(IPluginBase.TrackType.Audio, "Lyria", GoogleAudioTrackPayload.ModelLyriaClip),
                 Model(IPluginBase.TrackType.Audio, "Lyria", GoogleAudioTrackPayload.ModelLyriaPro)
