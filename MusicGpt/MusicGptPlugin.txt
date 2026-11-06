@@ -1,4 +1,9 @@
 MusicGPT
 Capabilities - Create songs or instrumental music from text, write lyrics, generate vocals, make covers, and create speech or narration.
+Workflow - MusicGPT text-to-music: generate full songs, instrumental backing tracks and musical arrangements from prompts.
+Workflow - MusicGPT vocal generation: create sung vocal performances or add vocals to a song.
+Workflow - MusicGPT lyrics: write or revise song lyrics.
+Workflow - MusicGPT music cover: generate a cover rendition of a supplied song.
+Workflow - MusicGPT narration: generate speech, synthetic voice and spoken narration.
 Current - MusicGPT music generation, instrumental generation, vocals, lyrics and speech/narration.
 Current - Search terms: MusicGPT, music, song, cover, vocals, audio.

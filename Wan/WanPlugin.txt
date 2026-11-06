@@ -1,4 +1,6 @@
 WAN API
 Capabilities - Create video from image with the hosted WAN 2.2 image-to-video model.
+
+Model ID - wan2.2-i2v-plus | Name: Wan 2.2 Image to Video Plus | Capabilities: image-to-video, animate stills with motion using hosted Alibaba WAN 2.2. | Tags: image to video, animate image, photo animation
 Current - wan2.2-i2v-plus.
 Current - Search terms: WAN 2.2, image-to-video, Alibaba.

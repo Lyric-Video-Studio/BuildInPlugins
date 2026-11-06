@@ -1,5 +1,10 @@
 LTX
 Capabilities - Generate video from text, animate still images, and create video using supported audio conditioning and reference inputs.
+
+Model ID - ltx-2-3-pro | Name: LTX 2.3 Pro | Capabilities: high-quality text-to-video or image-to-video, audiovisual scene generation with motion and video settings. | Tags: text to video, video generation, make video from prompt, image to video, animate image, photo animation
+Model ID - ltx-2-3-fast | Name: LTX 2.3 Fast | Capabilities: fast text-to-video or image-to-video generation, rapid scene and shot previews. | Tags: text to video, video generation, make video from prompt, image to video, animate image, photo animation
+Model ID - ltx-2-fast | Name: LTX 2 Fast | Capabilities: fast text-to-video or image-to-video clips and iteration. | Tags: text to video, video generation, make video from prompt, image to video, animate image, photo animation
+Model ID - ltx-2-pro | Name: LTX 2 Pro | Capabilities: higher-fidelity text-to-video or image-to-video clips with controlled motion. | Tags: text to video, video generation, make video from prompt, image to video, animate image, photo animation
 Model - ltx-2-3-pro: high-quality video generation.
 Model - ltx-2-3-fast: faster LTX 2.3 generation.
 Model - ltx-2-pro: high-quality LTX 2 video generation.

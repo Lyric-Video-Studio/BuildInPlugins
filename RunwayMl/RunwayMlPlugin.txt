@@ -1,5 +1,12 @@
 Runway ML
 Capabilities - Create video from text, animate an image, transfer a reference performance to a character, edit or transform existing video, and upscale video.
+
+Model ID - gen4.5 | Name: Runway Gen-4.5 | Capabilities: text-to-video, cinematic scene composition, movement, character action and shot generation. | Tags: text to video, video generation, make video from prompt
+Model ID - act_two | Name: Runway Act Two | Capabilities: performance transfer, animate character acting and facial expression using a driving performance video; acting and speech gestures. | Tags: motion transfer, character animation, drive character performance
+Model ID - upscale_v1 | Name: Runway Video Upscale | Capabilities: video upscaling, resolution enhancement of an existing video. | Tags: upscale video, video enhancement, increase resolution
+Model ID - gen4_aleph | Name: Runway Gen-4 Aleph | Capabilities: video-to-video edit, visual restyle, modify objects or environments in a source clip using a prompt. | Tags: video editing, video to video, restyle video
+Model ID - gen4_turbo | Name: Runway Gen-4 Turbo | Capabilities: fast image-to-video animation from still artwork and photography. | Tags: image to video, animate image, photo animation
+Model ID - gen3a_turbo | Name: Runway Gen-3 Alpha Turbo | Capabilities: image-to-video motion generation from a first frame. | Tags: image to video, animate image, photo animation
 Model - gen4.5: text-to-video generation with cinematic motion.
 Model - act_two: performance-driven character animation using an acting reference (facial expression, movement, speaking performance); use for controlled character acting, not standalone lip sync from only an audio file.
 Model - gen4_aleph: instruction-guided video-to-video editing and visual transformation.

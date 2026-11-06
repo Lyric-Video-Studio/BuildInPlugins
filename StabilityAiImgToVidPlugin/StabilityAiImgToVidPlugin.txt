@@ -1,4 +1,5 @@
 Stability AI image-to-video
 Capabilities - Create video from image with Stability AI hosted video generation.
+Workflow - Stability AI image-to-video: animate a provided source still into a new video clip with model-generated motion.
 Current - Stability AI hosted image-to-video generation.
 Current - Search terms: Stability AI, Stable Video Diffusion, image-to-video.

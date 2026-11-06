@@ -1,4 +1,7 @@
 Automatic1111 ImgToImg / Vid2Vid / Upscale
 Capabilities - Create or edit an image from another image, transform video from video, upscale images and videos, and guide generation with ControlNet.
+Workflow - Automatic1111 image-to-image: restyle, transform or repaint a supplied image using an installed checkpoint and ControlNet guidance.
+Workflow - Automatic1111 video-to-video: transfer image-to-image processing across frames of a source video.
+Workflow - Automatic1111 upscale: increase image or video resolution using installed upscalers.
 Current - Uses the checkpoints and models installed in the connected Automatic1111 instance.
 Current - Search terms: Stable Diffusion, SDXL, img2img, vid2vid, upscale, ControlNet.
