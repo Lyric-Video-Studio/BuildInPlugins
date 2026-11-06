@@ -1,6 +1,6 @@
 Stability AI image generation
 Capabilities - Create images from text prompts with Stable Diffusion 3 through the Stability AI API.
 
-Model ID - sd3 | Name: Stable Diffusion 3 | Capabilities: text-to-image illustration and photo generation from a prompt via Stability AI Stable Image API.
+Model ID - sd3 | Name: Stable Diffusion 3 | Capabilities: text-to-image illustration and photo generation from a prompt via Stability AI Stable Image API. | Tags: text to image, create picture, image generation
 Current - sd3 through the Stability AI Stable Image API.
 Current - Search terms: SD3, Stable Diffusion 3, text-to-image.
