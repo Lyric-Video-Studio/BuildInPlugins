@@ -5,7 +5,7 @@ Model ID - MiniMax-H3 | Name: MiniMax H3 | Capabilities: multimodal reference-to
 Model ID - MiniMax-H3-Max | Name: MiniMax H3 Max | Capabilities: fast text-to-video and first-last-frame image-to-video with cinematic motion; native audio with generated scenes where supported. | Tags: text to video, video generation, make video from prompt, image to video, animate image, photo animation, first last frame, keyframe transition
 Model ID - MiniMax-Hailuo-2.3 | Name: MiniMax Hailuo 2.3 | Capabilities: image-to-video, cinematic camera motion, high-quality visual animation. | Tags: image to video, animate image, photo animation
 Model ID - MiniMax-Hailuo-02 | Name: MiniMax Hailuo 02 | Capabilities: image-to-video, cinematic scene generation and fluid motion. | Tags: image to video, animate image, photo animation
-Model ID - S2V-01 | Name: MiniMax Subject to Video | Capabilities: subject-reference video, preserve a subject identity while creating a new moving scene.
+Model ID - S2V-01 | Name: MiniMax Subject to Video | Capabilities: subject-reference video, preserve a subject identity while creating a new moving scene. | Tags: subject to video, character reference, subject consistency, character animation
 Model ID - T2V-01 | Name: MiniMax Text to Video | Capabilities: text-to-video from scene prompts. | Tags: text to video, video generation, make video from prompt
 Model ID - T2V-01-Director | Name: MiniMax Director Text to Video | Capabilities: text-to-video with director camera movement controls. | Tags: text to video, video generation, make video from prompt, camera control, camera movement
 Model ID - I2V-01 | Name: MiniMax Image to Video | Capabilities: image-to-video animate an existing first frame. | Tags: image to video, animate image, photo animation
