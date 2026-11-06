@@ -1,7 +1,7 @@
 ElevenLabs
 Capabilities - Create speech from text, generate voices, and create music from a prompt.
 
-Model ID - eleven_multilingual_v2 | Name: ElevenLabs Multilingual V2 | Capabilities: text-to-speech, generate narration and spoken voices in multiple languages.
-Model ID - music_v1 | Name: ElevenLabs Music V1 | Capabilities: text-to-music, create songs or instrumentals from a music prompt.
+Model ID - eleven_multilingual_v2 | Name: ElevenLabs Multilingual V2 | Capabilities: text-to-speech, generate narration and spoken voices in multiple languages. | Tags: text to speech, voice narration
+Model ID - music_v1 | Name: ElevenLabs Music V1 | Capabilities: text-to-music, create songs or instrumentals from a music prompt. | Tags: text to music, music generation, instrumental music
 Current - eleven_multilingual_v2 text-to-speech and voice generation.
 Current - music_v1 music generation.
